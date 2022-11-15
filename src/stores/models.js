@@ -1,3 +1,5 @@
+import emitGlobalEvent from "../helpers/emitEvent";
+
 const ifcModels = [];
 const resetIfcModels = () => ifcModels = [];
 
@@ -7,12 +9,7 @@ const resetIfcLoaders = () => ifcLoaders = [];
 let selectedProperties = undefined;
 const setSelectedProperties = (props) => {
     selectedProperties = props
-    selectedChanged()
-}
-
-function selectedChanged(){
-    const event = new Event('selectedChanged')
-    document.dispatchEvent(event)
+    emitGlobalEvent('selectedChanged')
 }
 
 export { 

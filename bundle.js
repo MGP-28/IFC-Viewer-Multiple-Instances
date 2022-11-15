@@ -89891,6 +89891,11 @@ class IFCLoader extends Loader {
 
  const setCamera = (value) => camera = value;
 
+function emitGlobalEvent(eventName){
+    const event = new Event(eventName);
+    document.dispatchEvent(event);
+}
+
 const ifcModels = [];
 
 const ifcLoaders = [];
@@ -89898,13 +89903,8 @@ const ifcLoaders = [];
 let selectedProperties = undefined;
 const setSelectedProperties = (props) => {
     selectedProperties = props;
-    selectedChanged();
+    emitGlobalEvent('selectedChanged');
 };
-
-function selectedChanged(){
-    const event = new Event('selectedChanged');
-    document.dispatchEvent(event);
-}
 
 function loadModels(event) {
     
@@ -90004,7 +90004,6 @@ async function pick(event) {
   // console.log('found', RaycastFoundStored.found);
   let props = null;
   if (isFoundValid()) {
-    console.log('here!');
     const index = found.object.faceIndex;
     const geometry = found.object.object.geometry;
 

@@ -8,7 +8,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import * as Stored from "../stores/scene";
+import * as Stored from "../../stores/scene";
 
 export default function buildScene() {
 
