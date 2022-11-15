@@ -2,23 +2,22 @@ import RaycastIntersectObject from "../models/raycastIntersectObject.js";
 import * as Models from "../stores/models.js";
 import * as RaycastStore from "../stores/raycast.js";
 import * as Stored from "../stores/scene.js";
-import * as ViewStore from "../stores/view.js";
 
 async function pick(event) {
   cast(event);
 
   // console.log('found', RaycastFoundStored.found);
-
-  if (RaycastStore.isFoundValid) {
+  let props = null;
+  if (RaycastStore.isFoundValid()) {
     const index = RaycastStore.found.object.faceIndex;
     const geometry = RaycastStore.found.object.object.geometry;
 
     const ifcLoader = Models.ifcLoaders[RaycastStore.found.idx];
     const id = ifcLoader.ifcManager.getExpressId(geometry, index);
-    const props = await ifcLoader.ifcManager.getItemProperties(0, id);
-
-    ViewStore.output.innerHTML = JSON.stringify(props, null, 2);
+    const propsRaw = await ifcLoader.ifcManager.getItemProperties(0, id);
+    props = JSON.stringify(propsRaw, null, 2)
   }
+  Models.setSelectedProperties(props);
 }
 
 function cast(event) {

@@ -89895,6 +89895,17 @@ const ifcModels = [];
 
 const ifcLoaders = [];
 
+let selectedProperties = undefined;
+const setSelectedProperties = (props) => {
+    selectedProperties = props;
+    selectedChanged();
+};
+
+function selectedChanged(){
+    const event = new Event('selectedChanged');
+    document.dispatchEvent(event);
+}
+
 function loadModels(event) {
     
   const _ifcLoaders = [];
@@ -89938,18 +89949,29 @@ function loadModels(event) {
   }
 }
 
-const input = document.getElementById("file-input");
-
-const output = document.getElementById("id-output");
-
 function startInput() {
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.id = 'file-input';
+  input.accept = '.ifc, .ifcXML, .ifcZIP';
+
+  document.body.appendChild(input);
 
   input.addEventListener(
     "change",
-    (event) => loadModels(event),
+    (event) => {
+      loadModels(event);
+      toggleFileInput(input);
+    },
     false
   );
   
+}
+
+function toggleFileInput(input){
+  input.classList.toggle('hidden');
 }
 
 class RaycastIntersectObject{
@@ -89963,9 +89985,9 @@ let found = new RaycastIntersectObject(null, null);
 
 const setFound = (RayIntObj) => found = new RaycastIntersectObject(RayIntObj.object, RayIntObj.idx);
 
-const resetFound = () => found = new RaycastIntersectObject(null, null);
+const resetFound = () => found = null;
 
-const isFoundValid = () => found.object !== null;
+const isFoundValid = () => { return found !== null };
 
 const raycaster = new Raycaster();
 setupRaycaster();
@@ -89980,17 +90002,18 @@ async function pick(event) {
   cast(event);
 
   // console.log('found', RaycastFoundStored.found);
-
-  if (isFoundValid) {
+  let props = null;
+  if (isFoundValid()) {
+    console.log('here!');
     const index = found.object.faceIndex;
     const geometry = found.object.object.geometry;
 
     const ifcLoader = ifcLoaders[found.idx];
     const id = ifcLoader.ifcManager.getExpressId(geometry, index);
-    const props = await ifcLoader.ifcManager.getItemProperties(0, id);
-
-    output.innerHTML = JSON.stringify(props, null, 2);
+    const propsRaw = await ifcLoader.ifcManager.getItemProperties(0, id);
+    props = JSON.stringify(propsRaw, null, 2);
   }
+  setSelectedProperties(props);
 }
 
 function cast(event) {
@@ -90041,9 +90064,29 @@ function startUserInputs() {
   
 }
 
+function startObjectDetail() {
+  const div = document.createElement("div");
+  div.classList.add("message-container", "hidden");
+
+  document.body.appendChild(div);
+
+  div.innerHTML = `
+        <p class="message">Properties:</p>
+        <pre class="message" id="id-output">None</pre>
+    `;
+  document.addEventListener("selectedChanged", (event) => {
+    if(selectedProperties !== null) {
+        document.getElementById('id-output').textContent = selectedProperties;
+        div.classList.remove("hidden");
+    }
+    else div.classList.add("hidden");
+  });
+}
+
 function render(){
     startInput();
     startUserInputs();
+    startObjectDetail();
 }
 
 // This set of controls performs orbiting, dollying (zooming), and panning.

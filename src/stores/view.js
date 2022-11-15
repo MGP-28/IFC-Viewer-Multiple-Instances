@@ -1,5 +1,3 @@
-const input = document.getElementById("file-input");
+const elements = {}
 
-const output = document.getElementById("id-output");
-
-export { input, output }
+export { elements }

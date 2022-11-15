@@ -8,9 +8,9 @@ let found = new RaycastIntersectObject(null, null)
 
 const setFound = (RayIntObj) => found = new RaycastIntersectObject(RayIntObj.object, RayIntObj.idx)
 
-const resetFound = () => found = new RaycastIntersectObject(null, null)
+const resetFound = () => found = null
 
-const isFoundValid = () => found.object !== null
+const isFoundValid = () => { return found !== null }
 
 const raycaster = new Raycaster();
 setupRaycaster()
