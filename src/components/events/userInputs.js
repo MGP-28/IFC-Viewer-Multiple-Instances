@@ -1,4 +1,4 @@
-import { pick } from "../helpers/raytracing";
+import { pick } from "../../helpers/raytracing";
 
 export default function startUserInputs() {
 

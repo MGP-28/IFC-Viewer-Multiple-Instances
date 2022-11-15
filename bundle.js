@@ -89896,10 +89896,13 @@ function emitGlobalEvent(eventName){
     document.dispatchEvent(event);
 }
 
+// IFC Models loaded
 const ifcModels = [];
 
+// IFC Loaders -> One for each model
 const ifcLoaders = [];
 
+// Currently selected object's properties
 let selectedProperties = undefined;
 const setSelectedProperties = (props) => {
     selectedProperties = props;
