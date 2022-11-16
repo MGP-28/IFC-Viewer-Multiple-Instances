@@ -2,6 +2,7 @@ import { IFCLoader } from "web-ifc-three/IFCLoader";
 import * as Scene from "../stores/scene.js";
 import * as Models from "../stores/models.js";
 import Model from "../models/Model.js";
+import { getAllSpacialTrees } from "./spatialTree.js";
 
 export default function loadModels(event) {
     
@@ -30,10 +31,12 @@ export default function loadModels(event) {
   function waitLoad() {
     if (!Models.isAllModelsLoaded()) {
       setTimeout(() => {
-        waitLoad();
+        waitLoad()
       }, 1000);
     } else {
-      reorderArrays();
+      reorderArrays()
+      getAllSpacialTrees()
+      //
     }
   }
 
