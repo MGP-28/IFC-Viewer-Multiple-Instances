@@ -1,4 +1,5 @@
 import UIConfigs from "./ui";
+import { MeshBasicMaterial } from "three"
 
 // Creates subset material
 export default materials = {
