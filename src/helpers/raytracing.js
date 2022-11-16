@@ -13,8 +13,7 @@ async function pick(event) {
 
     const ifcLoader = Models.models[RaycastStore.found.idx].loader;
     const id = ifcLoader.ifcManager.getExpressId(geometry, index);
-    const propsRaw = await ifcLoader.ifcManager.getItemProperties(0, id);
-    props = JSON.stringify(propsRaw, null, 2)
+    props = await ifcLoader.ifcManager.getItemProperties(0, id);
   }
   Models.setSelectedProperties(props);
 }

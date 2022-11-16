@@ -12,7 +12,7 @@ export default function startObjectDetail() {
     `;
   document.addEventListener("selectedChanged", (event) => {
     if(selectedProperties !== null) {
-        document.getElementById('id-output').textContent = selectedProperties
+        document.getElementById('id-output').textContent = JSON.stringify(selectedProperties, null, 2)
         div.classList.remove("hidden")
     }
     else div.classList.add("hidden")
