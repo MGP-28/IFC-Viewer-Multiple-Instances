@@ -31,13 +31,14 @@ export default class Model {
   }
 
   getLevelsOfModel() {
-    return getNodeByType("IFCBUILDINGSTOREY");
+    return getNodesByType("IFCBUILDINGSTOREY");
   }
 }
 
-function getNodeByType(type, obj) {
+function getNodesByType(type, obj) {
   if (obj[type] !== type) {
-    const result = getNodeByType(type, obj[children][0]);
+    const result = getNodesByType(type, obj[children][0]);
     if (result == true) return obj[children];
+    else return result;
   } else return true;
 }
