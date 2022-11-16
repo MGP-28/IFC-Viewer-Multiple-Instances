@@ -15,13 +15,23 @@ const setSelectedProperties = (props) => {
     emitGlobalEvent('selectedChanged')
 }
 
-const modelNames = [];
-const usedCategories = [];
+// Stores model names for UI integration
+let modelNames = [];
+const resetModelNames = () => modelNames = [];
+
+// Set of categories used in all models
+let usedCategories = new Set();
+const resetUsedCategories = () => usedCategories = new Set();
+
+// Stores spacial trees from all models loaded
+let trees = [];
+const resetTrees = () => trees = [];
 
 export { 
     ifcModels, resetIfcModels,
     ifcLoaders, resetIfcLoaders,
     selectedProperties, setSelectedProperties,
-    modelNames, 
-    usedCategories
+    modelNames, resetModelNames,
+    usedCategories, resetUsedCategories,
+    trees, resetTrees
 }
