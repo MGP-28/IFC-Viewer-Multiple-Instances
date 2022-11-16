@@ -1,18 +1,17 @@
 import RaycastIntersectObject from "../models/raycastIntersectObject.js";
 import * as Models from "../stores/models.js";
 import * as RaycastStore from "../stores/raycast.js";
-import * as Stored from "../stores/scene.js";
+import * as Scene from "../stores/scene.js";
 
 async function pick(event) {
   cast(event);
 
-  // console.log('found', RaycastFoundStored.found);
   let props = null;
   if (RaycastStore.isFoundValid()) {
     const index = RaycastStore.found.object.faceIndex;
     const geometry = RaycastStore.found.object.object.geometry;
 
-    const ifcLoader = Models.ifcLoaders[RaycastStore.found.idx];
+    const ifcLoader = Models.models[RaycastStore.found.idx].loader;
     const id = ifcLoader.ifcManager.getExpressId(geometry, index);
     const propsRaw = await ifcLoader.ifcManager.getItemProperties(0, id);
     props = JSON.stringify(propsRaw, null, 2)
@@ -22,7 +21,7 @@ async function pick(event) {
 
 function cast(event) {
   // Computes the position of the mouse on the screen
-  const bounds = Stored.threeCanvas.getBoundingClientRect();
+  const bounds = Scene.threeCanvas.getBoundingClientRect();
 
   const x1 = event.clientX - bounds.left;
   const x2 = bounds.right - bounds.left;
@@ -33,7 +32,7 @@ function cast(event) {
   RaycastStore.mouse.y = -(y1 / y2) * 2 + 1;
 
   // Places it on the camera pointing to the mouse
-  RaycastStore.raycaster.setFromCamera(RaycastStore.mouse, Stored.camera);
+  RaycastStore.raycaster.setFromCamera(RaycastStore.mouse, Scene.camera);
 
   // Casts a ray
   castEachModel();
@@ -42,14 +41,12 @@ function cast(event) {
 async function castEachModel() {
   const results = [];
 
-  for (let idx = 0; idx < Models.ifcModels.length; idx++) {
-    const arr = [Models.ifcModels[idx]];
+  for (let idx = 0; idx < Models.models.length; idx++) {
+    const arr = [Models.models[idx].model];
     const result = RaycastStore.raycaster.intersectObjects(arr)[0];
     const intersectiongObj = new RaycastIntersectObject(result, idx);
     if (result) results.push(intersectiongObj);
   }
-
-  // console.log(results)
 
   if (results.length > 0) getRaycastingResult(results);
   else RaycastStore.resetFound();
