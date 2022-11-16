@@ -1,5 +1,17 @@
 import emitGlobalEvent from "../helpers/emitEvent";
 
+// Model class instances
+let models = [];
+const addModel = (model) => models.push(model);
+const resetModels = () => models = [];
+function isAllModelsLoaded(){
+    for (let idx = 0; idx < models.length; idx++) {
+        if ( models[idx].model !== undefined ) continue
+        else return false
+    }
+    return true
+}
+
 // IFC Models loaded
 const ifcModels = [];
 const resetIfcModels = () => ifcModels = [];
@@ -28,6 +40,7 @@ let trees = [];
 const resetTrees = () => trees = [];
 
 export { 
+    models, addModel, resetModels, isAllModelsLoaded,
     ifcModels, resetIfcModels,
     ifcLoaders, resetIfcLoaders,
     selectedProperties, setSelectedProperties,

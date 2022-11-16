@@ -1,6 +1,7 @@
 import { IFCLoader } from "web-ifc-three/IFCLoader";
-import * as Stored from "../stores/scene.js";
+import * as Scene from "../stores/scene.js";
 import * as Models from "../stores/models.js";
+import Model from "../models/Model.js";
 
 export default function loadModels(event) {
     
@@ -9,12 +10,17 @@ export default function loadModels(event) {
   for (let idx = 0; idx < event.target.files.length; idx++) {
 
     const ifcURL = URL.createObjectURL(event.target.files[idx]);
-    // console.log(event.target.files[idx])
+    
+    const model = new Model();
+    Models.addModel(model);
+
     const ifcLoader = new IFCLoader();
-    ifcLoader.load(ifcURL, (ifcModel) => {
-      Models.ifcModels.push(ifcModel);
-      Stored.scene.add(ifcModel);
+
+    ifcLoader.load(ifcURL, (loadedModel) => {
+      Scene.scene.add(loadedModel);
+      model.model = loadedModel;
     });
+
     _ifcLoaders.push(ifcLoader);
   }
 
@@ -22,7 +28,7 @@ export default function loadModels(event) {
   waitLoad();
 
   function waitLoad() {
-    if (event.target.files.length > Models.ifcModels.length) {
+    if (!Models.isAllModelsLoaded()) {
       setTimeout(() => {
         waitLoad();
       }, 1000);
@@ -32,15 +38,12 @@ export default function loadModels(event) {
   }
 
   function reorderArrays() {
-    // console.log('rawLoaders', _ifcLoaders)
-    for (let idx = 0; idx < Models.ifcModels.length; idx++) {
-      // console.log('cycling')
+    for (let idx = 0; idx < Models.models.length; idx++) {
+      const uuid = Models.models[idx].model.uuid
       const correspondingLoader = _ifcLoaders.find(
-        (x) => Models.ifcModels[idx].uuid == x.ifcManager.state.models[0].mesh.uuid
+        (x) => Models.models[idx].model.uuid == x.ifcManager.state.models[0].mesh.uuid
       );
-      Models.ifcLoaders.push(correspondingLoader);
+      Models.models[idx].loader = correspondingLoader
     }
-    // console.log('models', ifcModels)
-    // console.log('loaders', ifcLoaders)
   }
 }
