@@ -1,24 +1,24 @@
 import RaycastIntersectObject from "../models/raycastIntersectObject.js";
-import {
-    Raycaster,
-    Vector2
-  } from "three";
+import { Raycaster, Vector2 } from "three";
 
-let found = new RaycastIntersectObject(null, null)
+let found = new RaycastIntersectObject(null, null);
 
-const setFound = (RayIntObj) => found = new RaycastIntersectObject(RayIntObj.object, RayIntObj.idx)
+const setFound = (RayIntObj) =>
+  (found = new RaycastIntersectObject(RayIntObj.object, RayIntObj.idx));
 
-const resetFound = () => found = null
+const resetFound = () => (found = null);
 
-const isFoundValid = () => { return found !== null }
+const isFoundValid = () => {
+  return found !== null;
+};
 
 const raycaster = new Raycaster();
-setupRaycaster()
+setupRaycaster();
 
 const mouse = new Vector2();
 
-export { found, setFound, resetFound, isFoundValid, raycaster, mouse }
+export { found, setFound, resetFound, isFoundValid, raycaster, mouse };
 
-function setupRaycaster(){
-    raycaster.firstHitOnly = true;
+function setupRaycaster() {
+  raycaster.firstHitOnly = true;
 }
