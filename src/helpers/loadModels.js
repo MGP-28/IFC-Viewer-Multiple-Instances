@@ -39,7 +39,6 @@ export default function loadModels(event) {
 
   function reorderArrays() {
     for (let idx = 0; idx < Models.models.length; idx++) {
-      const uuid = Models.models[idx].model.uuid
       const correspondingLoader = _ifcLoaders.find(
         (x) => Models.models[idx].model.uuid == x.ifcManager.state.models[0].mesh.uuid
       );
