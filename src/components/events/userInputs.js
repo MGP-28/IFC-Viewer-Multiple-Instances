@@ -1,4 +1,5 @@
 import { pick } from "../../helpers/raytracing";
+import { isSelectionFromViewer } from "../../stores/selection";
 
 export default function startUserInputs() {
 
@@ -8,6 +9,9 @@ export default function startUserInputs() {
         window.ondblclick = (event) => pick(event, true);
 
         // Mouse move => highlights object being hovered
-        window.onmousemove = (event) => pick(event, false);
+        window.onmousemove = (event) => {
+            if(!isSelectionFromViewer) return;
+            pick(event, false);
+        }
     })  
 }

@@ -21,7 +21,7 @@ async function pick(event, isSelected) {
     const id = ifcLoader.ifcManager.getExpressId(geometry, index);
     props = await ifcLoader.ifcManager.getItemProperties(0, id);
   }
-  SelectedStore.setSelectedProperties(props, isSelected);
+  SelectedStore.setSelectedProperties(props, isSelected, true);
 }
 
 function cast(event) {

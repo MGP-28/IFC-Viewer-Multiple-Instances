@@ -5,6 +5,7 @@ async function getAllSpacialTrees() {
     const newTree = await getSpacialTree(idx);
     Models.models[idx].tree = newTree;
   }
+  return true;
 }
 
 async function getSpacialTree(idx) {

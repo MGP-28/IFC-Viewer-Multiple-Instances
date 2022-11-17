@@ -29,16 +29,16 @@ export default function loadModels(event) {
   // Async function to check if models are loaded every second. Doesn't interrupt application flow
   waitLoad();
 
-  function waitLoad() {
+  async function waitLoad() {
     if (!Models.isAllModelsLoaded()) {
       setTimeout(() => {
         waitLoad()
       }, 1000);
     } else {
       reorderArrays()
-      getAllSpacialTrees()
+      const result = await getAllSpacialTrees()
       //
-      emitGlobalEvent("wereReady")
+      if(result) emitGlobalEvent("wereReady")
     }
   }
 

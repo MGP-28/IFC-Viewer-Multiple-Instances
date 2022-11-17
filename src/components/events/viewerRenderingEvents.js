@@ -17,6 +17,7 @@ export default function startRenderingEvents() {
 // @type (string) = material type, according to src/configs/materials.js
 function processRenderization(type) {
   if (RaycastStore.isFoundValid()) {
+    console.log('found is valid!')
     // get selected model index in Store array
     const modelIdx = RaycastStore.found.idx;
 
@@ -33,6 +34,7 @@ function processRenderization(type) {
     const IdArr = [SelectedStore.selectedProperties.expressID];
     createSubset(model, IdArr, type);
   } else {
+    if(!SelectedStore.isSelectionFromViewer) return
     // if there's no selection, remove all selections
     for (let idx = 0; idx < Models.models.length; idx++) {
       const model = Models.models[idx];

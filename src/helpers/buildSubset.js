@@ -14,10 +14,11 @@ function createSubset(model, ids, type) {
 }
 
 function removeSubset(model, type) {
-  // model from store, type is string (selected, highlighted, ...)
 
+  // model from store, type is string (selected, highlighted, ...)
   // const material = materials[type];
   // model.loader.ifcManager.removeSubset(0, Scene.scene, material);
+
   createSubset(model, [], type)
 }
 
