@@ -1,5 +1,4 @@
 import { removeSubset } from "../helpers/buildSubset";
-import emitGlobalEvent from "../helpers/emitEvent";
 import RaycastIntersectObject from "../models/raycastIntersectObject";
 import * as Models from "../stores/models";
 import * as RaycastStore from "../stores/raycast";
@@ -96,7 +95,7 @@ async function buildTree(tree) {
 async function buildNode(node) {
   const nodeEl = document.createElement("li");
   // create node
-  const title = buildTitle(node);
+  const title = await buildTitle(node);
   nodeEl.appendChild(title);
   let childrenEl = false;
 
@@ -153,12 +152,12 @@ async function buildNode(node) {
  * @param {Object} node
  * @returns DOM Element 'span'
  */
-function buildTitle(node) {
+async function buildTitle(node) {
   // create node title span
   const span = document.createElement("span");
   const text =
     node.children.length == 0 || IFCCategoriesToFecthName.includes(node.type)
-      ? getNodePropertyName(node)
+      ? await getNodePropertyName(node)
       : node.type;
   span.textContent = text;
   return span;
@@ -183,8 +182,15 @@ async function buildChildren(node) {
  * @param {Object} node
  * @returns string
  */
-function getNodePropertyName(node) {
-  return node.type + " AHHHH";
+async function getNodePropertyName(node) {
+  console.log("name", node);
+  const model = Models.models[currentTreeIdx];
+  const id = node.expressID;
+  const props = await model.loader.ifcManager.getItemProperties(0, id);
+  console.log("props", props);
+  let name = node.type
+  if(props.Name !== null) name = props.Name.value;
+  return name;
 }
 
 // Helpers
