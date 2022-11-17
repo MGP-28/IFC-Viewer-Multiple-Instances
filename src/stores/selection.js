@@ -23,7 +23,7 @@ let selectedSpatialTreeIdx = undefined;
  * @param {int} index model index on Stores/models.js
  */
 const setselectedSpatialTree = (index) => {
-  selectedProperties = index;
+  selectedSpatialTreeIdx = index;
   emitGlobalEvent("spatialTreeSelected");
 };
 

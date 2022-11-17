@@ -35,7 +35,6 @@ function buildTreesTabs(trees) {
     treeTabEl.classList.add("tree-tab");
     treeTabEl.textContent = `Tab ${idx}`;
     treeTabEl.addEventListener("click", () => {
-      console.log("click");
       SelectionStore.setselectedSpatialTree(idx);
     });
     document.addEventListener("spatialTreeSelected", () => {
@@ -112,7 +111,7 @@ async function buildNode(node) {
     });
   } else {
     const expressID = node.expressID;
-    const model = Models.models[currentTreeIdx]
+    const model = Models.models[currentTreeIdx];
     const loader = model.loader;
     const props = await loader.ifcManager.getItemProperties(0, expressID, true);
     const object = await loader.ifcManager.byId(0, expressID);

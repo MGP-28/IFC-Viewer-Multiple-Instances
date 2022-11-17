@@ -71,12 +71,13 @@ body {
   border-bottom: none;
 }
 
-.tree-tab:hover {
-  background-color: aquamarine;
+.tree-tab.tab-active {
+  background-color: lightblue;
+  z-index: 1;
 }
 
-.tree-tab.tab-active {
-  z-index: 1;
+.tree-tab:hover {
+  background-color: aquamarine;
 }
 
 .tree-content-container {
@@ -91,7 +92,7 @@ body {
 
 .tree-content-container ul > li {
   margin-left: 5px;
-  border-top: solid 1px lightblue;
+  border-top: solid 1px lightgray;
 }
 
 .tree-content-container li > ul {
