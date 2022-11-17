@@ -2,8 +2,14 @@ import RaycastIntersectObject from "../models/raycastIntersectObject.js";
 import * as Models from "../stores/models.js";
 import * as RaycastStore from "../stores/raycast.js";
 import * as Scene from "../stores/scene.js";
+import * as SelectedStore from "../stores/selection.js";
 
-async function pick(event) {
+/**
+ * Gets users' mouse position, casts a ray to intercept objects on the render and returns their properties
+ * @param {Event} event event triggered
+ * @param {boolean} isSelected is user selection or just hover. This dictates logic for renderization
+ */
+async function pick(event, isSelected) {
   cast(event);
 
   let props = null;
@@ -15,7 +21,7 @@ async function pick(event) {
     const id = ifcLoader.ifcManager.getExpressId(geometry, index);
     props = await ifcLoader.ifcManager.getItemProperties(0, id);
   }
-  Models.setSelectedProperties(props);
+  SelectedStore.setSelectedProperties(props, isSelected);
 }
 
 function cast(event) {
@@ -33,13 +39,15 @@ function cast(event) {
   // Places it on the camera pointing to the mouse
   RaycastStore.raycaster.setFromCamera(RaycastStore.mouse, Scene.camera);
 
-  // Casts a ray
+  // Casts a ray for each model uploaded, returns object
   castEachModel();
 }
 
 async function castEachModel() {
   const results = [];
 
+  // Get intercepted object closest to the user camera/mouse, if there is one
+  // RaycastIntersectObject is used to tie the object to its model loader
   for (let idx = 0; idx < Models.models.length; idx++) {
     const arr = [Models.models[idx].model];
     const result = RaycastStore.raycaster.intersectObjects(arr)[0];
@@ -51,6 +59,10 @@ async function castEachModel() {
   else RaycastStore.resetFound();
 }
 
+/**
+ * Gets object closest to the camera from all the results obtained
+ * @param {Array} results Results from raycasting process
+ */
 function getRaycastingResult(results) {
   const minDistance = Math.min(...results.map((x) => x.object.distance));
   const found = results.find((x) => x.object.distance == minDistance);

@@ -1,4 +1,4 @@
-import { selectedProperties } from "../stores/models";
+import * as SelectionStore from "../stores/selection";
 
 export default function startObjectDetail() {
   const div = document.createElement("div");
@@ -11,8 +11,8 @@ export default function startObjectDetail() {
         <pre class="message" id="id-output">None</pre>
     `;
   document.addEventListener("selectedChanged", (event) => {
-    if(selectedProperties !== null) {
-        document.getElementById('id-output').textContent = JSON.stringify(selectedProperties, null, 2)
+    if(SelectionStore.selectedProperties !== null) {
+        document.getElementById('id-output').textContent = JSON.stringify(SelectionStore.selectedProperties, null, 2)
         div.classList.remove("hidden")
     }
     else div.classList.add("hidden")
