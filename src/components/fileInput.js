@@ -1,3 +1,4 @@
+import emitGlobalEvent from "../helpers/emitEvent";
 import loadModels from "../helpers/loadModels";
 
 export default function startInput() {
@@ -15,6 +16,7 @@ export default function startInput() {
     (event) => {
       loadModels(event)
       toggleFileInput(input)
+      emitGlobalEvent("loading")
     },
     false
   );

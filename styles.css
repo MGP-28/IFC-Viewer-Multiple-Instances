@@ -1,3 +1,11 @@
+:root{
+  --primary-color: cyan;
+  --primary-color-dark: darkcyan;
+  --primary-color-light: lightcyan;
+  --transparent-background-light: rgba(255, 255, 255, 0.8);
+  --transparent-background-dark: rgba(0, 20, 20, 0.8);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -28,7 +36,7 @@ body {
 .message-container {
   z-index: 1;
   position: absolute;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: var(--transparent-background-light);
   display: inline-block;
   padding: 10px;
   overflow: auto;
@@ -46,7 +54,7 @@ body {
 .tree-container {
   z-index: 1;
   position: absolute;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: var(--transparent-background-light);
   display: inline-block;
   padding: 10px;
   overflow: auto;
@@ -72,12 +80,12 @@ body {
 }
 
 .tree-tab.tab-active {
-  background-color: lightblue;
+  background-color: var(--primary-color-light);
   z-index: 1;
 }
 
 .tree-tab:hover {
-  background-color: aquamarine;
+  background-color: var(--primary-color);
 }
 
 .tree-content-container {
@@ -96,7 +104,7 @@ body {
 }
 
 .tree-content-container li > span:hover {
-  background-color: lightcyan;
+  background-color: var(--primary-color-light);
 }
 
 .tree-content-container li > ul {
@@ -111,7 +119,7 @@ body {
 }
 
 .tree-content span.active-selection-leaf {
-  background-color: aquamarine;
+  background-color: var(--primary-color);
 }
 
 .caret {
@@ -127,6 +135,46 @@ body {
 .caret-down::before {
   transform: rotate(90deg);
 }
+
+/* Modal */
+
+.modal{
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: var(--transparent-background-dark);
+  z-index: 1;
+}
+
+/* Loading popup */
+
+.modal-loading-container{
+  width: 100%;
+  max-width: 300px;
+  height: 100%;
+  max-height: 300px;
+  border: var(--primary-color-dark) 1px solid;
+  background-color: white;
+  padding: 20px;
+  display: grid;
+  grid-template-rows: repeat(2, 1fr);
+  place-items: center;
+}
+
+/* #region animations */
+@keyframes spin {
+  from {
+    transform:rotate(0deg);
+  }
+  to {
+    transform:rotate(360deg);
+  }
+}
+
+.anim-spinner{
+  animation: spin 1.5s linear infinite;
+}
+/* #endregion animations */
 
 .hidden {
   display: none;

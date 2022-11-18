@@ -9,5 +9,7 @@ export default function startUserInputs() {
 
     // Mouse move => highlights object being hovered
     canvas.onmousemove = (event) => pick(event, false);
+
+    emitGlobalEvent("loadingComplete")
   });
 }
