@@ -1,4 +1,5 @@
 import { removeSubset } from "../helpers/buildSubset";
+import { clearString } from "../helpers/string";
 import RaycastIntersectObject from "../models/raycastIntersectObject";
 import * as Models from "../stores/models";
 import * as RaycastStore from "../stores/raycast";
@@ -117,29 +118,30 @@ async function buildNode(node) {
     const foundObj = new RaycastIntersectObject(object, currentTreeIdx);
     let isSelection = false;
 
-    title.addEventListener("mouseenter", () => {
-      isSelection = false;
-      RaycastStore.setFound(foundObj);
-      SelectionStore.setSelectedProperties(props, false, false);
-    });
-
-    title.addEventListener("mouseleave", () => {
-      if (isSelection) {
-        removeSubset(model, "highlighted");
-      }
-      removeSelection(true, true);
-    });
-
-    title.addEventListener("click", () => {
-      if (isSelection) {
+    addEvents();
+    function addEvents() {
+      title.addEventListener("mouseenter", () => {
         isSelection = false;
-        removeSelection(true, true);
-      } else {
-        isSelection = true;
         RaycastStore.setFound(foundObj);
-        SelectionStore.setSelectedProperties(props, true, false);
-      }
-    });
+        SelectionStore.setSelectedProperties(props, false, false);
+      });
+
+      title.addEventListener("mouseleave", () => {
+        if (isSelection) {
+          removeSubset(model, "highlighted");
+        }
+        removeSelection(true, true);
+      });
+
+      title.addEventListener("click", () => {
+        if (isSelection) removeSelection(true, true);
+        else {
+          RaycastStore.setFound(foundObj);
+          SelectionStore.setSelectedProperties(props, true, false);
+        }
+        isSelection = !isSelection;
+      });
+    }
   }
   nodeEl.appendChild(title);
   if (childrenEl !== false) nodeEl.appendChild(childrenEl);
@@ -183,14 +185,24 @@ async function buildChildren(node) {
  * @returns string
  */
 async function getNodePropertyName(node) {
-  console.log("name", node);
   const model = Models.models[currentTreeIdx];
   const id = node.expressID;
   const props = await model.loader.ifcManager.getItemProperties(0, id);
-  console.log("props", props);
-  let name = node.type
-  if(props.Name !== null) name = props.Name.value;
-  return name;
+  let name = node.type;
+
+  if (props.LongName) name = props.LongName.value;
+  else if (props.Name) {
+    let _name = props.Name.value;
+    if (props.Tag) {
+      // Clears tag value from name and the preceding ':'
+      _name = _name.replace(props.Tag.value, "");
+      _name = _name.slice(0, -1);
+    }
+    name = _name;
+  } else if (props.ObjectType) name = props.ObjectType.value;
+
+  const text = clearString(name);
+  return text;
 }
 
 // Helpers
