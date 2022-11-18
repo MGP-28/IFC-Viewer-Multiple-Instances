@@ -7,24 +7,31 @@ import * as SelectedStore from "../stores/selection.js";
 /**
  * Gets users' mouse position, casts a ray to intercept objects on the render and returns their properties
  * @param {Event} event event triggered
- * @param {boolean} isSelected is user selection or just hover. This dictates logic for renderization
+ * @param {Boolean} isSelection is user selection or hover highlighting
  */
-async function pick(event, isSelected) {
-  cast(event);
+async function pick(event, isSelection) {
+  setupCast(event);
 
-  let props = null;
-  if (RaycastStore.isFoundValid()) {
-    const index = RaycastStore.found.object.faceIndex;
-    const geometry = RaycastStore.found.object.object.geometry;
+  // Casts a ray for each model uploaded, returns object
+  const found = await castEachModel();
 
-    const ifcLoader = Models.models[RaycastStore.found.idx].loader;
-    const id = ifcLoader.ifcManager.getExpressId(geometry, index);
-    props = await ifcLoader.ifcManager.getItemProperties(0, id);
+  if (!found) {
+    RaycastStore.resetFound();
+
+    if (isSelection) {
+      SelectedStore.resetSelectedProperties();
+    } else {
+      SelectedStore.resetHighlightedProperties();
+    }
+    return;
   }
-  SelectedStore.setSelectedProperties(props, isSelected, true);
+
+  RaycastStore.setFound(found);
+  const response = await storeFoundObjectProperties(isSelection);
+  return response;
 }
 
-function cast(event) {
+function setupCast(event) {
   // Computes the position of the mouse on the screen
   const bounds = Scene.threeCanvas.getBoundingClientRect();
 
@@ -38,9 +45,6 @@ function cast(event) {
 
   // Places it on the camera pointing to the mouse
   RaycastStore.raycaster.setFromCamera(RaycastStore.mouse, Scene.camera);
-
-  // Casts a ray for each model uploaded, returns object
-  castEachModel();
 }
 
 async function castEachModel() {
@@ -55,8 +59,10 @@ async function castEachModel() {
     if (result) results.push(intersectiongObj);
   }
 
-  if (results.length > 0) getRaycastingResult(results);
-  else RaycastStore.resetFound();
+  if (results.length > 0) {
+    const found = getRaycastingResult(results);
+    return found;
+  } else return false;
 }
 
 /**
@@ -66,7 +72,21 @@ async function castEachModel() {
 function getRaycastingResult(results) {
   const minDistance = Math.min(...results.map((x) => x.object.distance));
   const found = results.find((x) => x.object.distance == minDistance);
-  RaycastStore.setFound(found);
+  return found;
 }
 
-export { pick, cast, castEachModel };
+async function storeFoundObjectProperties(isSelection) {
+  const index = RaycastStore.found.object.faceIndex;
+  const geometry = RaycastStore.found.object.object.geometry;
+
+  const modelIdx = RaycastStore.found.idx;
+  const ifcLoader = Models.models[modelIdx].loader;
+  const id = ifcLoader.ifcManager.getExpressId(geometry, index);
+  const props = await ifcLoader.ifcManager.getItemProperties(0, id);
+  if (isSelection) SelectedStore.setSelectedProperties(props, modelIdx, true);
+  else SelectedStore.setHighlightedProperties(props, modelIdx, true);
+
+  return true;
+}
+
+export { pick, setupCast as cast, castEachModel };

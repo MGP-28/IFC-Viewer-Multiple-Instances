@@ -1,6 +1,12 @@
 import materials from "../configs/materials.js";
 import * as Scene from "../stores/scene.js";
 
+/**
+ * 
+ * @param {Object} model model instance of the loaded IFC
+ * @param {array} ids array with all the expressIDs of the object to add to the subset
+ * @param {string} type name of type of material to be used (see configs/materials.js)
+ */
 function createSubset(model, ids, type) {
   //create subset for provided model
   const material = materials[type];

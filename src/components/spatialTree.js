@@ -1,4 +1,4 @@
-import { removeSubset } from "../helpers/buildSubset";
+import { createSubset, removeSubset } from "../helpers/buildSubset";
 import { clearString } from "../helpers/string";
 import RaycastIntersectObject from "../models/raycastIntersectObject";
 import * as Models from "../stores/models";
@@ -121,22 +121,16 @@ async function buildNode(node) {
     addEvents();
     function addEvents() {
       title.addEventListener("mouseenter", () => {
-        isSelection = false;
-        RaycastStore.setFound(foundObj);
-        SelectionStore.setSelectedProperties(props, false, false);
+        SelectionStore.setHighlightedProperties(props, false, false);
       });
 
       title.addEventListener("mouseleave", () => {
-        if (isSelection) {
-          removeSubset(model, "highlighted");
-        }
-        removeSelection(true, true);
+        SelectionStore.resetHighlightedProperties()
       });
 
       title.addEventListener("click", () => {
         if (isSelection) removeSelection(true, true);
         else {
-          RaycastStore.setFound(foundObj);
           SelectionStore.setSelectedProperties(props, true, false);
         }
         isSelection = !isSelection;
@@ -207,7 +201,6 @@ async function getNodePropertyName(node) {
 
 // Helpers
 function removeSelection(isSelection, isFromViewer) {
-  isSelection = false;
   RaycastStore.resetFound();
   SelectionStore.setSelectedProperties(null, isSelection, isFromViewer);
 }
