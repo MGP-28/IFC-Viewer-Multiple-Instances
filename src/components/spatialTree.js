@@ -114,24 +114,22 @@ async function buildNode(node) {
     const model = Models.models[currentTreeIdx];
     const loader = model.loader;
     const props = await loader.ifcManager.getItemProperties(0, expressID, true);
-    const object = await loader.ifcManager.byId(0, expressID);
-    const foundObj = new RaycastIntersectObject(object, currentTreeIdx);
     let isSelection = false;
 
     addEvents();
     function addEvents() {
       title.addEventListener("mouseenter", () => {
-        SelectionStore.setHighlightedProperties(props, false, false);
+        SelectionStore.setHighlightedProperties(props, currentTreeIdx, false);
       });
 
       title.addEventListener("mouseleave", () => {
-        SelectionStore.resetHighlightedProperties()
+        SelectionStore.resetHighlightedProperties();
       });
 
       title.addEventListener("click", () => {
-        if (isSelection) removeSelection(true, true);
+        if (isSelection) SelectionStore.resetSelectedProperties();
         else {
-          SelectionStore.setSelectedProperties(props, true, false);
+          SelectionStore.setSelectedProperties(props, currentTreeIdx, false);
         }
         isSelection = !isSelection;
       });
@@ -197,10 +195,4 @@ async function getNodePropertyName(node) {
 
   const text = clearString(name);
   return text;
-}
-
-// Helpers
-function removeSelection(isSelection, isFromViewer) {
-  RaycastStore.resetFound();
-  SelectionStore.setSelectedProperties(null, isSelection, isFromViewer);
 }
