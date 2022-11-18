@@ -35,7 +35,6 @@ function processRenderization(type) {
 
     createSubset(model, IdArr, type);
   } else {
-    if (!SelectedStore.isSelectionFromViewer) return;
     // if there's no selection, remove all selections
     for (let idx = 0; idx < Models.models.length; idx++) {
       const model = Models.models[idx];
