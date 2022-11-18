@@ -1,13 +1,13 @@
 import { pick } from "../../helpers/raytracing";
 
 export default function startUserInputs() {
+  document.addEventListener("wereReady", () => {
+    const canvas = document.getElementById("three-canvas");
 
-    document.addEventListener("wereReady", () => {
+    // Double-click => highlights and shows details of pointed object
+    canvas.ondblclick = (event) => pick(event, true);
 
-        // Double-click => highlights and shows details of pointed object
-        window.ondblclick = (event) => pick(event, true);
-
-        // Mouse move => highlights object being hovered
-        window.onmousemove = (event) => pick(event, false);
-    })  
+    // Mouse move => highlights object being hovered
+    canvas.onmousemove = (event) => pick(event, false);
+  });
 }
