@@ -127,9 +127,13 @@ async function buildNode(node) {
       });
 
       title.addEventListener("click", () => {
-        if (isSelection) SelectionStore.resetSelectedProperties();
+        if (isSelection) {
+          SelectionStore.resetSelectedProperties();
+          toggleActiveCSSClass(title);
+        }
         else {
           SelectionStore.setSelectedProperties(props, currentTreeIdx, false);
+          toggleActiveCSSClass(title);
         }
         isSelection = !isSelection;
       });
@@ -195,4 +199,8 @@ async function getNodePropertyName(node) {
 
   const text = clearString(name);
   return text;
+}
+
+function toggleActiveCSSClass(title){
+  title.classList.toggle("active-selection-leaf")
 }

@@ -95,6 +95,10 @@ body {
   border-top: solid 1px lightgray;
 }
 
+.tree-content-container li > span:hover {
+  background-color: lightcyan;
+}
+
 .tree-content-container li > ul {
   margin-left: 5px;
 }
@@ -102,6 +106,12 @@ body {
 .tree-content span {
   cursor: pointer;
   user-select: none;
+  display: block;
+  width: 100%;
+}
+
+.tree-content span.active-selection-leaf {
+  background-color: aquamarine;
 }
 
 .caret {
