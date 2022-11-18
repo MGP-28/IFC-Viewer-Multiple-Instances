@@ -10,7 +10,7 @@ const vars = {
 /**
  *
  * @param {Object} props selected object properties
- * @param {boolean} isSelection is user selection the object or just highlighting
+ * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
 const setSelectedProperties = (props, modelIdx, isFromViewer) => {
@@ -31,7 +31,7 @@ let isSelectionFromViewer = true;
 /**
  *
  * @param {Object} props selected object properties
- * @param {boolean} isSelection is user selection the object or just highlighting
+ * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
 const setHighlightedProperties = (props, modelIdx, isFromViewer) => {
