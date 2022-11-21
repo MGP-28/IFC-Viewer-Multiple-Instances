@@ -11,11 +11,41 @@ function isAllModelsLoaded() {
 }
 
 // Set of categories used in all models
-let usedCategories = new Set();
-const resetUsedCategories = () => (usedCategories = new Set());
-const addCategories = (categories) => {
-  const arr = [...usedCategories].concat(categories);
-  usedCategories = new Set(arr);
+let AllCategoriesLoaded = undefined;
+
+const getAllCategoriesLoaded = () => {
+
+  if(!AllCategoriesLoaded) getAllCategoriesOfAllModels();
+  return AllCategoriesLoaded;
+}
+
+const getAllCategoriesOfAllModels = () => {
+  if (AllCategoriesLoaded) return;
+  let _allCategoriesLoaded = [];
+  for (let idx = 0; idx < models.length; idx++) {
+    const categoriesModel = getAllCategoriesOfAModel(idx);
+    _allCategoriesLoaded.concat(categoriesModel);
+  }
+  AllCategoriesLoaded = new Set(_allCategoriesLoaded);
+};
+
+const getAllCategoriesOfAModel = (modelID) => {
+  // Array to return with categories' names
+  const categoriesModel = [];
+
+  const levels = models[modelID].levels;
+  // Cycle levels of a model
+  for (let idx = 0; idx < levels.length; idx++) {
+    const level = levels[idx];
+    const categoriesByLevel = level.categories;
+    // Cycle each category in a level
+    for (let idx = 0; idx < categoriesByLevel.length; idx++) {
+      const categoryByLevel = categoriesByLevel[idx];
+      categoriesModel.push(categoryByLevel.name);
+    }
+  }
+
+  return categoriesModel;
 };
 
 export {
@@ -23,7 +53,6 @@ export {
   addModel,
   resetModels,
   isAllModelsLoaded,
-  usedCategories,
-  resetUsedCategories,
-  addCategories,
+  getAllCategoriesLoaded,
+  getAllCategoriesOfAModel
 };
