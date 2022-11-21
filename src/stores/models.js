@@ -24,7 +24,7 @@ const getAllCategoriesOfAllModels = () => {
   let _allCategoriesLoaded = [];
   for (let idx = 0; idx < models.length; idx++) {
     const categoriesModel = getAllCategoriesOfAModel(idx);
-    _allCategoriesLoaded.concat(categoriesModel);
+    _allCategoriesLoaded = _allCategoriesLoaded.concat(categoriesModel);
   }
   AllCategoriesLoaded = new Set(_allCategoriesLoaded);
 };

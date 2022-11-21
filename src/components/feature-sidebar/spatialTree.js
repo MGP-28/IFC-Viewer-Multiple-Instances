@@ -12,6 +12,8 @@ export default async function startSpatialTree() {
   document.addEventListener("wereReady", async (event) => {
     const trees = Models.models.map((x) => x.tree);
 
+    console.log("trees", trees);
+
     const tabsEl = buildTreesTabs(trees);
     const treesEl = await buildTreesContainer(trees);
     treesContainer.appendChild(tabsEl);
@@ -125,17 +127,16 @@ async function buildNode(node) {
         if (isSelection) {
           SelectionStore.resetSelectedProperties();
           toggleActiveCSSClass(title, false);
-        }
-        else {
+        } else {
           SelectionStore.setSelectedProperties(props, modelIdx, false);
           toggleActiveCSSClass(title, true);
         }
         isSelection = !isSelection;
       });
       document.addEventListener("selectedChanged", () => {
-        if(SelectionStore.vars.selected.props == props) return
+        if (SelectionStore.vars.selected.props == props) return;
         toggleActiveCSSClass(title, false);
-      })
+      });
     }
   }
   nodeEl.appendChild(title);
@@ -200,8 +201,8 @@ async function getNodePropertyName(node) {
   return text;
 }
 
-function toggleActiveCSSClass(title, isActive){
-  if(isActive) title.classList.add("active-selection-leaf")
-  else title.classList.remove("active-selection-leaf")
+function toggleActiveCSSClass(title, isActive) {
+  if (isActive) title.classList.add("active-selection-leaf");
+  else title.classList.remove("active-selection-leaf");
   return false;
 }

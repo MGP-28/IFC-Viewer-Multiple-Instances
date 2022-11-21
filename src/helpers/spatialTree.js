@@ -33,30 +33,86 @@ function arranjeNodesInTree(obj) {
 
 function groupNodes(level) {
   const childrenObj = level.children;
-  let types = [];
+  class Child {
+    constructor(type) {
+      this.children = [];
+      this.expressID = expressID;
+      this.type = type;
+    }
+  }
   const newChildren = [];
+  // ExpressID to give to Grouping nodes
   const expressID = 0;
 
-  for (item in childrenObj) {
-    types.push(childrenObj[item].type);
-    types = [...new Set(types)];
+  for (let idx = 0; idx < childrenObj.length; idx++) {
+    let item = childrenObj[idx];
+
+    if (hasChildren(item)) {
+      console.log("has children");
+      const nestedChildren = resolveNestedChildren(item);
+      nestedChildren.forEach(nestedChild => {
+        childrenObj.push(nestedChild);
+      });
+      item.children = [];
+    }
+
+    const type = item.type;
+    let typeInstance = newChildren.find((x) => x.type == type);
+    if (!typeInstance) {
+      typeInstance = new Child(type);
+      newChildren.push(typeInstance);
+    }
+    typeInstance.children.push(item);
   }
 
-  for (let i = 0; i < types.length; i++) {
-    const array = [];
+  level.children = Array.of(...newChildren);
 
-    for (let j = 0; j < childrenObj.length; j++) {
-      if (childrenObj[j].type === types[i]) {
-        array.push(childrenObj[j]);
-      }
-    }
-    const type = types[i];
-    newChildren.push({ children: array, expressID: expressID, type: type });
-    level.children = newChildren;
-    if (![...Models.usedCategories].includes(types[i])) {
-      Models.addCategories([types[i]]);
-    }
+  // for (item in childrenObj) {
+  //   types.push(childrenObj[item].type);
+  //   types = [...new Set(types)];
+  // }
+
+  // for (let i = 0; i < types.length; i++) {
+  //   const array = [];
+
+  //   for (let j = 0; j < childrenObj.length; j++) {
+  //     if (childrenObj[j].type === types[i]) {
+  //       array.push(childrenObj[j]);
+  //     }
+  //   }
+  //   const type = types[i];
+  //   newChildren.push({ children: array, expressID: expressID, type: type });
+  //   level.children = newChildren;
+  //   if (![...Models.usedCategories].includes(types[i])) {
+  //     Models.addCategories([types[i]]);
+  //   }
+  // }
+}
+
+function resolveNestedChildren(item) {
+  let leafNodes = [];
+
+  if (!item.children) return item;
+
+  const children = item.children;
+
+  for (let idx = 0; idx < children.length; idx++) {
+    const item = children[idx];
+    if (hasChildren(item)) {
+      const nestedChildren = resolveNestedChildren(item);
+      leafNodes = leafNodes.concat(nestedChildren);
+    } else leafNodes.push(item);
   }
+
+  return leafNodes;
+}
+
+function hasChildren(node) {
+  return (
+    node.children !== null &&
+    node.children !== undefined &&
+    node.children.length > 0
+  )
 }
 
 export { getAllSpacialTrees, getSpacialTree };
