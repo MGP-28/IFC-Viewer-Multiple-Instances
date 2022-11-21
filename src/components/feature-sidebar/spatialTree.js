@@ -70,7 +70,6 @@ async function buildTreesContainer(trees) {
 
 /**
  * Builds spatial tree
- * @param {DOM element} parent parent element to append content
  * @param {Object} tree tree generated on model loading
  */
 async function buildTree(tree) {
@@ -94,6 +93,7 @@ async function buildNode(node) {
   const title = await buildTitle(node);
   nodeEl.appendChild(title);
   let childrenEl = false;
+  const modelIdx = currentTreeIdx;
 
   if (node.children.length > 0) {
     title.classList.add("caret");
@@ -106,7 +106,7 @@ async function buildNode(node) {
     });
   } else {
     const expressID = node.expressID;
-    const model = Models.models[currentTreeIdx];
+    const model = Models.models[modelIdx];
     const loader = model.loader;
     const props = await loader.ifcManager.getItemProperties(0, expressID, true);
     let isSelection = false;
@@ -114,7 +114,7 @@ async function buildNode(node) {
     addEvents();
     function addEvents() {
       title.addEventListener("mouseenter", () => {
-        SelectionStore.setHighlightedProperties(props, currentTreeIdx, false);
+        SelectionStore.setHighlightedProperties(props, modelIdx, false);
       });
 
       title.addEventListener("mouseleave", () => {
@@ -124,14 +124,18 @@ async function buildNode(node) {
       title.addEventListener("click", () => {
         if (isSelection) {
           SelectionStore.resetSelectedProperties();
-          toggleActiveCSSClass(title);
+          toggleActiveCSSClass(title, false);
         }
         else {
-          SelectionStore.setSelectedProperties(props, currentTreeIdx, false);
-          toggleActiveCSSClass(title);
+          SelectionStore.setSelectedProperties(props, modelIdx, false);
+          toggleActiveCSSClass(title, true);
         }
         isSelection = !isSelection;
       });
+      document.addEventListener("selectedChanged", () => {
+        if(SelectionStore.vars.selected.props == props) return
+        toggleActiveCSSClass(title, false);
+      })
     }
   }
   nodeEl.appendChild(title);
@@ -196,6 +200,8 @@ async function getNodePropertyName(node) {
   return text;
 }
 
-function toggleActiveCSSClass(title){
-  title.classList.toggle("active-selection-leaf")
+function toggleActiveCSSClass(title, isActive){
+  if(isActive) title.classList.add("active-selection-leaf")
+  else title.classList.remove("active-selection-leaf")
+  return false;
 }
