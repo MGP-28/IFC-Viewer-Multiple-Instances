@@ -14,6 +14,7 @@ export default class Model {
     this.model = undefined;
     this.tree = undefined;
     this.name = undefined;
+    this.levels = [];
   }
 
   getCategoriesOfModel() {
