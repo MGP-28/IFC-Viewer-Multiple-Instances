@@ -7,5 +7,10 @@ export default function featureTab(text, idx){
     tab.addEventListener("click", () => {
         SelectionStore.setSelectedFeatureTabIdx(idx);
     })
+    document.addEventListener("featureSelected", () => {
+        if (SelectionStore.selectedFeatureTabIdx == idx)
+        tab.classList.add("tab-active");
+        else tab.classList.remove("tab-active");
+      });
     return tab;
 }
