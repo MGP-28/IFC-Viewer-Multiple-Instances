@@ -1,18 +1,13 @@
-import { createSubset, removeSubset } from "../helpers/buildSubset";
-import { clearString } from "../helpers/string";
-import RaycastIntersectObject from "../models/raycastIntersectObject";
-import * as Models from "../stores/models";
-import * as RaycastStore from "../stores/raycast";
-import * as SelectionStore from "../stores/selection";
+import { clearString } from "../../helpers/string";
+import * as Models from "../../stores/models";
+import * as SelectionStore from "../../stores/selection";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 let currentTreeIdx = null;
 
 export default async function startSpatialTree() {
   const treesContainer = document.createElement("div");
-  treesContainer.classList.add("tree-container", "hidden");
-
-  document.body.appendChild(treesContainer);
+  treesContainer.classList.add("group-selection-container", "hidden");
 
   document.addEventListener("wereReady", async (event) => {
     const trees = Models.models.map((x) => x.tree);
@@ -21,18 +16,18 @@ export default async function startSpatialTree() {
     const treesEl = await buildTreesContainer(trees);
     treesContainer.appendChild(tabsEl);
     treesContainer.appendChild(treesEl);
-
-    treesContainer.classList.remove("hidden");
   });
+
+  return treesContainer;
 }
 
 function buildTreesTabs(trees) {
   const treeTabs = document.createElement("div");
-  treeTabs.classList.add("tree-tabs-container");
+  treeTabs.classList.add("feature-tabs-container");
 
   for (let idx = 0; idx < trees.length; idx++) {
     const treeTabEl = document.createElement("div");
-    treeTabEl.classList.add("tree-tab");
+    treeTabEl.classList.add("feature-tab");
     treeTabEl.textContent = `Tab ${idx}`;
     treeTabEl.addEventListener("click", () => {
       SelectionStore.setselectedSpatialTree(idx);

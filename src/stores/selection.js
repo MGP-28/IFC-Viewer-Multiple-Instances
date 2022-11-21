@@ -46,6 +46,12 @@ const resetHighlightedProperties = () => {
   emitGlobalEvent("highlightedChanged");
 };
 
+let selectedFeatureTabIdx = undefined;
+const setSelectedFeatureTabIdx = (index) => {
+  selectedFeatureTabIdx = index;
+  emitGlobalEvent("featureSelected");
+};
+
 let selectedSpatialTreeIdx = undefined;
 /**
  * Sets selected tree's model index
@@ -63,6 +69,8 @@ export {
   setHighlightedProperties,
   resetHighlightedProperties,
   isSelectionFromViewer,
+  selectedFeatureTabIdx,
+  setSelectedFeatureTabIdx,
   selectedSpatialTreeIdx,
   setselectedSpatialTree,
 };
