@@ -6,6 +6,8 @@ import { getAllSpacialTrees } from "./spatialTree.js";
 import emitGlobalEvent from "./emitEvent.js";
 
 export default function loadModels(event) {
+
+  emitGlobalEvent("loading")
     
   const _ifcLoaders = [];
 
