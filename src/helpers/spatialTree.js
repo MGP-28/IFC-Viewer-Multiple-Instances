@@ -11,7 +11,6 @@ async function getAllSpacialTrees() {
 async function getSpacialTree(idx) {
   const ifcLoader = Models.models[idx].loader;
   const ifcModelTree = await ifcLoader.ifcManager.getSpatialStructure(0);
-  console.log('tree', ifcModelTree)
   arranjeNodesInTree(ifcModelTree);
   return ifcModelTree;
 }

@@ -32,7 +32,6 @@ function processContentTab(name, element) {
 
 function eventChangeTab(element, currentIdx) {
   document.addEventListener("featureSelected", () => {
-    console.log(currentIdx, selectedFeatureTabIdx)
     if (currentIdx === selectedFeatureTabIdx) element.classList.remove("hidden");
     else element.classList.add("hidden");
   });
