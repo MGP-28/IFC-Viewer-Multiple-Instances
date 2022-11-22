@@ -1,0 +1,1 @@
+export const getIfcRegex = () => /([Ii][Ff][Cc])/g;

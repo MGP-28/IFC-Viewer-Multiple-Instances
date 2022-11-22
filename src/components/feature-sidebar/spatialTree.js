@@ -1,3 +1,4 @@
+import { getIfcRegex } from "../../helpers/repositories/regex";
 import { clearString } from "../../helpers/string";
 import * as Models from "../../stores/models";
 import * as SelectionStore from "../../stores/selection";
@@ -153,10 +154,11 @@ async function buildNode(node) {
 async function buildTitle(node) {
   // create node title span
   const span = document.createElement("span");
-  const text =
+  const _text =
     node.children.length == 0 || IFCCategoriesToFecthName.includes(node.type)
       ? await getNodePropertyName(node)
       : node.type;
+  const text = removeIFCTagsFromName(_text);
   span.textContent = text;
   return span;
 }
@@ -205,4 +207,9 @@ function toggleActiveCSSClass(title, isActive) {
   if (isActive) title.classList.add("active-selection-leaf");
   else title.classList.remove("active-selection-leaf");
   return false;
+}
+
+function removeIFCTagsFromName(text) {
+  const regex = getIfcRegex();
+  return text.replace(regex, "");
 }
