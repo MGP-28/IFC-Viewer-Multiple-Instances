@@ -1,11 +1,11 @@
-import { IFCLoader } from "web-ifc-three/IFCLoader";
 import * as Scene from "../stores/scene.js";
 import * as Models from "../stores/models.js";
 import Model from "../models/Model.js";
 import { getAllSpacialTrees } from "./spatialTree.js";
 import emitGlobalEvent from "./emitEvent.js";
+import setupLoader from "./builders/loaderBuilder.js";
 
-export default function loadModels(event) {
+export default async function loadModels(event) {
 
   emitGlobalEvent("loading")
     
@@ -15,15 +15,19 @@ export default function loadModels(event) {
 
     const ifcURL = URL.createObjectURL(event.target.files[idx]);
     
-    const model = new Model();
-    Models.addModel(model);
+    const modelInstance = new Model();
+    Models.addModel(modelInstance);
 
-    const ifcLoader = new IFCLoader();
+    const ifcLoader = await setupLoader(ifcLoader);
 
-    ifcLoader.load(ifcURL, (loadedModel) => {
-      Scene.scene.add(loadedModel);
-      model.model = loadedModel;
-    });
+    const loadedModel = await ifcLoader.loadAsync(ifcURL)
+    Scene.scene.add(loadedModel);
+    modelInstance.model = loadedModel;
+
+    // ifcLoader.load(ifcURL, (loadedModel) => {
+    //   Scene.scene.add(loadedModel);
+    //   modelInstance.model = loadedModel;
+    // });
 
     _ifcLoaders.push(ifcLoader);
   }

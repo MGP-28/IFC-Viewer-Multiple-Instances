@@ -13,10 +13,10 @@ export default function startInput() {
 
   input.addEventListener(
     "change",
-    (event) => {
-      loadModels(event)
+    async (event) => {
       toggleFileInput(input)
       emitGlobalEvent("loading")
+      await loadModels(event)
     },
     false
   );
