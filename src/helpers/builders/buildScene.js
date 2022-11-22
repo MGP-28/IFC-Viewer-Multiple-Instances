@@ -1,4 +1,4 @@
-import { Scene } from "three";
+import { LessDepth, Scene } from "three";
 import {
   AmbientLight,
   AxesHelper,
@@ -9,11 +9,11 @@ import {
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as Stored from "../../stores/scene";
+import Stats from "stats.js/src/Stats";
 
 export default function buildScene() {
-
-  //Start scene in Three 
-  Stored.setScene( new Scene() )
+  //Start scene in Three
+  Stored.setScene(new Scene());
 
   //Object to store the size of the viewport
   const size = {
@@ -22,7 +22,7 @@ export default function buildScene() {
   };
 
   //Creates the camera (point of view of the user)
-  Stored.setCamera( new PerspectiveCamera(75, size.width / size.height) );
+  Stored.setCamera(new PerspectiveCamera(75, size.width / size.height));
   Stored.camera.position.z = 15;
   Stored.camera.position.y = 13;
   Stored.camera.position.x = 8;
@@ -61,10 +61,20 @@ export default function buildScene() {
   controls.enableDamping = true;
   controls.target.set(-2, 0, 0);
 
+  //Stats debug component
+  var stats = new Stats();
+  stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+  document.body.appendChild(stats.dom);
+
   //Animation loop
   const animate = () => {
+    stats.begin();
+
     controls.update();
     renderer.render(Stored.scene, Stored.camera);
+
+    stats.end();
+
     requestAnimationFrame(animate);
   };
 
