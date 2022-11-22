@@ -66,27 +66,6 @@ function groupNodes(level) {
   }
 
   level.children = Array.of(...newChildren);
-
-  // for (item in childrenObj) {
-  //   types.push(childrenObj[item].type);
-  //   types = [...new Set(types)];
-  // }
-
-  // for (let i = 0; i < types.length; i++) {
-  //   const array = [];
-
-  //   for (let j = 0; j < childrenObj.length; j++) {
-  //     if (childrenObj[j].type === types[i]) {
-  //       array.push(childrenObj[j]);
-  //     }
-  //   }
-  //   const type = types[i];
-  //   newChildren.push({ children: array, expressID: expressID, type: type });
-  //   level.children = newChildren;
-  //   if (![...Models.usedCategories].includes(types[i])) {
-  //     Models.addCategories([types[i]]);
-  //   }
-  // }
 }
 
 function resolveNestedChildren(item) {
