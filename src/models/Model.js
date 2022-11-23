@@ -3,10 +3,11 @@
 // loader = IfcLoader instance created for this model
 // model = IfcModel created and inserted into the scene
 // tree = Spacial tree of the model
-// categories [] = Collecton of categories used in the IFC model
-// levels [] = Collection of levels used in the IFC model
+// levels [] = Array of Level instances used in the IFC model. Contains related categories
 // subsets [] = Collection of subsets seperated by category and level. See: subset model
 // name = Model name
+
+import Level from "./SpatialTree/Level";
 
 export default class Model {
   constructor() {
@@ -14,32 +15,22 @@ export default class Model {
     this.model = undefined;
     this.tree = undefined;
     this.name = undefined;
+    this.subset = undefined;
     this.levels = [];
   }
-
+  addLevel(level) {
+    const index = this.levels.findIndex((x) => x.name === level.name);
+    if (index == -1) {
+      this.levels.push(level);
+    } else throw new Error("Level already exists");
+  }
   getCategoriesOfModel() {
     const arr = [];
-    const levels = getLevelsOfModel();
-    // cycle each level
-    for (let levelIdx = 0; levelIdx < levels.length; levelIdx++) {
-      const children = levels[levelIdx][children];
-      // cycle each category in a level
-      for (let childIdx = 0; childIdx < children.length; childIdx++) {
-        arr.push(children[childIdx].type);
-      }
+    const categoryBundle = this.levels.map((x) => x.categories);
+    for (let idx = 0; idx < categoryBundle.length; idx++) {
+      const categoryName = categoryBundle[idx].name;
+      arr.push(categoryName);
     }
-    return new Set(arr);
+    return Array.from(new Set(arr));
   }
-
-  getLevelsOfModel() {
-    return getNodesByType("IFCBUILDINGSTOREY");
-  }
-}
-
-function getNodesByType(type, obj) {
-  if (obj[type] !== type) {
-    const result = getNodesByType(type, obj[children][0]);
-    if (result == true) return obj[children];
-    else return result;
-  } else return true;
 }

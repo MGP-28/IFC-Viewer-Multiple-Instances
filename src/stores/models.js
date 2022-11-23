@@ -14,38 +14,16 @@ function isAllModelsLoaded() {
 let AllCategoriesLoaded = undefined;
 
 const getAllCategoriesLoaded = () => {
-
-  if(!AllCategoriesLoaded) getAllCategoriesOfAllModels();
-  return AllCategoriesLoaded;
-}
-
-const getAllCategoriesOfAllModels = () => {
-  if (AllCategoriesLoaded) return;
-  let _allCategoriesLoaded = [];
-  for (let idx = 0; idx < models.length; idx++) {
-    const categoriesModel = getAllCategoriesOfAModel(idx);
-    _allCategoriesLoaded = _allCategoriesLoaded.concat(categoriesModel);
-  }
-  AllCategoriesLoaded = new Set(_allCategoriesLoaded);
-};
-
-const getAllCategoriesOfAModel = (modelID) => {
-  // Array to return with categories' names
-  const categoriesModel = [];
-
-  const levels = models[modelID].levels;
-  // Cycle levels of a model
-  for (let idx = 0; idx < levels.length; idx++) {
-    const level = levels[idx];
-    const categoriesByLevel = level.categories;
-    // Cycle each category in a level
-    for (let idx = 0; idx < categoriesByLevel.length; idx++) {
-      const categoryByLevel = categoriesByLevel[idx];
-      categoriesModel.push(categoryByLevel.name);
+  if (!AllCategoriesLoaded) {
+    let arr = [];
+    for (let idx = 0; idx < models.length; idx++) {
+      const modelInstance = models[idx];
+      const categories = modelInstance.getCategoriesOfModel();
+      arr.concat(categories);
     }
+    AllCategoriesLoaded = Array.from(new Set(arr));
   }
-
-  return categoriesModel;
+  return AllCategoriesLoaded;
 };
 
 export {
@@ -53,6 +31,5 @@ export {
   addModel,
   resetModels,
   isAllModelsLoaded,
-  getAllCategoriesLoaded,
-  getAllCategoriesOfAModel
+  getAllCategoriesLoaded
 };
