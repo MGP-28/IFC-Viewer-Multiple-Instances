@@ -5,10 +5,9 @@ import { getAllSpacialTrees } from "./spatialTree.js";
 import emitGlobalEvent from "./emitEvent.js";
 import { setupLoader, setMatrix } from "./builders/loaderBuilder.js";
 import * as THREE from "three";
+import * as RaycastStore from "../stores/raycast.js";
 
 export default async function loadModels(event) {
-  emitGlobalEvent("loading");
-
   const _ifcLoaders = [];
 
   for (let idx = 0; idx < event.target.files.length; idx++) {
@@ -48,9 +47,11 @@ export default async function loadModels(event) {
       }, 1000);
     } else {
       reorderArrays();
+      createSubsets();
+      emitGlobalEvent("wereReady");
       const result = await getAllSpacialTrees();
-
-      if (result) emitGlobalEvent("wereReady");
+      if (result) emitGlobalEvent("featuresCompleted");
+      return result;
     }
   }
 
@@ -62,5 +63,27 @@ export default async function loadModels(event) {
       );
       Models.models[idx].loader = correspondingLoader;
     }
+  }
+
+  function createSubsets() {
+    for (let idx = 0; idx < Models.models.length; idx++) {
+      createSubset(idx);
+    }
+  }
+
+  function createSubset(idx) {
+    const ids = Array.from(
+      new Set(Models.models[idx].model.geometry.attributes.expressID.array)
+    );
+    let subset = Models.models[idx].loader.ifcManager.createSubset({
+      modelID: 0,
+      ids: ids,
+      scene: Scene.scene,
+      removePrevious: true,
+      customID: idx,
+    });
+    Models.models[idx].subset = subset;
+    Scene.scene.add(subset);
+    RaycastStore.subsetRaycast.push(subset);
   }
 }
