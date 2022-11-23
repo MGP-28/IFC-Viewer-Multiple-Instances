@@ -1,4 +1,4 @@
-import { createSubset, removeSubset } from "../../helpers/buildSubset.js";
+import { createSubset, removeSubset } from "../../helpers/subsetBuilder";
 import * as Models from "../../stores/models.js";
 import * as SelectedStore from "../../stores/selection.js";
 
