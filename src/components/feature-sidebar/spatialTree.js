@@ -1,16 +1,25 @@
+import getNodePropertyName from "../../helpers/getNodePropertyName";
 import { getIfcRegex } from "../../helpers/repositories/regex";
-import { clearString } from "../../helpers/string";
+import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
 import * as SelectionStore from "../../stores/selection";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
+let useIconOnLabel = false;
+
 let currentTreeIdx = null;
+
+const references = {
+  modelRef: new SpatialTreeReference(),
+  levelRef: new SpatialTreeReference(),
+  categoryRef: new SpatialTreeReference(),
+};
 
 export default async function startSpatialTree() {
   const treesContainer = document.createElement("div");
   treesContainer.classList.add("group-selection-container", "hidden");
 
-  document.addEventListener("wereReady", async (event) => {
+  document.addEventListener("featuresCompleted", async (event) => {
     const trees = Models.models.map((x) => x.tree);
 
     console.log("trees", trees);
@@ -79,6 +88,7 @@ async function buildTree(tree) {
   const treeEl = document.createElement("ul");
   // treeEl.classlist.add()
 
+  useIconOnLabel = true;
   const treeContentEl = await buildNode(tree);
   treeEl.appendChild(treeContentEl);
 
@@ -92,8 +102,8 @@ async function buildTree(tree) {
  */
 async function buildNode(node) {
   const nodeEl = document.createElement("li");
-  // create node
   const title = await buildTitle(node);
+  // IMPLEMENT VISIBILITY ICON
   nodeEl.appendChild(title);
   let childrenEl = false;
   const modelIdx = currentTreeIdx;
@@ -156,10 +166,12 @@ async function buildTitle(node) {
   const span = document.createElement("span");
   const _text =
     node.children.length == 0 || IFCCategoriesToFecthName.includes(node.type)
-      ? await getNodePropertyName(node)
+      ? await getNodePropertyName(node, currentTreeIdx)
       : node.type;
   const text = removeIFCTagsFromName(_text);
   span.textContent = text;
+  const icon = document.createElement("i");
+  icon.classList.add("fa-solid", "fa-eye");
   return span;
 }
 
@@ -175,32 +187,6 @@ async function buildChildren(node) {
     childrenEl.appendChild(node);
   }
   return childrenEl;
-}
-
-/**
- *  Get node name by gettign the objects properties via expressID
- * @param {Object} node
- * @returns string
- */
-async function getNodePropertyName(node) {
-  const model = Models.models[currentTreeIdx];
-  const id = node.expressID;
-  const props = await model.loader.ifcManager.getItemProperties(0, id);
-  let name = node.type;
-
-  if (props.LongName) name = props.LongName.value;
-  else if (props.Name) {
-    let _name = props.Name.value;
-    if (props.Tag) {
-      // Clears tag value from name and the preceding ':'
-      _name = _name.replace(props.Tag.value, "");
-      _name = _name.slice(0, -1);
-    }
-    name = _name;
-  } else if (props.ObjectType) name = props.ObjectType.value;
-
-  const text = clearString(name);
-  return text;
 }
 
 function toggleActiveCSSClass(title, isActive) {
