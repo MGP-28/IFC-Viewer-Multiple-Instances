@@ -1,10 +1,17 @@
+import CategoryByLevel from "../models/SpatialTree/CategoryByLevel";
+import Level from "../models/SpatialTree/Level";
 import * as Models from "../stores/models";
+import getNodePropertyName from "./getNodePropertyName";
+
+let modelInstanceIdx = undefined;
 
 async function getAllSpacialTrees() {
   for (let idx = 0; idx < Models.models.length; idx++) {
+    modelInstanceIdx = idx;
     const newTree = await getSpacialTree(idx);
     Models.models[idx].tree = newTree;
   }
+  console.log(Models.models)
   return true;
 }
 
@@ -12,19 +19,19 @@ async function getSpacialTree(idx) {
   const ifcLoader = Models.models[idx].loader;
   const ifcModelTree = await ifcLoader.ifcManager.getSpatialStructure(0);
   console.log("tree", ifcModelTree);
-  arranjeNodesInTree(ifcModelTree);
+  await arranjeNodesInTree(ifcModelTree);
   return ifcModelTree;
 }
 
-let count = 0;
-function arranjeNodesInTree(obj) {
+let count = 0; // Allows node grouping only on the second "IFCBUILDINGSTOREY" type found
+async function arranjeNodesInTree(obj) {
   for (const i in obj) {
     if (typeof obj[i] == "object" && obj[i] !== null) {
       arranjeNodesInTree(obj[i]);
     } else {
-      const type = obj.type;
-      if (type === "IFCBUILDINGSTOREY" && count % 2 == 0) {
+      if (obj.type === "IFCBUILDINGSTOREY" && count % 2 == 0) {
         groupNodes(obj);
+        await storeLevelCategories(obj);
       }
     }
     count += 1;
@@ -50,7 +57,7 @@ function groupNodes(level) {
     // If node has children, get their data and push as a leaf node into the main array
     if (hasChildren(item)) {
       const nestedChildren = resolveNestedChildren(item);
-      nestedChildren.forEach(nestedChild => {
+      nestedChildren.forEach((nestedChild) => {
         childrenObj.push(nestedChild);
       });
       item.children = [];
@@ -91,7 +98,23 @@ function hasChildren(node) {
     node.children !== null &&
     node.children !== undefined &&
     node.children.length > 0
-  )
+  );
+}
+
+async function storeLevelCategories(levelNode) {
+  const model = Models.models[modelInstanceIdx];
+  const levelName = await getNodePropertyName(levelNode, modelInstanceIdx);
+  const level = new Level(levelName);
+  for (let idx = 0; idx < levelNode.children.length; idx++) {
+    const categoryNode = levelNode.children[idx];
+    const category = new CategoryByLevel(categoryNode.type);
+    for (let idxCat = 0; idxCat < categoryNode.children.length; idxCat++) {
+      const nodeExpressID = categoryNode.children[idxCat].expressID;
+      category.addID(nodeExpressID);
+    }
+    level.addCategory(category);
+  }
+  model.addLevel(level);
 }
 
 export { getAllSpacialTrees, getSpacialTree };
