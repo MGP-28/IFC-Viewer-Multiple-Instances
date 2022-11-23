@@ -24,9 +24,11 @@ function removeSubset(model, type) {
 }
 
 function createObjectSubset(model, expressID) {
+  const arr = [];
+  arr.push(expressID);
   const subset = model.loader.ifcManager.createSubset({
     modelID: 0,
-    ids: [expressID],
+    ids: arr,
     scene: Scene.scene,
     removePrevious: true,
     customID: expressID,
