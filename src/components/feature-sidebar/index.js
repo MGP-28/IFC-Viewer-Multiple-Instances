@@ -6,7 +6,7 @@ export default async function startFeatureSidebar() {
   // wrapper
   const featureContainer = document.createElement("div");
   featureContainer.classList.add("feature-container", "hidden");
-  document.addEventListener("wereReady", () => {
+  document.addEventListener("featuresCompleted", () => {
     featureContainer.classList.remove("hidden");
   });
 
