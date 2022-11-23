@@ -53,7 +53,7 @@ async function castEachModel() {
   // Get intercepted object closest to the user camera/mouse, if there is one
   // RaycastIntersectObject is used to tie the object to its model loader
   for (let idx = 0; idx < Models.models.length; idx++) {
-    const arr = [Models.models[idx].model];
+    const arr = [RaycastStore.subsetRaycast[idx]];
     const result = RaycastStore.raycaster.intersectObjects(arr)[0];
     const intersectiongObj = new RaycastIntersectObject(result, idx);
     if (result) results.push(intersectiongObj);
