@@ -31,8 +31,9 @@ export default async function loadModels(event) {
       setMatrix(matrix);
     }
 
-    Scene.scene.add(loadedModel);
     modelInstance.model = loadedModel;
+
+    // Scene.scene.add(loadedModel); // To be replaced by level/category loading
 
     _ifcLoaders.push(ifcLoader);
   }

@@ -47,8 +47,8 @@ function groupNodes(level) {
   for (let idx = 0; idx < childrenObj.length; idx++) {
     let item = childrenObj[idx];
 
+    // If node has children, get their data and push as a leaf node into the main array
     if (hasChildren(item)) {
-      console.log("has children");
       const nestedChildren = resolveNestedChildren(item);
       nestedChildren.forEach(nestedChild => {
         childrenObj.push(nestedChild);
