@@ -11,14 +11,12 @@ async function getAllSpacialTrees() {
     const newTree = await getSpacialTree(idx);
     Models.models[idx].tree = newTree;
   }
-  console.log(Models.models)
   return true;
 }
 
 async function getSpacialTree(idx) {
   const ifcLoader = Models.models[idx].loader;
   const ifcModelTree = await ifcLoader.ifcManager.getSpatialStructure(0);
-  console.log("tree", ifcModelTree);
   await arranjeNodesInTree(ifcModelTree);
   return ifcModelTree;
 }
