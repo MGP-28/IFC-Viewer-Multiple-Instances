@@ -64,7 +64,9 @@ export default function buildScene() {
   //Stats debug component
   var stats = new Stats();
   stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-  document.body.appendChild(stats.dom);
+  const statsWindow = stats.dom;
+  statsWindow.classList.add("stats")
+  document.body.appendChild(statsWindow);
 
   //Animation loop
   const animate = () => {

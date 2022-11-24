@@ -6,10 +6,54 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+      integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <title>BIMMS - IFC.js</title>
   </head>
   <body>
+    <div class="tools-side-container">
+      <div class="tools-side-content">
+        <div class="tools-side-feature feature-active">
+          <div class="tools-side-feature-icon">
+            <object
+              data="./src/assets/icons/building-06.svg"
+              type="image/svg+xml"
+            ></object>
+          </div>
+          <div class="tools-side-feature-header">DINNER MODEL</div>
+          <div class="tools-side-feature-close">
+            <object
+              data="./src/assets/icons/x.svg"
+              type="image/svg+xml"
+            ></object>
+          </div>
+          <div class="tools-side-feature-name">SLAB - 01</div>
+          <div class="tools-side-feature-content">Content</div>
+        </div>
+        <div class="tools-side-feature">
+          <div class="tools-side-feature-icon">
+            <object
+              data="./src/assets/icons/dataflow-02.svg"
+              type="image/svg+xml"
+            ></object>
+          </div>
+          <div class="tools-side-feature-header"></div>
+          <div class="tools-side-feature-name"></div>
+          <div class="tools-side-feature-content"></div>
+        </div>
+      </div>
+    </div>
     <canvas id="three-canvas"></canvas>
     <script src="bundle.js"></script>
   </body>
