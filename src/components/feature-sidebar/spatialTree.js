@@ -10,6 +10,7 @@ const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 let isFirstElementOfTree = true;
 let useIconOnLabel = true;
 let currentTreeIdx = null;
+let isLevel = false;
 const references = {
   modelRef: undefined,
   levelRef: undefined,
@@ -105,16 +106,23 @@ async function buildTree(tree) {
  * @returns DOM Element 'li'
  */
 async function buildNode(node) {
+  let localLevel = false;
+  if (IFCCategoriesToFecthName.includes(node.type)) {
+    isLevel = true;
+    localLevel = true;
+    references.levelRef = undefined;
+  }
+
   const nodeEl = document.createElement("li");
   const title = await buildTitle(node);
-  // IMPLEMENT VISIBILITY ICON
   nodeEl.appendChild(title);
   let childrenEl = false;
   const modelIdx = currentTreeIdx;
 
   if (node.children.length > 0) {
     title.classList.add("caret");
-    childrenEl = await buildChildren(node);
+    const isCategory = localLevel;
+    childrenEl = await buildChildren(node, isCategory);
     childrenEl.classList.add("hidden");
 
     title.addEventListener("click", () => {
@@ -153,6 +161,7 @@ async function buildNode(node) {
         toggleActiveCSSClass(title, false);
       });
     }
+    if(localLevel) isLevel = false;
   }
   nodeEl.appendChild(title);
   if (childrenEl !== false) nodeEl.appendChild(childrenEl);
@@ -192,7 +201,7 @@ function processIconEvents(icon, node) {
   const branchLevel = getElementLevel();
   switch (branchLevel) {
     case "building": {
-      console.log("building")
+      console.log("building");
       isFirstElementOfTree = false;
       useIconOnLabel = false;
       SpatialTreeInterelementEventHandling.processBuildingEvents(icon);
@@ -201,20 +210,20 @@ function processIconEvents(icon, node) {
     }
 
     case "level": {
-      console.log("level")
+      console.log("level");
       SpatialTreeInterelementEventHandling.processLevelEvents(icon);
       references.levelRef = new SpatialTreeReference(node.type, icon);
       break;
     }
 
     case "category": {
-      console.log("category")
+      console.log("category");
       SpatialTreeInterelementEventHandling.processCategoryNodeEvents(icon);
       references.categoryRef = new SpatialTreeReference(node.type, icon);
       break;
     }
     default: {
-      console.log("leaf")
+      console.log("leaf");
       const selfReference = new SpatialTreeReference(node.type, icon);
       SpatialTreeInterelementEventHandling.processLeafNodeEvents(
         selfReference,
@@ -248,9 +257,12 @@ function getElementLevel() {
  * @param {Object} node
  * @returns DOM Element 'ul'
  */
-async function buildChildren(node) {
+async function buildChildren(node, isCategory) {
   const childrenEl = document.createElement("ul");
   for (const childNode of node.children) {
+    // Resets stored category reference
+    if (isCategory) references.categoryRef = undefined;
+
     const node = await buildNode(childNode);
     childrenEl.appendChild(node);
   }
