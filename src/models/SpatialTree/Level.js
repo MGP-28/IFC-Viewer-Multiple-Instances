@@ -14,4 +14,12 @@ export default class Level {
       addCategory(category);
     });
   }
+  getAllIDs(){
+    let ids = [];
+    for (let idx = 0; idx < this.categories.length; idx++) {
+      const categoryIds = this.categories[idx].ids;
+      ids = ids.concat(categoryIds);
+    }
+    return ids;
+  }
 }

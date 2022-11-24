@@ -38,20 +38,20 @@ export default async function loadModels(event) {
   }
 
   // Async function to check if models are loaded every second. Doesn't interrupt application flow
-  waitLoad();
+  await waitLoad();
 
   async function waitLoad() {
     if (!Models.isAllModelsLoaded()) {
-      setTimeout(() => {
-        waitLoad();
+      setTimeout(async () => {
+        await waitLoad();
       }, 1000);
     } else {
       reorderArrays();
       createSubsets();
+      await getAllSpacialTrees();
       emitGlobalEvent("wereReady");
-      const result = await getAllSpacialTrees();
-      if (result) emitGlobalEvent("featuresCompleted");
-      return result;
+      emitGlobalEvent("startFeatures");
+      return true;
     }
   }
 
@@ -72,9 +72,7 @@ export default async function loadModels(event) {
   }
 
   function createSubset(idx) {
-    const ids = Array.from(
-      new Set(Models.models[idx].model.geometry.attributes.expressID.array)
-    );
+    const ids = Models.models[idx].getAllIDs();
     let subset = Models.models[idx].loader.ifcManager.createSubset({
       modelID: 0,
       ids: ids,

@@ -1,137 +1,170 @@
 import * as SubsetBuilder from "../../helpers/subsetBuilder";
+import { models } from "../../stores/models";
 
 /**
  * Leaf node subset visibility management (event listeners)
- * 
+ *
  * (listener, self) click
- * 
- * (listener, category) toggleCategory (payload = isEnabled: boolean)
- * 
- * (listener, level) toggleLevel (payload = isEnabled: boolean)
- * 
- * (listener, model) toggleModel (payload = isEnabled: boolean)
- * 
- * (listener, model) toggleGlobalCategory (payload = isEnabled: boolean, categoryType: string)
- * 
- * @param {NodeReference} SelfReference
- * @param {NodeReference} CategoryReference
- * @param {NodeReference} LevelReference
- * @param {NodeReference} ModelReference
+ *
+ * @param {HTMLElement} DOMElement
  * @param {Integer} expressID
  */
-function processLeafNodeEvents(
-  SelfReference,
-  CategoryReference,
-  LevelReference,
-  ModelReference,
-  expressID,
-  modelIdx
-) {
+function processLeafNodeEvents(DOMElement, expressID, modelIdx) {
   let isEnabled = true;
 
   // (listener, self) click => show/hide self
-  SelfReference.DOMElement.addEventListener("click", (e) => {
+  DOMElement.addEventListener("click", (e) => {
     e.stopPropagation();
     isEnabled = !isEnabled;
-    handleSubset(expressID, modelIdx, isEnabled);
+    handleSubset([expressID], modelIdx, isEnabled);
   });
+
+  // #region event based toggling (obsolete)
+  // Using events -> Weak performance
+  // (listener, category) toggleCategory (payload = isEnabled: boolean)
+  //
+  // (listener, level) toggleLevel (payload = isEnabled: boolean)
+  //
+  // (listener, model) toggleModel (payload = isEnabled: boolean)
+  //
+  // (listener, model) toggleGlobalCategory (payload = isEnabled: boolean, categoryType: string)
+  //
   // (listener, category) toggleCategory (payload = isEnabled: boolean) => show/hide self
-  CategoryReference.DOMElement.addEventListener("toggleCategory", (e) => {
-    isEnabled = e.detail.isEnabled;
-    handleSubset(expressID, modelIdx, isEnabled);
-  });
+  // CategoryReference.DOMElement.addEventListener("toggleCategory", (e) => {
+  //   isEnabled = e.detail.isEnabled;
+  //   handleSubset([expressID], modelIdx, isEnabled);
+  // });
   // (listener, level) toggleLevel (payload = isEnabled: boolean) => show/hide self
-  LevelReference.DOMElement.addEventListener("toggleLevel", (e) => {
-    isEnabled = e.detail.isEnabled;
-    handleSubset(expressID, modelIdx, isEnabled);
-  });
+  // LevelReference.DOMElement.addEventListener("toggleLevel", (e) => {
+  //   isEnabled = e.detail.isEnabled;
+  //   handleSubset([expressID], modelIdx, isEnabled);
+  // });
   // (listener, model) toggleModel (payload = isEnabled: boolean) => show/hide self
-  ModelReference.DOMElement.addEventListener("toggleModel", (e) => {
-    isEnabled = e.detail.isEnabled;
-    handleSubset(expressID, modelIdx, isEnabled);
-  });
-  // (listener, model) toggleGlobalCategory (payload = isEnabled: boolean, categoryType: string) => show/hide self
-  ModelReference.DOMElement.addEventListener("toggleGlobalCategory", (e) => {
-    const categoryType = e.detail.categoryType;
-    if (CategoryReference.name == categoryType || categoryType == "all") {
-      isEnabled = e.detail.isEnabled;
-      handleSubset(expressID, modelIdx, e.detail.isEnabled);
-    }
-  });
+  // ModelReference.DOMElement.addEventListener("toggleModel", (e) => {
+  //   isEnabled = e.detail.isEnabled;
+  //   handleSubset([expressID], modelIdx, isEnabled);
+  // });
+  // // (listener, model) toggleGlobalCategory (payload = isEnabled: boolean, categoryType: string) => show/hide self
+  // ModelReference.DOMElement.addEventListener("toggleGlobalCategory", (e) => {
+  //   const categoryType = e.detail.categoryType;
+  //   if (CategoryReference.name == categoryType || categoryType == "all") {
+  //     isEnabled = e.detail.isEnabled;
+  //     handleSubset([expressID], modelIdx, e.detail.isEnabled);
+  //   }
+  // });
+  // #endregion event based toggling
 }
 
 /**
  * Add event dispatching to category node
- * 
- * Dispatch: "toggleCategory", self, payload = isEnabled: boolean
- * @param {HTMLElement} DOMElement category DOM element
+ *
+ * @param {HTMLElement} DOMElement
+ * @param {Integer} modelIdx
+ * @param {String} levelName
+ * @param {String} categoryName
  */
-function processCategoryNodeEvents(DOMElement) {
-  // (listener, self) Click => (dispatch: "toggleCategory", self, payload = isEnabled: boolean)
-  let isEnabledCategory = true;
+function processCategoryNodeEvents(
+  DOMElement,
+  modelIdx,
+  levelName,
+  categoryName
+) {
+  let isEnabled = true;
   DOMElement.addEventListener("click", (e) => {
     e.stopPropagation();
-    isEnabledCategory = !isEnabledCategory;
-    const customEvent = new CustomEvent("toggleCategory", {
-      detail: {
-        isEnabled: isEnabledCategory,
-      },
-    });
-    DOMElement.dispatchEvent(customEvent);
+    isEnabled = !isEnabled;
+
+    // #region event based toggling (obsolete)
+    // Using events -> Weak performance
+    // (listener, self) Click => (dispatch: "toggleCategory", self, payload = isEnabled: boolean)
+    //
+    // const customEvent = new CustomEvent("toggleCategory", {
+    //   detail: {
+    //     isEnabled: isEnabled,
+    //   },
+    // });
+    // DOMElement.dispatchEvent(customEvent);
+    // #endregion event based toggling
+
+    const model = models[modelIdx];
+    const level = model.levels.find((x) => x.name == levelName);
+    const categoryInLevel = level.categories.find(
+      (x) => x.name == categoryName
+    );
+    const objectIDs = categoryInLevel.ids;
+    handleSubset(objectIDs, modelIdx, isEnabled);
   });
 }
 
 /**
- * Add event dispatching to level node
- * 
- * dispatch: "toggleLevel", self, payload = isEnabled: boolean
+ * Add event handling to level node
+ *
  * @param {HTMLElement} DOMElement level DOM element
+ * @param {Integer} modelIdx store index of model to be manipulated
  */
-function processLevelEvents(DOMElement) {
-  // (listener, self) Click => (dispatch: "toggleLevel", self, payload = isEnabled: boolean)
-  let isEnabledLevels = true;
+function processLevelEvents(DOMElement, modelIdx, levelName) {
+  let isEnabled = true;
   DOMElement.addEventListener("click", (e) => {
     e.stopPropagation();
-    isEnabledLevels = !isEnabledLevels;
-    const customEvent = new CustomEvent("toggleLevel", {
-      detail: {
-        isEnabled: isEnabledLevels,
-      },
-    });
-    DOMElement.dispatchEvent(customEvent);
+    isEnabled = !isEnabled;
+
+    // #region event based toggling (obsolete)
+    // Using events -> Weak performance
+    // (listener, self) Click => (dispatch: "toggleLevel", self, payload = isEnabled: boolean)
+    //
+    // const customEvent = new CustomEvent("toggleLevel", {
+    //   detail: {
+    //     isEnabled: isEnabledLevels,
+    //   },
+    // });
+    // DOMElement.dispatchEvent(customEvent);
+    // #endregion event based toggling
+
+    const model = models[modelIdx];
+    const objectIDs = model.getIDsByLevelName(levelName);
+    handleSubset(objectIDs, modelIdx, isEnabled);
   });
 }
 
 /**
- * Add event dispatching to building node
- * 
- * dispatch: "toggleModel", self, payload = isEnabled: boolean
+ * Add event handling to building node
+ *
  * @param {HTMLElement} DOMElement building DOM element
+ * @param {Integer} modelIdx store index of model to be manipulated
  */
-function processBuildingEvents(DOMElement) {
-  // (listener, self) Click => (dispatch: "toggleModel", self, payload = isEnabled: boolean)
-  let isEnabledLevels = true;
+function processBuildingEvents(DOMElement, modelIdx) {
+  let isEnabled = true;
   DOMElement.addEventListener("click", (e) => {
     e.stopPropagation();
-    isEnabledLevels = !isEnabledLevels;
-    const customEvent = new CustomEvent("toggleModel", {
-      detail: {
-        isEnabled: isEnabledLevels,
-      },
-    });
-    DOMElement.dispatchEvent(customEvent);
+    isEnabled = !isEnabled;
+
+    // #region event based toggling (obsolete)
+    // (listener, self) Click => (dispatch: "toggleModel", self, payload = isEnabled: boolean)
+    // Using events -> Weak performance
+    //
+    // const customEvent = new CustomEvent("toggleModel", {
+    //   detail: {
+    //     isEnabled: isEnabled,
+    //   },
+    // });
+    // DOMElement.dispatchEvent(customEvent);
+    // #endregion
+
+    const model = models[modelIdx];
+    const objectIDs = model.getAllIDs();
+    handleSubset(objectIDs, modelIdx, isEnabled);
   });
 }
 
 /**
  * Enables/disables subset on the scene, depending on "isEnabled"
- * @param {Integer} expressID object expressID
+ * @param {Array.<Integer>} expressIDs object expressID
  * @param {Integer} modelIdx identifies which model to manipulate
  * @param {Boolean} isEnabled
  */
-function handleSubset(expressID, modelIdx, isEnabled) {
-  if (isEnabled) SubsetBuilder.addToSubset(modelIdx, expressID)
-  else SubsetBuilder.removeFromSubset(modelIdx, expressID)
+function handleSubset(expressIDs, modelIdx, isEnabled) {
+  if (isEnabled) SubsetBuilder.addToSubset(modelIdx, expressIDs);
+  else SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
 }
 
 export {

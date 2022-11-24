@@ -52,13 +52,13 @@ function createObjectSubset(model, expressID) {
 /**
  * Add object to subset by its expressID
  * @param {Integer} modelIdx Identifies which model to manipulate
- * @param {Integer} expressID 
+ * @param {Integer} expressIDs 
  */
-function addToSubset(modelIdx, expressID) {
+function addToSubset(modelIdx, expressIDs) {
   const loader = models[modelIdx].loader;
   loader.ifcManager.createSubset({
     modelID: 0,
-    ids: [expressID],
+    ids: expressIDs,
     scene: Scene.scene,
     removePrevious: false,
     customID: modelIdx,
@@ -70,9 +70,9 @@ function addToSubset(modelIdx, expressID) {
  * @param {Integer} modelIdx Identifies which model to manipulate
  * @param {Integer} expressID 
  */
-function removeFromSubset(modelIdx, expressID) {
+function removeFromSubset(modelIdx, expressIDs) {
   const loader = models[modelIdx].loader;
-  loader.ifcManager.removeFromSubset(0, [expressID], modelIdx);
+  loader.ifcManager.removeFromSubset(0, expressIDs, modelIdx);
 }
 
 export {

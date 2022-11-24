@@ -33,4 +33,15 @@ export default class Model {
     }
     return Array.from(new Set(arr));
   }
+  getAllIDs() {
+    const ids = Array.from(
+      new Set(this.model.geometry.attributes.expressID.array)
+    );
+    return ids;
+  }
+  getIDsByLevelName(levelName) {
+    const level = this.levels.find((x) => x.name == levelName);
+    const ids = level.getAllIDs();
+    return ids;
+  }
 }

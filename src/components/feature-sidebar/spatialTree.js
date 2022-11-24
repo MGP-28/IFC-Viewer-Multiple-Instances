@@ -21,11 +21,8 @@ export default async function startSpatialTree() {
   const treesContainer = document.createElement("div");
   treesContainer.classList.add("group-selection-container", "hidden");
 
-  document.addEventListener("featuresCompleted", async (event) => {
+  document.addEventListener("startFeatures", async (event) => {
     const trees = Models.models.map((x) => x.tree);
-
-    console.log("trees", trees);
-
     const tabsEl = buildTreesTabs(trees);
     const treesEl = await buildTreesContainer(trees);
     treesContainer.appendChild(tabsEl);
@@ -189,47 +186,56 @@ async function buildTitle(node) {
 
   if (hasIcon) {
     const icon = document.createElement("i");
-    icon.classList.add("fa-solid", "fa-eye");
-    processIconEvents(icon, node);
+    icon.classList.add("fa-solid", "fa-eye", "spatial-tree-visibility-icon");
+    await processIconEvents(icon, node);
     span.appendChild(icon);
   }
 
   return span;
 }
 
-function processIconEvents(icon, node) {
+async function processIconEvents(icon, node) {
   const branchLevel = getElementLevel();
   switch (branchLevel) {
     case "building": {
       console.log("building");
       isFirstElementOfTree = false;
       useIconOnLabel = false;
-      SpatialTreeInterelementEventHandling.processBuildingEvents(icon);
+      SpatialTreeInterelementEventHandling.processBuildingEvents(
+        icon,
+        currentTreeIdx
+      );
       references.modelRef = new SpatialTreeReference(node.type, icon);
       break;
     }
 
     case "level": {
       console.log("level");
-      SpatialTreeInterelementEventHandling.processLevelEvents(icon);
-      references.levelRef = new SpatialTreeReference(node.type, icon);
+      const levelName = await getNodePropertyName(node, currentTreeIdx);
+      SpatialTreeInterelementEventHandling.processLevelEvents(
+        icon, 
+        currentTreeIdx, 
+        levelName
+      );
+      references.levelRef = new SpatialTreeReference(levelName, icon);
       break;
     }
 
     case "category": {
       console.log("category");
-      SpatialTreeInterelementEventHandling.processCategoryNodeEvents(icon);
       references.categoryRef = new SpatialTreeReference(node.type, icon);
+      SpatialTreeInterelementEventHandling.processCategoryNodeEvents(
+        icon,
+        currentTreeIdx,
+        references.levelRef.name,
+        node.type
+      );
       break;
     }
     default: {
       console.log("leaf");
-      const selfReference = new SpatialTreeReference(node.type, icon);
       SpatialTreeInterelementEventHandling.processLeafNodeEvents(
-        selfReference,
-        references.categoryRef,
-        references.levelRef,
-        references.modelRef,
+        icon,
         node.expressID,
         currentTreeIdx
       );

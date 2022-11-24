@@ -143,6 +143,11 @@ body {
   transform: rotate(90deg);
 }
 
+.spatial-tree-visibility-icon{
+  margin-left: 5px;
+  color: darkslategrey;
+}
+
 /* Modal */
 
 .modal{
