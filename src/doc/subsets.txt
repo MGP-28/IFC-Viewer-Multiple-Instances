@@ -1,0 +1,11 @@
+Removing expressIDs from subset
+    Models.models[idx].loader.ifcManager.removeFromSubset(0, [22620], idx)
+
+Add expressIDs to subset
+    Models.models[idx].loader.ifcManager.createSubset({
+        modelID: 0,
+        ids: [22620],
+        scene: Scene.scene,
+        removePrevious: false, <--- IMPORTANT
+        customID: idx,
+    });
