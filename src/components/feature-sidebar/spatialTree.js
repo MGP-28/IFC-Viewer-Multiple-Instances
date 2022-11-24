@@ -3,16 +3,17 @@ import { getIfcRegex } from "../../helpers/repositories/regex";
 import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
 import * as SelectionStore from "../../stores/selection";
+import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
-let useIconOnLabel = false;
 
+let isFirstElementOfTree = true;
+let useIconOnLabel = true;
 let currentTreeIdx = null;
-
 const references = {
-  modelRef: new SpatialTreeReference(),
-  levelRef: new SpatialTreeReference(),
-  categoryRef: new SpatialTreeReference(),
+  modelRef: undefined,
+  levelRef: undefined,
+  categoryRef: undefined,
 };
 
 export default async function startSpatialTree() {
@@ -85,6 +86,9 @@ async function buildTreesContainer(trees) {
  * @param {Object} tree tree generated on model loading
  */
 async function buildTree(tree) {
+  isFirstElementOfTree = true;
+  useIconOnLabel = true;
+
   const treeEl = document.createElement("ul");
   // treeEl.classlist.add()
 
@@ -170,9 +174,73 @@ async function buildTitle(node) {
       : node.type;
   const text = removeIFCTagsFromName(_text);
   span.textContent = text;
-  const icon = document.createElement("i");
-  icon.classList.add("fa-solid", "fa-eye");
+
+  let hasIcon = true;
+  if (!useIconOnLabel) hasIcon = toggleIcon(node);
+
+  if (hasIcon) {
+    const icon = document.createElement("i");
+    icon.classList.add("fa-solid", "fa-eye");
+    processIconEvents(icon, node);
+    span.appendChild(icon);
+  }
+
   return span;
+}
+
+function processIconEvents(icon, node) {
+  const branchLevel = getElementLevel();
+  switch (branchLevel) {
+    case "building": {
+      console.log("building")
+      isFirstElementOfTree = false;
+      useIconOnLabel = false;
+      SpatialTreeInterelementEventHandling.processBuildingEvents(icon);
+      references.modelRef = new SpatialTreeReference(node.type, icon);
+      break;
+    }
+
+    case "level": {
+      console.log("level")
+      SpatialTreeInterelementEventHandling.processLevelEvents(icon);
+      references.levelRef = new SpatialTreeReference(node.type, icon);
+      break;
+    }
+
+    case "category": {
+      console.log("category")
+      SpatialTreeInterelementEventHandling.processCategoryNodeEvents(icon);
+      references.categoryRef = new SpatialTreeReference(node.type, icon);
+      break;
+    }
+    default: {
+      console.log("leaf")
+      const selfReference = new SpatialTreeReference(node.type, icon);
+      SpatialTreeInterelementEventHandling.processLeafNodeEvents(
+        selfReference,
+        references.categoryRef,
+        references.levelRef,
+        references.modelRef,
+        node.expressID,
+        currentTreeIdx
+      );
+      break;
+    }
+  }
+}
+
+function toggleIcon(node) {
+  if (IFCCategoriesToFecthName.includes(node.type)) {
+    useIconOnLabel = true;
+    return true;
+  } else return false;
+}
+
+function getElementLevel() {
+  if (isFirstElementOfTree) return "building";
+  if (references.levelRef === undefined) return "level";
+  if (references.categoryRef === undefined) return "category";
+  return "leaf";
 }
 
 /**

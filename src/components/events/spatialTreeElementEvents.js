@@ -1,4 +1,4 @@
-import { scene } from "../../stores/scene";
+import * as SubsetBuilder from "../../helpers/subsetBuilder";
 
 /**
  * Leaf node subset visibility management (event listeners)
@@ -17,43 +17,45 @@ import { scene } from "../../stores/scene";
  * @param {NodeReference} CategoryReference
  * @param {NodeReference} LevelReference
  * @param {NodeReference} ModelReference
- * @param {Subset} subset
+ * @param {Integer} expressID
  */
 function processLeafNodeEvents(
   SelfReference,
   CategoryReference,
   LevelReference,
   ModelReference,
-  subset
+  expressID,
+  modelIdx
 ) {
   let isEnabled = true;
 
   // (listener, self) click => show/hide self
-  SelfReference.DOMElement.addEventListener("click", () => {
+  SelfReference.DOMElement.addEventListener("click", (e) => {
+    e.stopPropagation();
     isEnabled = !isEnabled;
-    handleSubset(subset, isEnabled);
+    handleSubset(expressID, modelIdx, isEnabled);
   });
   // (listener, category) toggleCategory (payload = isEnabled: boolean) => show/hide self
   CategoryReference.DOMElement.addEventListener("toggleCategory", (e) => {
     isEnabled = e.detail.isEnabled;
-    handleSubset(subset, isEnabled);
+    handleSubset(expressID, modelIdx, isEnabled);
   });
   // (listener, level) toggleLevel (payload = isEnabled: boolean) => show/hide self
   LevelReference.DOMElement.addEventListener("toggleLevel", (e) => {
     isEnabled = e.detail.isEnabled;
-    handleSubset(subset, isEnabled);
+    handleSubset(expressID, modelIdx, isEnabled);
   });
   // (listener, model) toggleModel (payload = isEnabled: boolean) => show/hide self
   ModelReference.DOMElement.addEventListener("toggleModel", (e) => {
     isEnabled = e.detail.isEnabled;
-    handleSubset(subset, isEnabled);
+    handleSubset(expressID, modelIdx, isEnabled);
   });
   // (listener, model) toggleGlobalCategory (payload = isEnabled: boolean, categoryType: string) => show/hide self
   ModelReference.DOMElement.addEventListener("toggleGlobalCategory", (e) => {
     const categoryType = e.detail.categoryType;
     if (CategoryReference.name == categoryType || categoryType == "all") {
       isEnabled = e.detail.isEnabled;
-      handleSubset(subset, e.detail.isEnabled);
+      handleSubset(expressID, modelIdx, e.detail.isEnabled);
     }
   });
 }
@@ -67,7 +69,8 @@ function processLeafNodeEvents(
 function processCategoryNodeEvents(DOMElement) {
   // (listener, self) Click => (dispatch: "toggleCategory", self, payload = isEnabled: boolean)
   let isEnabledCategory = true;
-  DOMElement.addEventListener("click", () => {
+  DOMElement.addEventListener("click", (e) => {
+    e.stopPropagation();
     isEnabledCategory = !isEnabledCategory;
     const customEvent = new CustomEvent("toggleCategory", {
       detail: {
@@ -87,7 +90,8 @@ function processCategoryNodeEvents(DOMElement) {
 function processLevelEvents(DOMElement) {
   // (listener, self) Click => (dispatch: "toggleLevel", self, payload = isEnabled: boolean)
   let isEnabledLevels = true;
-  DOMElement.addEventListener("click", () => {
+  DOMElement.addEventListener("click", (e) => {
+    e.stopPropagation();
     isEnabledLevels = !isEnabledLevels;
     const customEvent = new CustomEvent("toggleLevel", {
       detail: {
@@ -102,12 +106,13 @@ function processLevelEvents(DOMElement) {
  * Add event dispatching to building node
  * 
  * dispatch: "toggleModel", self, payload = isEnabled: boolean
- * @param {HTMLElement} DOMElement buildng DOM element
+ * @param {HTMLElement} DOMElement building DOM element
  */
 function processBuildingEvents(DOMElement) {
   // (listener, self) Click => (dispatch: "toggleModel", self, payload = isEnabled: boolean)
   let isEnabledLevels = true;
-  DOMElement.addEventListener("click", () => {
+  DOMElement.addEventListener("click", (e) => {
+    e.stopPropagation();
     isEnabledLevels = !isEnabledLevels;
     const customEvent = new CustomEvent("toggleModel", {
       detail: {
@@ -120,12 +125,13 @@ function processBuildingEvents(DOMElement) {
 
 /**
  * Enables/disables subset on the scene, depending on "isEnabled"
- * @param {Subset} subset
+ * @param {Integer} expressID object expressID
+ * @param {Integer} modelIdx identifies which model to manipulate
  * @param {Boolean} isEnabled
  */
-function handleSubset(subset, isEnabled) {
-  if (isEnabled) scene.add(subset);
-  else subset.removeFromParent();
+function handleSubset(expressID, modelIdx, isEnabled) {
+  if (isEnabled) SubsetBuilder.addToSubset(modelIdx, expressID)
+  else SubsetBuilder.removeFromSubset(modelIdx, expressID)
 }
 
 export {
