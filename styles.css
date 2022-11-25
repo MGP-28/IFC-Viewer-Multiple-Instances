@@ -182,51 +182,7 @@ body {
 }
 /* #endregion Tools side tab */
 
-/* Feature sidebar tab */
-
-.feature-container {
-  z-index: 1;
-  position: absolute;
-  background-color: var(--transparent-background-light);
-  display: inline-block;
-  padding: 10px;
-  overflow: auto;
-  width: 33vw;
-  height: 100vh;
-  left: 100%;
-  transform: translateX(-100%);
-  display: flex;
-  flex-direction: column;
-  font-family: Montserrat;
-}
-
-.feature-tabs-container {
-  display: flex;
-  border-bottom: solid black 1px;
-}
-
-.feature-tab {
-  cursor: pointer;
-  border: solid black 1px;
-  padding: 5px;
-  z-index: 3;
-  border-bottom: none;
-}
-
-.feature-tab.tab-active {
-  background-color: var(--primary-color-light);
-  z-index: 1;
-}
-
-.feature-tab:hover {
-  background-color: var(--primary-color);
-}
-
-.feature-content-container {
-  border-top: solid black 1px;
-}
-
-/* Spatial tree */
+/* #region Spatial tree */
 
 .tree-content-container{
   padding: 5px 10px 10px;
@@ -254,6 +210,10 @@ body {
 .tree-content > ul > li:first-child > span {
   font-weight: 500;
   font-size: 14px;
+}
+
+.tree-content-container>ul:not(:first-child){
+  margin-top: 5px;
 }
 
 .tree-content-container ul {
@@ -297,6 +257,7 @@ body {
   margin-left: 5px;
   color: darkslategrey;
 }
+/* #endregion Spatial Tree */
 
 /* Modal */
 
