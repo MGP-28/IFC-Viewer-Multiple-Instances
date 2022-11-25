@@ -4,7 +4,8 @@
   "description": "-",
   "main": "app.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "init": "npm i && rollup -c"
   },
   "author": "",
   "license": "MIT",
