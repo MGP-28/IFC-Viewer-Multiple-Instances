@@ -12,6 +12,6 @@ export default function render() {
   startUserInputs();
   startTimer();
   startRenderingEvents();
-  startObjectDetail();
+  //startObjectDetail();
   startFeatureSidebar();
 }
