@@ -18,39 +18,15 @@ const references = {
 };
 
 export default async function startSpatialTree() {
-  const treesContainer = document.createElement("div");
-  treesContainer.classList.add("group-selection-container", "hidden");
+  const treesContainer = document.getElementById("spatial-trees-container");
 
   document.addEventListener("startFeatures", async (event) => {
     const trees = Models.models.map((x) => x.tree);
-    const tabsEl = buildTreesTabs(trees);
     const treesEl = await buildTreesContainer(trees);
-    treesContainer.appendChild(tabsEl);
     treesContainer.appendChild(treesEl);
   });
 
-  return treesContainer;
-}
-
-function buildTreesTabs(trees) {
-  const treeTabs = document.createElement("div");
-  treeTabs.classList.add("feature-tabs-container");
-
-  for (let idx = 0; idx < trees.length; idx++) {
-    const treeTabEl = document.createElement("div");
-    treeTabEl.classList.add("feature-tab");
-    treeTabEl.textContent = `Tab ${idx}`;
-    treeTabEl.addEventListener("click", () => {
-      SelectionStore.setselectedSpatialTree(idx);
-    });
-    document.addEventListener("spatialTreeSelected", () => {
-      if (SelectionStore.selectedSpatialTreeIdx == idx)
-        treeTabEl.classList.add("tab-active");
-      else treeTabEl.classList.remove("tab-active");
-    });
-    treeTabs.appendChild(treeTabEl);
-  }
-  return treeTabs;
+  return true;
 }
 
 async function buildTreesContainer(trees) {
@@ -66,13 +42,6 @@ async function buildTreesContainer(trees) {
     const treeEl = await buildTree(trees[idx]);
     treeContentEl.appendChild(treeEl);
 
-    if (idx > 0) treeContentEl.classList.add("hidden");
-
-    document.addEventListener("spatialTreeSelected", () => {
-      if (SelectionStore.selectedSpatialTreeIdx == idx)
-        treeContentEl.classList.remove("hidden");
-      else treeContentEl.classList.add("hidden");
-    });
     treeContent.appendChild(treeContentEl);
   }
 

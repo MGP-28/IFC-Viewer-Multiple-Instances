@@ -46,31 +46,11 @@ const resetHighlightedProperties = () => {
   emitGlobalEvent("highlightedChanged");
 };
 
-let selectedFeatureTabIdx = undefined;
-const setSelectedFeatureTabIdx = (index) => {
-  selectedFeatureTabIdx = index;
-  emitGlobalEvent("featureSelected");
-};
-
-let selectedSpatialTreeIdx = undefined;
-/**
- * Sets selected tree's model index
- * @param {int} index model index on Stores/models.js
- */
-const setselectedSpatialTree = (index) => {
-  selectedSpatialTreeIdx = index;
-  emitGlobalEvent("spatialTreeSelected");
-};
-
 export {
   vars,
   setSelectedProperties,
   resetSelectedProperties,
   setHighlightedProperties,
   resetHighlightedProperties,
-  isSelectionFromViewer,
-  selectedFeatureTabIdx,
-  setSelectedFeatureTabIdx,
-  selectedSpatialTreeIdx,
-  setselectedSpatialTree,
+  isSelectionFromViewer
 };
