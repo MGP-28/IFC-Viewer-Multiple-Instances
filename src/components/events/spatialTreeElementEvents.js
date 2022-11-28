@@ -1,22 +1,53 @@
 import * as SubsetBuilder from "../../helpers/subsetBuilder";
-import { models } from "../../stores/models";
+import * as Models from "../../stores/models";
+import * as SelectionStore from "../../stores/selection";
 
 /**
  * Leaf node subset visibility management (event listeners)
  *
  * (listener, self) click
  *
- * @param {HTMLElement} DOMElement
+ * @param {HTMLElement} titleEl Node text element (icon parent)
+ * @param {HTMLElement} visibilityEl Node icon element
  * @param {Integer} expressID
  */
-function processLeafNodeEvents(DOMElement, expressID, modelIdx) {
+ async function processLeafNodeEvents(titleEl, visibilityEl, expressID, modelIdx) {
   let isEnabled = true;
 
+  const model = Models.models[modelIdx];
+  const loader = model.loader;
+  const props = await loader.ifcManager.getItemProperties(0, expressID, true);
+
   // (listener, self) click => show/hide self
-  DOMElement.addEventListener("click", (e) => {
+  visibilityEl.addEventListener("click", (e) => {
     e.stopPropagation();
     isEnabled = !isEnabled;
-    handleSubset([expressID], modelIdx, isEnabled);
+    handleMainSubset([expressID], modelIdx, isEnabled);
+  });
+
+  let isSelection = false;
+
+  titleEl.addEventListener("mouseenter", () => {
+    SelectionStore.setHighlightedProperties("fake props", [props.expressID], modelIdx, false);
+  });
+
+  titleEl.addEventListener("mouseleave", () => {
+    SelectionStore.resetHighlightedProperties();
+  });
+
+  titleEl.addEventListener("click", () => {
+    if (isSelection) {
+      SelectionStore.resetSelectedProperties();
+      toggleActiveCSSClass(titleEl, false);
+    } else {
+      SelectionStore.setSelectedProperties(props, [props.expressID], modelIdx, false);
+      toggleActiveCSSClass(titleEl, true);
+    }
+    isSelection = !isSelection;
+  });
+  document.addEventListener("selectedChanged", () => {
+    if (SelectionStore.vars.selected.props == props) return;
+    toggleActiveCSSClass(titleEl, false);
   });
 
   // #region event based toggling (obsolete)
@@ -56,21 +87,28 @@ function processLeafNodeEvents(DOMElement, expressID, modelIdx) {
 }
 
 /**
- * Add event dispatching to category node
+ * Add event handling to category node
  *
- * @param {HTMLElement} DOMElement
+ * @param {HTMLElement} titleEl Node text element (icon parent)
+ * @param {HTMLElement} visibilityEl Node icon element
  * @param {Integer} modelIdx
  * @param {String} levelName
  * @param {String} categoryName
  */
 function processCategoryNodeEvents(
-  DOMElement,
+  titleEl,
+  visibilityEl,
   modelIdx,
   levelName,
   categoryName
 ) {
   let isEnabled = true;
-  DOMElement.addEventListener("click", (e) => {
+  const model = Models.models[modelIdx];
+  const level = model.levels.find((x) => x.name == levelName);
+  const categoryInLevel = level.categories.find((x) => x.name == categoryName);
+  const objectIDs = categoryInLevel.ids;
+
+  visibilityEl.addEventListener("click", (e) => {
     e.stopPropagation();
     isEnabled = !isEnabled;
 
@@ -86,25 +124,25 @@ function processCategoryNodeEvents(
     // DOMElement.dispatchEvent(customEvent);
     // #endregion event based toggling
 
-    const model = models[modelIdx];
-    const level = model.levels.find((x) => x.name == levelName);
-    const categoryInLevel = level.categories.find(
-      (x) => x.name == categoryName
-    );
-    const objectIDs = categoryInLevel.ids;
-    handleSubset(objectIDs, modelIdx, isEnabled);
+    handleMainSubset(objectIDs, modelIdx, isEnabled);
   });
+
+  handleHighlighting(titleEl, modelIdx, objectIDs);
 }
 
 /**
  * Add event handling to level node
  *
- * @param {HTMLElement} DOMElement level DOM element
+ * @param {HTMLElement} titleEl Node text element (icon parent)
+ * @param {HTMLElement} visibilityEl Node icon element
  * @param {Integer} modelIdx store index of model to be manipulated
  */
-function processLevelEvents(DOMElement, modelIdx, levelName) {
+function processLevelEvents(titleEl, visibilityEl, modelIdx, levelName) {
   let isEnabled = true;
-  DOMElement.addEventListener("click", (e) => {
+  const model = Models.models[modelIdx];
+  const objectIDs = model.getIDsByLevelName(levelName);
+
+  visibilityEl.addEventListener("click", (e) => {
     e.stopPropagation();
     isEnabled = !isEnabled;
 
@@ -120,21 +158,25 @@ function processLevelEvents(DOMElement, modelIdx, levelName) {
     // DOMElement.dispatchEvent(customEvent);
     // #endregion event based toggling
 
-    const model = models[modelIdx];
-    const objectIDs = model.getIDsByLevelName(levelName);
-    handleSubset(objectIDs, modelIdx, isEnabled);
+    handleMainSubset(objectIDs, modelIdx, isEnabled);
   });
+
+  handleHighlighting(titleEl, modelIdx, objectIDs);
 }
 
 /**
  * Add event handling to building node
  *
- * @param {HTMLElement} DOMElement building DOM element
+ * @param {HTMLElement} titleEl Node text element (icon parent)
+ * @param {HTMLElement} visibilityEl Node icon element
  * @param {Integer} modelIdx store index of model to be manipulated
  */
-function processBuildingEvents(DOMElement, modelIdx) {
+function processBuildingEvents(titleEl, visibilityEl, modelIdx) {
+  const model = Models.models[modelIdx];
+  const objectIDs = model.getAllIDs();
+
   let isEnabled = true;
-  DOMElement.addEventListener("click", (e) => {
+  visibilityEl.addEventListener("click", (e) => {
     e.stopPropagation();
     isEnabled = !isEnabled;
 
@@ -150,10 +192,10 @@ function processBuildingEvents(DOMElement, modelIdx) {
     // DOMElement.dispatchEvent(customEvent);
     // #endregion
 
-    const model = models[modelIdx];
-    const objectIDs = model.getAllIDs();
-    handleSubset(objectIDs, modelIdx, isEnabled);
+    handleMainSubset(objectIDs, modelIdx, isEnabled);
   });
+
+  handleHighlighting(titleEl, modelIdx, objectIDs);
 }
 
 /**
@@ -162,9 +204,20 @@ function processBuildingEvents(DOMElement, modelIdx) {
  * @param {Integer} modelIdx identifies which model to manipulate
  * @param {Boolean} isEnabled
  */
-function handleSubset(expressIDs, modelIdx, isEnabled) {
+function handleMainSubset(expressIDs, modelIdx, isEnabled) {
   if (isEnabled) SubsetBuilder.addToSubset(modelIdx, expressIDs);
   else SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
+}
+
+function handleHighlighting(titleEl, modelIdx, objectIDs) {
+  titleEl.addEventListener("mouseenter", () => {
+    SelectionStore.setHighlightedProperties("fake props", objectIDs, modelIdx, false);
+    
+  });
+
+  titleEl.addEventListener("mouseleave", () => {
+    
+  });
 }
 
 export {

@@ -84,7 +84,7 @@ async function storeFoundObjectProperties(isSelection) {
   const id = ifcLoader.ifcManager.getExpressId(geometry, index);
   const props = await ifcLoader.ifcManager.getItemProperties(0, id);
   if (isSelection) SelectedStore.setSelectedProperties(props, modelIdx, true);
-  else SelectedStore.setHighlightedProperties(props, modelIdx, true);
+  else SelectedStore.setHighlightedProperties("fake props", [props.expressID], modelIdx, true);
 
   return true;
 }

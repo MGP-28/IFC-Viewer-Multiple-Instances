@@ -13,8 +13,8 @@ const vars = {
  * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
-const setSelectedProperties = (props, modelIdx, isFromViewer) => {
-  vars.selected.addProps(props, modelIdx);
+const setSelectedProperties = (props, ids, modelIdx, isFromViewer) => {
+  vars.selected.addProps(props, ids, modelIdx);
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("selectedChanged");
 };
@@ -34,8 +34,8 @@ let isSelectionFromViewer = true;
  * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
-const setHighlightedProperties = (props, modelIdx, isFromViewer) => {
-  vars.highlighted.addProps(props, modelIdx);
+const setHighlightedProperties = (props, ids, modelIdx, isFromViewer) => {
+  vars.highlighted.addProps(props, ids, modelIdx);
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("highlightedChanged");
 };

@@ -1,5 +1,6 @@
 import getNodePropertyName from "../../helpers/getNodePropertyName";
 import { getIfcRegex } from "../../helpers/repositories/regex";
+import { createSubset } from "../../helpers/subsetBuilder";
 import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
 import * as SelectionStore from "../../stores/selection";
@@ -10,7 +11,6 @@ const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 let isFirstElementOfTree = true;
 let useIconOnLabel = true;
 let currentTreeIdx = null;
-let isLevel = false;
 const references = {
   modelRef: undefined,
   levelRef: undefined,
@@ -74,7 +74,6 @@ async function buildTree(tree) {
 async function buildNode(node) {
   let localLevel = false;
   if (IFCCategoriesToFecthName.includes(node.type)) {
-    isLevel = true;
     localLevel = true;
     references.levelRef = undefined;
   }
@@ -83,7 +82,6 @@ async function buildNode(node) {
   const title = await buildTitle(node);
   nodeEl.appendChild(title);
   let childrenEl = false;
-  const modelIdx = currentTreeIdx;
 
   if (node.children.length > 0) {
     title.classList.add("caret");
@@ -95,39 +93,6 @@ async function buildNode(node) {
       childrenEl.classList.toggle("hidden");
       title.classList.toggle("caret-down");
     });
-  } else {
-    const expressID = node.expressID;
-    const model = Models.models[modelIdx];
-    const loader = model.loader;
-    const props = await loader.ifcManager.getItemProperties(0, expressID, true);
-    let isSelection = false;
-
-    addEvents();
-    function addEvents() {
-      title.addEventListener("mouseenter", () => {
-        SelectionStore.setHighlightedProperties(props, modelIdx, false);
-      });
-
-      title.addEventListener("mouseleave", () => {
-        SelectionStore.resetHighlightedProperties();
-      });
-
-      title.addEventListener("click", () => {
-        if (isSelection) {
-          SelectionStore.resetSelectedProperties();
-          toggleActiveCSSClass(title, false);
-        } else {
-          SelectionStore.setSelectedProperties(props, modelIdx, false);
-          toggleActiveCSSClass(title, true);
-        }
-        isSelection = !isSelection;
-      });
-      document.addEventListener("selectedChanged", () => {
-        if (SelectionStore.vars.selected.props == props) return;
-        toggleActiveCSSClass(title, false);
-      });
-    }
-    if(localLevel) isLevel = false;
   }
   nodeEl.appendChild(title);
   if (childrenEl !== false) nodeEl.appendChild(childrenEl);
@@ -154,47 +119,50 @@ async function buildTitle(node) {
   if (!useIconOnLabel) hasIcon = toggleIcon(node);
 
   if (hasIcon) {
-    const icon = document.createElement("i");
-    icon.classList.add("fa-solid", "fa-eye", "spatial-tree-visibility-icon");
-    await processIconEvents(icon, node);
-    span.appendChild(icon);
+    const visibilityIcon = document.createElement("i");
+    visibilityIcon.classList.add("fa-solid", "fa-eye", "spatial-tree-visibility-icon");
+    await processIconEvents(span, visibilityIcon, node);
+    span.appendChild(visibilityIcon);
   }
 
   return span;
 }
 
-async function processIconEvents(icon, node) {
+async function processIconEvents(span, visibilityIcon, node) {
   const branchLevel = getElementLevel();
   switch (branchLevel) {
     case "building": {
       console.log("building");
       isFirstElementOfTree = false;
       useIconOnLabel = false;
-      SpatialTreeInterelementEventHandling.processBuildingEvents(
-        icon,
+      await SpatialTreeInterelementEventHandling.processBuildingEvents(
+        span,
+        visibilityIcon,
         currentTreeIdx
       );
-      references.modelRef = new SpatialTreeReference(node.type, icon);
+      references.modelRef = new SpatialTreeReference(node.type, visibilityIcon);
       break;
     }
 
     case "level": {
       console.log("level");
       const levelName = await getNodePropertyName(node, currentTreeIdx);
-      SpatialTreeInterelementEventHandling.processLevelEvents(
-        icon, 
+      await SpatialTreeInterelementEventHandling.processLevelEvents(
+        span,
+        visibilityIcon, 
         currentTreeIdx, 
         levelName
       );
-      references.levelRef = new SpatialTreeReference(levelName, icon);
+      references.levelRef = new SpatialTreeReference(levelName, visibilityIcon);
       break;
     }
 
     case "category": {
       console.log("category");
-      references.categoryRef = new SpatialTreeReference(node.type, icon);
-      SpatialTreeInterelementEventHandling.processCategoryNodeEvents(
-        icon,
+      references.categoryRef = new SpatialTreeReference(node.type, visibilityIcon);
+      await SpatialTreeInterelementEventHandling.processCategoryNodeEvents(
+        span,
+        visibilityIcon,
         currentTreeIdx,
         references.levelRef.name,
         node.type
@@ -203,8 +171,9 @@ async function processIconEvents(icon, node) {
     }
     default: {
       console.log("leaf");
-      SpatialTreeInterelementEventHandling.processLeafNodeEvents(
-        icon,
+      await SpatialTreeInterelementEventHandling.processLeafNodeEvents(
+        span,
+        visibilityIcon,
         node.expressID,
         currentTreeIdx
       );

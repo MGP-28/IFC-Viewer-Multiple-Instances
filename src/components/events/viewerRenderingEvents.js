@@ -31,7 +31,7 @@ function processRenderization(type) {
 
     // add selection subset to the selected model
     const model = Models.models[modelIdx];
-    const IdArr = [storedObj.props.expressID];
+    const IdArr = storedObj.ids;
 
     createSubset(model, IdArr, type);
   } else {
