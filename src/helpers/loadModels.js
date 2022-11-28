@@ -2,7 +2,7 @@ import * as Scene from "../stores/scene.js";
 import * as Models from "../stores/models.js";
 import Model from "../models/Model.js";
 import { getAllSpacialTrees } from "./spatialTree.js";
-import emitGlobalEvent from "./emitEvent.js";
+import { emitGlobalEvent } from "./emitEvent.js";
 import { setupLoader, setMatrix } from "./builders/loaderBuilder.js";
 import * as THREE from "three";
 import * as RaycastStore from "../stores/raycast.js";

@@ -1,4 +1,4 @@
-import emitGlobalEvent from "../../helpers/emitEvent";
+import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { pick } from "../../helpers/raytracing";
 
 let isMouseDragging = false;

@@ -1,4 +1,4 @@
-import emitGlobalEvent from "../helpers/emitEvent";
+import { emitGlobalEvent } from "../helpers/emitEvent";
 import loadModels from "../helpers/loadModels";
 
 export default function startInput() {

@@ -84,14 +84,14 @@ async function buildNode(node) {
   let childrenEl = false;
 
   if (node.children.length > 0) {
-    title.classList.add("caret");
     const isCategory = localLevel;
     childrenEl = await buildChildren(node, isCategory);
     childrenEl.classList.add("hidden");
 
     title.addEventListener("click", () => {
       childrenEl.classList.toggle("hidden");
-      title.classList.toggle("caret-down");
+      const caret = title.getElementsByClassName("spatial-tree-caret")[0]
+      caret.classList.toggle("caret-down")
     });
   }
   nodeEl.appendChild(title);
@@ -106,6 +106,17 @@ async function buildNode(node) {
  * @returns DOM Element 'span'
  */
 async function buildTitle(node) {
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("tree-item");
+
+  if(node.children.length > 0) {
+    const caretIcon = document.createElement("div");
+    caretIcon.classList.add("spatial-tree-caret");
+    caretIcon.appendChild(buildIcon("chevron-right"));
+    wrapper.appendChild(caretIcon);
+    wrapper.classList.add("has-caret")
+  }
+
   // create node title span
   const span = document.createElement("span");
   const _text =
@@ -114,21 +125,48 @@ async function buildTitle(node) {
       : node.type;
   const text = removeIFCTagsFromName(_text);
   span.textContent = text;
+  wrapper.appendChild(span);
 
   let hasIcon = true;
   if (!useIconOnLabel) hasIcon = toggleIcon(node);
 
   if (hasIcon) {
-    const visibilityIcon = document.createElement("i");
-    visibilityIcon.classList.add("fa-solid", "fa-eye", "spatial-tree-visibility-icon");
-    await processIconEvents(span, visibilityIcon, node);
-    span.appendChild(visibilityIcon);
+    const visibilityIcon = document.createElement("div");
+    visibilityIcon.appendChild(buildIcon("eye"));
+
+    const selectIcon = document.createElement("div");
+    selectIcon.appendChild(buildIcon("roller-brush"));
+
+    const isolateIcon = document.createElement("div");
+    isolateIcon.appendChild(buildIcon("mark"));
+
+    const icons = {
+      visibility: visibilityIcon,
+      selection: selectIcon,
+      isolation: isolateIcon
+    };
+    await processIconEvents(wrapper, icons, node);
+
+    for (const key in icons) {
+      const iconEl = icons[key];
+      iconEl.classList.add("spatial-tree-icon");
+      wrapper.appendChild(iconEl);
+    }
   }
 
-  return span;
+  return wrapper;
 }
 
-async function processIconEvents(span, visibilityIcon, node) {
+function buildIcon(iconFileName) {
+  const iconDirectory = `./src/assets/icons/${iconFileName}.svg`;
+
+  const icon = document.createElement("img");
+  icon.src = iconDirectory;
+
+  return icon;
+}
+
+async function processIconEvents(span, icons, node) {
   const branchLevel = getElementLevel();
   switch (branchLevel) {
     case "building": {
@@ -137,10 +175,10 @@ async function processIconEvents(span, visibilityIcon, node) {
       useIconOnLabel = false;
       await SpatialTreeInterelementEventHandling.processBuildingEvents(
         span,
-        visibilityIcon,
+        icons,
         currentTreeIdx
       );
-      references.modelRef = new SpatialTreeReference(node.type, visibilityIcon);
+      references.modelRef = new SpatialTreeReference(node.type, icons);
       break;
     }
 
@@ -149,20 +187,20 @@ async function processIconEvents(span, visibilityIcon, node) {
       const levelName = await getNodePropertyName(node, currentTreeIdx);
       await SpatialTreeInterelementEventHandling.processLevelEvents(
         span,
-        visibilityIcon, 
-        currentTreeIdx, 
+        icons,
+        currentTreeIdx,
         levelName
       );
-      references.levelRef = new SpatialTreeReference(levelName, visibilityIcon);
+      references.levelRef = new SpatialTreeReference(levelName, icons);
       break;
     }
 
     case "category": {
       console.log("category");
-      references.categoryRef = new SpatialTreeReference(node.type, visibilityIcon);
+      references.categoryRef = new SpatialTreeReference(node.type, icons);
       await SpatialTreeInterelementEventHandling.processCategoryNodeEvents(
         span,
-        visibilityIcon,
+        icons,
         currentTreeIdx,
         references.levelRef.name,
         node.type
@@ -173,7 +211,7 @@ async function processIconEvents(span, visibilityIcon, node) {
       console.log("leaf");
       await SpatialTreeInterelementEventHandling.processLeafNodeEvents(
         span,
-        visibilityIcon,
+        icons,
         node.expressID,
         currentTreeIdx
       );
@@ -211,12 +249,6 @@ async function buildChildren(node, isCategory) {
     childrenEl.appendChild(node);
   }
   return childrenEl;
-}
-
-function toggleActiveCSSClass(title, isActive) {
-  if (isActive) title.classList.add("active-selection-leaf");
-  else title.classList.remove("active-selection-leaf");
-  return false;
 }
 
 function removeIFCTagsFromName(text) {

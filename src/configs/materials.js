@@ -5,7 +5,7 @@ import { MeshBasicMaterial } from "three"
 export default materials = {
   highlighted: new MeshBasicMaterial({
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.6,
     color: parseInt(UIConfigs.primaryColorLight, 16),
     depthTest: false,
   }),

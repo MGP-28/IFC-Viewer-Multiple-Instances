@@ -1,10 +1,38 @@
-import emitGlobalEvent from "../helpers/emitEvent";
+import { emitGlobalEvent } from "../helpers/emitEvent";
+import { removeElementsFromArray } from "../helpers/generic/arrays";
 import Selected from "../models/Selected";
 
 const vars = {
   selected: new Selected(),
-  highlighted: new Selected(),
+  highlighted: new Selected()
 };
+
+
+// Currently visible object's properties
+let visibilityByIds = {};
+
+const isVisible = (modelIdx, expressID) => {
+  return visibilityByIds[modelIdx][expressID];
+}
+
+const addNewModelReferenceToVisible = (modelIdx) => {
+  visibilityByIds[modelIdx] = {};
+}
+
+const addIdsToVisible = (ids, modelIdx) => {
+  for (let idx = 0; idx < ids.length; idx++) {
+    const element = ids[idx]
+    visibilityByIds[modelIdx][element] = true;
+  }
+  emitGlobalEvent("visibilityChanged");
+};
+
+const removeIdsFromVisible = (modelIdx, ids) => {
+  for (let idx = 0; idx < ids.length; idx++) {
+    visibilityByIds[modelIdx][ids] = false;
+  }
+  emitGlobalEvent("visibilityChanged");
+}
 
 // Currently selected object's properties
 /**
@@ -48,9 +76,13 @@ const resetHighlightedProperties = () => {
 
 export {
   vars,
+  addNewModelReferenceToVisible,
+  addIdsToVisible,
+  removeIdsFromVisible,
+  isVisible,
   setSelectedProperties,
   resetSelectedProperties,
   setHighlightedProperties,
   resetHighlightedProperties,
-  isSelectionFromViewer
+  isSelectionFromViewer,
 };
