@@ -184,7 +184,7 @@ body {
 
 /* #region Spatial tree */
 
-.tree-content-container{
+.tree-content-container {
   padding: 5px 10px 10px;
 }
 
@@ -195,11 +195,11 @@ body {
 }
 
 .tree-content span {
-  cursor: pointer;
   user-select: none;
   display: block;
   width: 100%;
   font-size: 11px;
+  padding-left: 5px;
 }
 
 .tree-content > ul > li:first-child {
@@ -210,9 +210,11 @@ body {
 .tree-content > ul > li:first-child > span {
   font-weight: 500;
   font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
-.tree-content-container>ul:not(:first-child){
+.tree-content-container > ul:not(:first-child) {
   margin-top: 5px;
 }
 
@@ -223,40 +225,68 @@ body {
 }
 
 .tree-content-container ul > li {
-  margin-left: 5px;
   border-top: solid 1px lightgray;
 }
 
-.tree-content-container li > span:hover {
-  background-color: var(--primary-color-light);
-}
-
 .tree-content-container li > ul {
-  margin-left: 5px;
+  margin-left: 10px;
 }
 
-.tree-content span.active-selection-leaf {
-  background-color: var(--primary-color-dark);
-  color: white;
+.tree-item {
+  cursor: pointer;
+  height: 25px;
+  display: grid;
+  grid-template-columns: 1fr max-content max-content max-content;
+  align-items: center;
+}
+
+.tree-item.has-caret{
+  grid-template-columns: max-content 1fr max-content max-content max-content;
+}
+
+.tree-item:hover {
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+	background-size: 200% 200%;
+}
+
+.tree-item span{
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tree-item.active-selection-leaf {
+  background-color: var(--primary-color-light);
 }
 
 .caret {
   cursor: pointer;
   user-select: none;
 }
-.caret::before {
-  content: "\25B6";
-  color: black;
-  display: inline-block;
-  margin-right: 6px;
-}
-.caret-down::before {
+.caret-down > img{
   transform: rotate(90deg);
 }
 
-.spatial-tree-visibility-icon {
+.spatial-tree-caret{
+  display: grid;
+  place-items: center;
+}
+
+.spatial-tree-caret > img{
+  width: 18px;
+}
+
+.spatial-tree-icon {
   margin-left: 5px;
-  color: darkslategrey;
+  width: max-content;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.spatial-tree-icon img {
+  width: 14px;
+  height: auto;
 }
 /* #endregion Spatial Tree */
 
@@ -296,6 +326,8 @@ body {
 }
 
 /* #region animations */
+
+/* spinner */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -307,6 +339,25 @@ body {
 
 .anim-spinner {
   animation: spin 1.5s linear infinite;
+}
+
+/* gradient moving */
+.anim-gradient {
+	background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+	background-size: 200% 200%;
+	animation: gradient 3s ease infinite;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 30% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
 }
 /* #endregion animations */
 
