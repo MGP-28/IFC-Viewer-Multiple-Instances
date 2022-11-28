@@ -52,7 +52,6 @@ body {
 
 .tools-side-feature {
   max-width: 360px;
-  border-radius: 8px;
   display: grid;
   place-items: start;
   overflow: hidden;
@@ -80,6 +79,7 @@ body {
 }
 
 .tools-side-feature.feature-active {
+  border-radius: 8px;
   background-color: var(--primary-color-dark);
   grid-template-columns: 40px auto 39px;
   place-items: center;
@@ -236,7 +236,8 @@ body {
 }
 
 .tree-content span.active-selection-leaf {
-  background-color: var(--primary-color);
+  background-color: var(--primary-color-dark);
+  color: white;
 }
 
 .caret {
