@@ -1,10 +1,10 @@
+import { buildIcon } from "../../components/generic/icon";
 import getNodePropertyName from "../../helpers/getNodePropertyName";
 import { getIfcRegex } from "../../helpers/repositories/regex";
-import { createSubset } from "../../helpers/subsetBuilder";
 import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
-import * as SelectionStore from "../../stores/selection";
 import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
+import { renderFeatureContainer } from "./containers";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 
@@ -18,15 +18,20 @@ const references = {
 };
 
 export default async function startSpatialTree() {
-  const treesContainer = document.getElementById("spatial-trees-container");
+  const wrapper = renderFeatureContainer(
+    "dataflow-02",
+    "Spatial Tree",
+    "Model Name"
+  );
+  const contentEl = wrapper.getElementsByClassName("tools-side-feature-content")[0];
 
   document.addEventListener("startFeatures", async (event) => {
     const trees = Models.models.map((x) => x.tree);
     const treesEl = await buildTreesContainer(trees);
-    treesContainer.appendChild(treesEl);
+    contentEl.appendChild(treesEl);
   });
 
-  return true;
+  return wrapper;
 }
 
 async function buildTreesContainer(trees) {
@@ -155,15 +160,6 @@ async function buildTitle(node) {
   }
 
   return wrapper;
-}
-
-function buildIcon(iconFileName) {
-  const iconDirectory = `./src/assets/icons/${iconFileName}.svg`;
-
-  const icon = document.createElement("img");
-  icon.src = iconDirectory;
-
-  return icon;
 }
 
 async function processIconEvents(span, icons, node) {
