@@ -52,7 +52,7 @@ function createObjectSubset(model, expressID) {
 /**
  * Add object to subset by its expressID
  * @param {Integer} modelIdx Identifies which model to manipulate
- * @param {Integer} expressIDs 
+ * @param {Array<Integer>} expressIDs 
  */
 function addToSubset(modelIdx, expressIDs) {
   const loader = models[modelIdx].loader;

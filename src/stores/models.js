@@ -1,6 +1,9 @@
 // Model class instances
 let models = [];
-const addModel = (model) => models.push(model);
+const addModel = (model) => {
+  models.push(model)
+  return models.length - 1
+}
 const resetModels = () => (models = []);
 function isAllModelsLoaded() {
   for (let idx = 0; idx < models.length; idx++) {

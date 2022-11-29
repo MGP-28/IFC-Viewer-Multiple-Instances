@@ -1,8 +1,6 @@
-import { emitCustomGlobalEvent } from "../../helpers/emitEvent";
 import * as SubsetBuilder from "../../helpers/subsetBuilder";
 import * as Models from "../../stores/models";
 import * as SelectionStore from "../../stores/selection";
-import { isArrayEqual, isArrayPartOfArray } from "../../validators/arrays";
 
 async function processLeafNodeEvents(titleEl, icons, expressID, modelIdx) {
   const objectIDs = [expressID];
@@ -35,7 +33,7 @@ async function processBuildingEvents(titleEl, icons, modelIdx) {
   const model = Models.models[modelIdx];
   const objectIDs = model.getAllIDs();
   SelectionStore.addNewModelReferenceToVisible(modelIdx);
-  SelectionStore.addIdsToVisible(objectIDs, modelIdx);
+  SelectionStore.addIdsToVisible(modelIdx, objectIDs);
 
   handleEvents(titleEl, icons, objectIDs, modelIdx);
 }
@@ -50,148 +48,120 @@ function toggleActiveCSSClass(title, isActive) {
 
 async function handleEvents(titleEl, icons, objectIDs, modelIdx) {
   let isEnabled = true;
-  handleVisibility(icons, objectIDs, modelIdx, isEnabled);
+  handleVisibility(icons, objectIDs, modelIdx);
 
   let isSelection = false;
-  await handleSelection(
-    icons.selection,
-    objectIDs,
-    modelIdx,
-    isSelection,
-    titleEl
-  );
+  await handleSelection(icons.selection, objectIDs, modelIdx, titleEl);
 
   handleHighlighting(titleEl, objectIDs, modelIdx);
 
-  handleIsolation(icons, objectIDs, modelIdx, isEnabled);
-}
+  handleIsolation(icons, objectIDs, modelIdx);
 
-/**
- * Enables/disables subset on the scene, depending on "isEnabled"
- * @param {Array.<Integer>} expressIDs object expressID
- * @param {Integer} modelIdx identifies which model to manipulate
- * @param {Boolean} isEnabled
- */
-function handleMainSubset(expressIDs, modelIdx, isEnabled) {
-  if (isEnabled) {
-    SubsetBuilder.addToSubset(modelIdx, expressIDs);
-    SelectionStore.addIdsToVisible(modelIdx, expressIDs)
+  function handleHighlighting(titleEl, objectIDs, modelIdx) {
+    titleEl.addEventListener("mouseenter", () => {
+      SelectionStore.setHighlightedProperties(
+        "fake props",
+        objectIDs,
+        modelIdx,
+        false
+      );
+    });
+
+    titleEl.addEventListener("mouseleave", () => {
+      SelectionStore.resetHighlightedProperties();
+    });
   }
-  else {
-    SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
-    SelectionStore.removeIdsFromVisible(modelIdx, expressIDs)
+
+  function handleVisibility(icons, objectIDs, modelIdx) {
+    // (listener, self) click => show/hide self
+    icons.visibility.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      isEnabled = !isEnabled;
+
+      handleMainSubset(objectIDs, modelIdx, isEnabled);
+    });
+
+    document.addEventListener("visibilityChanged", (e) => {
+      coordinateVisibility(icons, objectIDs, modelIdx, isEnabled);
+    });
   }
-}
 
-function handleHighlighting(titleEl, objectIDs, modelIdx) {
-  titleEl.addEventListener("mouseenter", () => {
-    SelectionStore.setHighlightedProperties(
-      "fake props",
-      objectIDs,
-      modelIdx,
-      false
-    );
-  });
-
-  titleEl.addEventListener("mouseleave", () => {
-    SelectionStore.resetHighlightedProperties();
-  });
-}
-
-function handleVisibility(icons, objectIDs, modelIdx, isEnabled) {
-  // (listener, self) click => show/hide self
-  icons.visibility.addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    isEnabled = !isEnabled;
-    // if (isEnabled) SelectionStore.addIdsToVisible(objectIDs, modelIdx);
-    // else SelectionStore.removeIdsFromVisible(modelIdx, objectIDs);
-
-    handleMainSubset(objectIDs, modelIdx, isEnabled);
-
-    toggleVisibilityIcon(icons.visibility, isEnabled);
-  });
-
-  document.addEventListener("visibilityChanged", (e) => {
-    coordinateVisibility(icons, objectIDs, modelIdx, isEnabled);
-  });
-}
-
-async function handleSelection(
-  selectionEl,
-  objectIDs,
-  modelIdx,
-  isSelection,
-  titleEl
-) {
-  const model = Models.models[modelIdx];
-  const loader = model.loader;
-  const props =
-    objectIDs.length == 1
-      ? await loader.ifcManager.getItemProperties(0, objectIDs[0], true)
-      : "fake props";
-
-  selectionEl.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (isSelection) {
-      SelectionStore.resetSelectedProperties();
-      toggleActiveCSSClass(titleEl, false);
-    } else {
-      SelectionStore.setSelectedProperties(props, objectIDs, modelIdx, false);
-      toggleActiveCSSClass(titleEl, true);
-    }
-    isSelection = !isSelection;
-  });
-
-  document.addEventListener("selectedChanged", () => {
-    const selected = SelectionStore.vars.selected;
-    if (selected.isValid() && isArrayEqual(selected.ids, objectIDs)) return;
-    isSelection = false;
-    toggleActiveCSSClass(titleEl, isSelection);
-  });
-}
-
-function handleIsolation(icons, objectIDs, modelIdx, isEnabled) {
-  icons.isolation.addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    isEnabled = true;
-
+  async function handleSelection(selectionEl, objectIDs, modelIdx, titleEl) {
     const model = Models.models[modelIdx];
-    model.subset.removeFromParent();
-    handleMainSubset(objectIDs, modelIdx, isEnabled);
-  });
+    const loader = model.loader;
+    const props =
+      objectIDs.length == 1
+        ? await loader.ifcManager.getItemProperties(0, objectIDs[0], true)
+        : "fake props";
 
-  document.addEventListener("visibilityChanged", (e) => {
-    coordinateVisibility(icons, objectIDs, modelIdx, isEnabled);
-  });
-}
+    selectionEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      isSelection = !isSelection;
+      if (!isSelection) SelectionStore.resetSelectedProperties();
+      else SelectionStore.setSelectedProperties(props, objectIDs, modelIdx, false);
+    });
 
-function toggleVisibilityIcon(visibilityEl, isEnabled) {
-  const icon = visibilityEl.childNodes[0];
-  if (isEnabled) icon.src = icon.src.replace("eye-off.svg", "eye.svg");
-  else icon.src = icon.src.replace("eye.svg", "eye-off.svg");
-}
+    document.addEventListener("selectedChanged", () => {
+      const selected = SelectionStore.vars.selected;
 
-function coordinateVisibility(icons, objectIDs, modelIdx, isEnabled) {
-  let isPart = false;
-  isEnabled = false;
-  for (let idx = 0; idx < objectIDs.length; idx++) {
-    const element = objectIDs[idx];
-    isPart = SelectionStore.isVisible(modelIdx, element);
-    if(isPart) {
-      isEnabled = true;
-      break;
-    }
+      let isInSelection = false;
+      for (let idx = 0; idx < objectIDs.length; idx++) {
+        const expressID = objectIDs[idx];
+        if (selected.includesObjectByID(modelIdx, expressID)) {
+          isInSelection = true;
+          break;
+        }
+      }
+      isSelection = selected.isValid() && isInSelection;
+      toggleActiveCSSClass(titleEl, isSelection);
+    });
   }
 
-  // if (isArrayEqual(ids, objectIDs)) isPart = true;
-  // else isPart = isArrayPartOfArray(objectIDs, ids);
+  function handleIsolation(icons, objectIDs, modelIdx) {
+    icons.isolation.addEventListener("click", (e) => {
+      e.stopPropagation();
 
-  // if (isPart) isEnabled = true;
-  // else isEnabled = false;
+      isEnabled = true;
 
-  toggleVisibilityIcon(icons.visibility, isEnabled);
+      const model = Models.models[modelIdx];
+      model.subset.removeFromParent();
+      handleMainSubset(objectIDs, modelIdx);
+    });
+  }
+
+  function toggleVisibilityIcon(visibilityEl) {
+    const icon = visibilityEl.childNodes[0];
+    if (isEnabled) icon.src = icon.src.replace("eye-off.svg", "eye.svg");
+    else icon.src = icon.src.replace("eye.svg", "eye-off.svg");
+  }
+
+  function coordinateVisibility(icons, objectIDs, modelIdx) {
+    isEnabled = false;
+    for (let idx = 0; idx < objectIDs.length; idx++) {
+      const element = objectIDs[idx];
+      if (SelectionStore.isVisible(modelIdx, element)) {
+        isEnabled = true;
+        break;
+      }
+    }
+    toggleVisibilityIcon(icons.visibility, isEnabled);
+  }
+
+  /**
+   * Enables/disables subset on the scene, depending on "isEnabled"
+   * @param {Array.<Integer>} expressIDs object expressID
+   * @param {Integer} modelIdx identifies which model to manipulate
+   */
+  function handleMainSubset(expressIDs, modelIdx) {
+    if (isEnabled) {
+      SubsetBuilder.addToSubset(modelIdx, expressIDs);
+      SelectionStore.addIdsToVisible(modelIdx, expressIDs);
+    } else {
+      SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
+      SelectionStore.removeIdsFromVisible(modelIdx, expressIDs);
+    }
+  }
 }
 
 // #endregion aux functions

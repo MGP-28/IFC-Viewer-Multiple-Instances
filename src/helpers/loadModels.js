@@ -16,7 +16,7 @@ export default async function loadModels(event) {
     const ifcURL = URL.createObjectURL(event.target.files[idx]);
 
     const modelInstance = new Model();
-    Models.addModel(modelInstance);
+    const modelIdx = Models.addModel(modelInstance);
 
     const ifcLoader = await setupLoader(isFirst);
 

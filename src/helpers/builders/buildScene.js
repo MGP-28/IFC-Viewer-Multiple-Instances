@@ -47,14 +47,14 @@ export default function buildScene() {
   renderer.setSize(size.width, size.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  //Creates grids and axes in the scene
-  const grid = new GridHelper(50, 30);
-  Stored.scene.add(grid);
+  // //Creates grids and axes in the scene
+  // const grid = new GridHelper(50, 30);
+  // Stored.scene.add(grid);
 
-  const axes = new AxesHelper();
-  axes.material.depthTest = false;
-  axes.renderOrder = 1;
-  Stored.scene.add(axes);
+  // const axes = new AxesHelper();
+  // axes.material.depthTest = false;
+  // axes.renderOrder = 1;
+  // Stored.scene.add(axes);
 
   //Creates the orbit controls (to navigate the scene)
   const controls = new OrbitControls(Stored.camera, Stored.threeCanvas);

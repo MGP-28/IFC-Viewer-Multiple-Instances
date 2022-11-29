@@ -18,6 +18,8 @@ function processRenderization(type) {
   const storedObj = SelectedStore.vars[type];
 
   if (storedObj.isValid()) {
+    /* Code for only 1 object selected at a time
+
     // get selected model index in Store array
     const modelIdx = storedObj.modelIdx;
 
@@ -33,7 +35,13 @@ function processRenderization(type) {
     const model = Models.models[modelIdx];
     const IdArr = storedObj.ids;
 
-    createSubset(model, IdArr, type);
+    */
+
+    for (const modelIdx in storedObj.objects) {
+      const idsToHighlight = storedObj.objects[modelIdx];
+      const model = Models.models[modelIdx];
+      createSubset(model, idsToHighlight, type);
+    }
   } else {
     // if there's no selection, remove all selections
     for (let idx = 0; idx < Models.models.length; idx++) {

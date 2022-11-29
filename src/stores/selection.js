@@ -1,27 +1,20 @@
 import { emitGlobalEvent } from "../helpers/emitEvent";
-import { removeElementsFromArray } from "../helpers/generic/arrays";
 import Selected from "../models/Selected";
-
-const vars = {
-  selected: new Selected(),
-  highlighted: new Selected()
-};
-
 
 // Currently visible object's properties
 let visibilityByIds = {};
 
 const isVisible = (modelIdx, expressID) => {
   return visibilityByIds[modelIdx][expressID];
-}
+};
 
 const addNewModelReferenceToVisible = (modelIdx) => {
   visibilityByIds[modelIdx] = {};
-}
+};
 
-const addIdsToVisible = (ids, modelIdx) => {
+const addIdsToVisible = (modelIdx, ids) => {
   for (let idx = 0; idx < ids.length; idx++) {
-    const element = ids[idx]
+    const element = ids[idx];
     visibilityByIds[modelIdx][element] = true;
   }
   emitGlobalEvent("visibilityChanged");
@@ -29,11 +22,16 @@ const addIdsToVisible = (ids, modelIdx) => {
 
 const removeIdsFromVisible = (modelIdx, ids) => {
   for (let idx = 0; idx < ids.length; idx++) {
-    visibilityByIds[modelIdx][ids] = false;
+    const element = ids[idx];
+    visibilityByIds[modelIdx][element] = false;
   }
   emitGlobalEvent("visibilityChanged");
-}
+};
 
+const vars = {
+  selected: new Selected(),
+  highlighted: new Selected(),
+};
 // Currently selected object's properties
 /**
  *
@@ -42,6 +40,7 @@ const removeIdsFromVisible = (modelIdx, ids) => {
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
 const setSelectedProperties = (props, ids, modelIdx, isFromViewer) => {
+  vars.selected.reset();
   vars.selected.addProps(props, ids, modelIdx);
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("selectedChanged");
@@ -63,6 +62,7 @@ let isSelectionFromViewer = true;
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
 const setHighlightedProperties = (props, ids, modelIdx, isFromViewer) => {
+  vars.highlighted.reset();
   vars.highlighted.addProps(props, ids, modelIdx);
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("highlightedChanged");
