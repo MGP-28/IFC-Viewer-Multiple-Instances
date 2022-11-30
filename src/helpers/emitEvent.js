@@ -10,4 +10,9 @@ function emitCustomGlobalEvent(eventName, detail){
     document.dispatchEvent(customEvent)
 }
 
-export { emitGlobalEvent, emitCustomGlobalEvent }
+function emitEventOnElement(element, eventName) {
+    const event = new Event(eventName)
+    element.dispatchEvent(event)
+}
+
+export { emitGlobalEvent, emitCustomGlobalEvent, emitEventOnElement }
