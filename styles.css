@@ -71,6 +71,11 @@ body {
   z-index: 99;
 }
 
+.tools-side-feature-icon.notready{
+  opacity: 50%;
+  cursor: not-allowed;
+}
+
 .tools-side-feature > :not(.tools-side-feature-icon) {
   display: none;
 }

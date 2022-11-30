@@ -2,6 +2,7 @@ import { createElement } from "../../helpers/generic/domElements";
 import { buildIcon } from "../generic/icon";
 
 function renderFeatureContainer(icon, header, name) {
+  // build container and content
   const featureContainer = createElement("div", {
     classes: ["tools-side-feature"],
   });
@@ -11,32 +12,42 @@ function renderFeatureContainer(icon, header, name) {
     <div class="tools-side-feature-close"></div>
     <div class="tools-side-feature-name">${name}</div>
     <div class="tools-side-feature-content"></div>
-    `;
+  `;
 
+  // add icons
   const iconClose = buildIcon("x");
   const closeWrapper = featureContainer.getElementsByClassName(
     "tools-side-feature-close"
   )[0];
-  closeWrapper.classList.add("interaction-cursor");
+  closeWrapper.classList.add("notready");
   closeWrapper.appendChild(iconClose);
 
   const iconMain = buildIcon(icon);
   const iconWrapper = featureContainer.getElementsByClassName(
     "tools-side-feature-icon"
   )[0];
-  iconWrapper.classList.add("interaction-cursor");
+  iconWrapper.classList.add("notready");
   iconWrapper.appendChild(iconMain);
 
+  // manage events
   let isActive = false;
-  iconWrapper.addEventListener("click", (e) => {
-    isActive = !isActive;
-    animationControl(isActive);
-  });
+  eventControl();
 
-  closeWrapper.addEventListener("click", (e) => {
-    isActive = false;
-    animationControl(isActive);
-  });
+  function eventControl() {
+    featureContainer.addEventListener("featureReady", () => {
+      iconWrapper.classList.remove("notready");
+      iconWrapper.classList.add("interaction-cursor");
+      iconWrapper.addEventListener("click", (e) => {
+        isActive = !isActive;
+        animationControl(isActive);
+      });
+
+      closeWrapper.addEventListener("click", (e) => {
+        isActive = false;
+        animationControl(isActive);
+      });
+    });
+  }
 
   function animationControl(isActive) {
     if (isActive) {

@@ -1,4 +1,5 @@
 import { buildIcon } from "../../components/generic/icon";
+import { emitEventOnElement } from "../../helpers/emitEvent";
 import getNodePropertyName from "../../helpers/getNodePropertyName";
 import { getIfcRegex } from "../../helpers/repositories/regex";
 import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
@@ -29,6 +30,8 @@ export default async function startSpatialTree() {
     const trees = Models.models.map((x) => x.tree);
     const treesEl = await buildTreesContainer(trees);
     contentEl.appendChild(treesEl);
+
+    emitEventOnElement(wrapper, "featureReady")
   });
 
   return wrapper;
