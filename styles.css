@@ -2,6 +2,7 @@
   --primary-color: #1a6dff;
   --primary-color-dark: #152243;
   --primary-color-light: #9fd1ff;
+  --primary-color-light-transparent: #9fd1ff49;
   --transparent-background-light: rgba(255, 255, 255, 0.8);
   --transparent-background-dark: rgba(0, 20, 20, 0.8);
   --grayed: #9a9a9a;
@@ -277,6 +278,7 @@ body {
   display: grid;
   grid-template-columns: 1fr max-content max-content max-content;
   align-items: center;
+  transition: background-color 0.5s;
 }
 
 .tree-item.has-caret {
@@ -286,12 +288,17 @@ body {
 .tree-item:hover {
   background: linear-gradient(-90deg, white, white, var(--primary-color-light));
   background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
 }
 
 .tree-item span {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.tree-leaf {
+  cursor: crosshair;
 }
 
 .tree-item.active-selection-leaf {
@@ -321,11 +328,23 @@ body {
   height: 100%;
   display: grid;
   place-items: center;
+  cursor: pointer;
 }
 
 .spatial-tree-icon img {
   width: 14px;
   height: auto;
+  transition: all 0.4s;
+}
+
+.spatial-tree-icon img:hover {
+  animation: pulsing 1s alternate infinite ease;
+}
+
+@keyframes pulsing {
+  100%{
+    transform: scale(1.2);
+  }
 }
 /* #endregion Spatial Tree */
 
