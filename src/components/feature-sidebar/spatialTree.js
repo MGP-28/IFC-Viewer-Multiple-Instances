@@ -117,18 +117,21 @@ async function buildTitle(node) {
   const wrapper = document.createElement("div");
   wrapper.classList.add("tree-item");
 
-  if(node.children.length > 0) {
+  const hasChildren = node.children.length > 0
+
+  if(hasChildren) {
     const caretIcon = document.createElement("div");
     caretIcon.classList.add("spatial-tree-caret");
     caretIcon.appendChild(buildIcon("chevron-right"));
     wrapper.appendChild(caretIcon);
     wrapper.classList.add("has-caret")
   }
+  else wrapper.classList.add("tree-leaf");
 
   // create node title span
   const span = document.createElement("span");
   const _text =
-    node.children.length == 0 || IFCCategoriesToFecthName.includes(node.type)
+    !hasChildren || IFCCategoriesToFecthName.includes(node.type)
       ? await getNodePropertyName(node, currentTreeIdx)
       : node.type;
   const text = removeIFCTagsFromName(_text);
@@ -142,17 +145,21 @@ async function buildTitle(node) {
     const visibilityIcon = document.createElement("div");
     visibilityIcon.appendChild(buildIcon("eye"));
 
-    const selectIcon = document.createElement("div");
-    selectIcon.appendChild(buildIcon("roller-brush"));
+    let selectIcon = undefined;
+    if(hasChildren){
+      selectIcon = document.createElement("div");
+      selectIcon.appendChild(buildIcon("target-02"));
+    }
 
     const isolateIcon = document.createElement("div");
-    isolateIcon.appendChild(buildIcon("mark"));
+    isolateIcon.appendChild(buildIcon("scale-01"));
 
     const icons = {
       visibility: visibilityIcon,
-      selection: selectIcon,
       isolation: isolateIcon
     };
+    if(hasChildren) icons["selection"] = selectIcon
+
     await processIconEvents(wrapper, icons, node);
 
     for (const key in icons) {

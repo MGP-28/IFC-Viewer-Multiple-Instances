@@ -88,18 +88,21 @@ async function handleEvents(titleEl, icons, objectIDs, modelIdx) {
   }
 
   async function handleSelection(selectionEl, objectIDs, modelIdx, titleEl) {
+    const isLeaf = objectIDs.length == 1;
     const model = Models.models[modelIdx];
     const loader = model.loader;
-    const props =
-      objectIDs.length == 1
-        ? await loader.ifcManager.getItemProperties(0, objectIDs[0], true)
-        : "fake props";
+    const props = isLeaf
+      ? await loader.ifcManager.getItemProperties(0, objectIDs[0], true)
+      : "fake props";
 
-    selectionEl.addEventListener("click", (e) => {
+    const eventEl = isLeaf ? titleEl : selectionEl;
+
+    eventEl.addEventListener("click", (e) => {
       e.stopPropagation();
       isSelection = !isSelection;
       if (!isSelection) SelectionStore.resetSelectedProperties();
-      else SelectionStore.setSelectedProperties(props, objectIDs, modelIdx, false);
+      else
+        SelectionStore.setSelectedProperties(props, objectIDs, modelIdx, false);
     });
 
     document.addEventListener("selectedChanged", () => {

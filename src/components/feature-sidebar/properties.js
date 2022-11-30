@@ -92,7 +92,6 @@ export default function startPropertiesFeature() {
   )[0];
   document.addEventListener("selectedChanged", () => {
     const selected = SelectionStore.vars.selected;
-    console.log(selected.isGroupSelection());
     if (selected.isGroupSelection()) return;
     mainProperties.forEach((propertyName) => {
       const id = `property-${propertyName}`;
@@ -104,6 +103,7 @@ export default function startPropertiesFeature() {
   //
   //
   //
+  // await loader.ifcManager.getPropertySets(modelId, elementId);
 
 
   // feature activating event handling

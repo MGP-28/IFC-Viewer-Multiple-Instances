@@ -16,10 +16,8 @@ export default function startRenderingEvents() {
 // @type (string) = material type, according to src/configs/materials.js
 function processRenderization(type) {
   const storedObj = SelectedStore.vars[type];
-  console.log(storedObj)
 
   if (storedObj.isValid()) {
-    console.log('here!')
     /* Code for only 1 object selected at a time
 
     // get selected model index in Store array
