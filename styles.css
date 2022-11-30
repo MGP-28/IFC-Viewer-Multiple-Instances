@@ -83,10 +83,23 @@ body {
   color: white;
   width: 100%;
   font-weight: 700;
+  user-select: none;
 }
+
 .tools-side-feature-close {
   margin: 0 10px 0 5px;
   height: 24px;
+}
+
+.tools-side-feature-name {
+  background-color: var(--primary-color-light);
+  color: white;
+  width: 100%;
+  padding: 5px 10px;
+  overflow: hidden;
+  grid-column: span 3;
+  font-weight: 500;
+  user-select: none;
 }
 
 .tools-side-feature.feature-active {
@@ -98,18 +111,16 @@ body {
   line-height: 20px;
 }
 
-.tools-side-feature.feature-active > :not(.tools-side-feature-icon) {
-  display: block;
+.tools-side-feature.opening {
+  animation: sidetools-feature-active 0.5s;
 }
 
-.tools-side-feature-name {
-  background-color: var(--primary-color-light);
-  color: white;
-  width: 100%;
-  padding: 5px 10px;
-  overflow: hidden;
-  grid-column: span 3;
-  font-weight: 500;
+.tools-side-feature.closing {
+  animation: sidetools-feature-active 0.5s reverse;
+}
+
+.tools-side-feature.feature-active > :not(.tools-side-feature-icon) {
+  display: block;
 }
 
 .tools-side-feature-content {
@@ -244,16 +255,16 @@ body {
   align-items: center;
 }
 
-.tree-item.has-caret{
+.tree-item.has-caret {
   grid-template-columns: max-content 1fr max-content max-content max-content;
 }
 
 .tree-item:hover {
   background: linear-gradient(-90deg, white, white, var(--primary-color-light));
-	background-size: 200% 200%;
+  background-size: 200% 200%;
 }
 
-.tree-item span{
+.tree-item span {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -267,16 +278,16 @@ body {
   cursor: pointer;
   user-select: none;
 }
-.caret-down > img{
+.caret-down > img {
   transform: rotate(90deg);
 }
 
-.spatial-tree-caret{
+.spatial-tree-caret {
   display: grid;
   place-items: center;
 }
 
-.spatial-tree-caret > img{
+.spatial-tree-caret > img {
   width: 18px;
 }
 
@@ -347,25 +358,39 @@ body {
 
 /* gradient moving */
 .anim-gradient {
-	background: linear-gradient(-90deg, white, white, var(--primary-color-light));
-	background-size: 200% 200%;
-	animation: gradient 3s ease infinite;
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
 }
 
 @keyframes gradient {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 30% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 30% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
+
+/* feature opening/closing */
+@keyframes sidetools-feature-active {
+  0% {
+    width: 40px;
+    border-radius: 4px;
+    opacity: 60%;
+  }
+  100% {
+    width: 100%;
+    border-radius: 8px;
+  }
+}
+
 /* #endregion animations */
 
-.interaction-cursor{
+.interaction-cursor {
   cursor: pointer;
 }
 
