@@ -1,5 +1,7 @@
+import { Scene } from "three";
 import * as SubsetBuilder from "../../helpers/subsetBuilder";
 import * as Models from "../../stores/models";
+import { scene } from "../../stores/scene";
 import * as SelectionStore from "../../stores/selection";
 
 async function processLeafNodeEvents(titleEl, icons, expressID, modelIdx) {
@@ -127,8 +129,14 @@ async function handleEvents(titleEl, icons, objectIDs, modelIdx) {
 
       isEnabled = true;
 
-      const model = Models.models[modelIdx];
-      model.subset.removeFromParent();
+      // for (let idx = 0; idx < Models.models.length; idx++) {
+      //   const model = Models.models[idx];
+      //   const ids = model.getAllIDs();
+      //   SubsetBuilder.removeFromSubset(idx, ids);
+      // }
+
+      SelectionStore.resetVisible();
+
       handleMainSubset(objectIDs, modelIdx);
     });
   }
