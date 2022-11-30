@@ -5,12 +5,31 @@
   --transparent-background-light: rgba(255, 255, 255, 0.8);
   --transparent-background-dark: rgba(0, 20, 20, 0.8);
   --grayed: #9a9a9a;
+  --scroll-bar-color: #c5c5c5;
+  --scroll-bar-bg-color: #f6f6f6;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-bar-color) var(--scroll-bar-bg-color);
+}
+
+/* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scroll-bar-bg-color);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-bar-color);
+  border-radius: 20px;
+  border: 3px solid var(--scroll-bar-bg-color);
 }
 
 html,
@@ -39,7 +58,7 @@ body {
   position: absolute;
   background-color: transparent;
   display: inline-block;
-  padding: 10px 0 10px 10px;
+  padding: 10px;
   height: 100vh;
   font-family: Montserrat;
   overflow-y: scroll;
@@ -55,7 +74,7 @@ body {
   display: grid;
   place-items: start;
   overflow: hidden;
-  filter: drop-shadow(0px 12px 16px rgba(0, 0, 0, 0.08));
+  filter: drop-shadow(0px 8px 6px rgba(0, 0, 0, 0.08));
   border: none;
 }
 
@@ -71,7 +90,7 @@ body {
   z-index: 99;
 }
 
-.tools-side-feature-icon.notready{
+.tools-side-feature-icon.notready {
   opacity: 50%;
   cursor: not-allowed;
 }
@@ -94,6 +113,7 @@ body {
 .tools-side-feature-close {
   margin: 0 10px 0 5px;
   height: 24px;
+  cursor: pointer;
 }
 
 .tools-side-feature-name {
