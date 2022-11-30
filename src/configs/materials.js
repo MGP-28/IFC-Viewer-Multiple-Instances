@@ -12,7 +12,7 @@ export default materials = {
   selected: new MeshBasicMaterial({
     transparent: true,
     opacity: 0.8,
-    color: parseInt(UIConfigs.primaryColorDark, 16),
+    color: parseInt(UIConfigs.primaryColor, 16),
     depthTest: false,
   }),
 };

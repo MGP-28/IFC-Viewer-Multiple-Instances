@@ -31,6 +31,10 @@ export default async function startSpatialTree() {
     const treesEl = await buildTreesContainer(trees);
     contentEl.appendChild(treesEl);
 
+    const featureName = wrapper.getElementsByClassName(
+      "tools-side-feature-name"
+    )[0];
+
     emitEventOnElement(wrapper, "featureReady")
   });
 

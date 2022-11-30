@@ -71,7 +71,7 @@ body {
 }
 
 .tools-side-feature {
-  max-width: 370px;
+  max-width: 340px;
   display: grid;
   place-items: start;
   overflow: hidden;
@@ -126,6 +126,7 @@ body {
   grid-column: span 3;
   font-weight: 500;
   user-select: none;
+  word-break: break-word; 
 }
 
 .tools-side-feature.feature-active {
@@ -208,18 +209,31 @@ body {
   grid-template-columns: 100px 1fr;
   font-size: 10px;
   border-bottom: solid 1px var(--grayed);
+  align-items: center;
 }
 
 .tools-side-properties-table li:first-child {
   font-weight: 700;
   font-size: 12px;
   color: black;
-  margin-bottom: 8px;
 }
 
 .tools-side-properties-table li > :not(:first-child) {
   width: 100%;
 }
+
+.tools-side-properties-table li span{
+  padding: 2px 5px;
+  line-height: 20px;
+}
+
+.tools-side-properties-table li span:first-child{
+  height: max-content;
+}
+
+/* .tools-side-properties-table li:not(:first-child) span:not(:first-child){
+  border-left: solid 1px var(--grayed);
+} */
 /* #endregion Tools side tab */
 
 /* #region Spatial tree */
@@ -278,7 +292,8 @@ body {
   display: grid;
   grid-template-columns: 1fr max-content max-content max-content;
   align-items: center;
-  transition: background-color 0.5s;
+  box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);
+  transition: all 0.5s;
 }
 
 .tree-item.has-caret {
@@ -289,6 +304,7 @@ body {
   background: linear-gradient(-90deg, white, white, var(--primary-color-light));
   background-size: 200% 200%;
   background-color: var(--primary-color-light-transparent);
+  transition: all 0.5s;
 }
 
 .tree-item span {

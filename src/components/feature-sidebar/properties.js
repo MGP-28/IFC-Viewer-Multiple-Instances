@@ -1,12 +1,14 @@
+import getCuratedCategoryNameById from "../../helpers/categoryNames";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
+import { capitalizeFirstLetter } from "../../helpers/generic/strings";
 import * as SelectionStore from "../../stores/selection";
 import { renderFeatureContainer } from "./containers";
 
 const mainProperties = [
-  "ExpressID",
-  "Type",
-  "GlobalID",
+  "expressID",
+  "type",
+  "GlobalId",
   "Name",
   "ObjectType",
   "Tag",
@@ -18,7 +20,7 @@ export default function startPropertiesFeature() {
   const wrapper = renderFeatureContainer(
     "building-06",
     "Object properties",
-    "Select a object"
+    "Select an object"
   );
   const contentEl = wrapper.getElementsByClassName(
     "tools-side-feature-content"
@@ -54,6 +56,7 @@ export default function startPropertiesFeature() {
   const tabsWrapper = contentEl.getElementsByClassName(
     "tools-side-properties-tabs"
   )[0];
+
   // when a tab is selected, changes each child to reflect changes
   tabsWrapper.addEventListener("tabChanged", () => {
     for (let idx = 0; idx < tabsWrapper.children.length; idx++) {
@@ -62,6 +65,7 @@ export default function startPropertiesFeature() {
       else element.classList.remove("tab-active");
     }
   });
+
   // event handlers on each tab
   for (let idx = 0; idx < tabsWrapper.children.length; idx++) {
     const element = tabsWrapper.children[idx];
@@ -77,46 +81,68 @@ export default function startPropertiesFeature() {
   )[0];
   // add a line for each property defined as "main"
   mainProperties.forEach((element) => {
-    const propertyEl = buildLi(element, "");
+    const propertyText = capitalizeFirstLetter(element);
+    const propertyEl = buildLi(propertyText, "", element);
     tableEl.appendChild(propertyEl);
   });
 
   //
   //
   //
-  const featureName = wrapper.getElementsByClassName(
+  const headerText = wrapper.getElementsByClassName(
     "tools-side-feature-name"
-  )[0];
-  const propertiesHeaderEl = contentEl.getElementsByClassName(
-    "tools-side-properties-header"
   )[0];
   document.addEventListener("selectedChanged", () => {
     const selected = SelectionStore.vars.selected;
-    if (selected.isGroupSelection()) return;
-    mainProperties.forEach((propertyName) => {
-      const id = `property-${propertyName}`;
-      const domElement = document.getElementById(id);
-      if(selected.props[propertyName]) domElement.textContent = selected.props[propertyName].value;
-      else domElement.textContent = "-"
-    });
+
+    let category = getCuratedCategoryNameById(selected.props.type);
+
+    if (selected.isValid() && !selected.isGroupSelection()) {
+
+      mainProperties.forEach((propertyName) => {
+
+        const id = `property-${propertyName}`;
+        const domElement = document.getElementById(id);
+        const value = selected.props[propertyName];
+
+        let text = value;
+        if(!value) text = "-"
+        else if(typeof value === "object") text = value.value
+        else if(propertyName == "type") text = category
+
+        domElement.textContent = text;
+      });
+      // Changes feature header displayed name
+      const _headerText = `${category} - ${selected.props.expressID}`
+      headerText.textContent = _headerText;
+    } else {
+      resetFields();
+    }
+
+    function resetFields() {
+      mainProperties.forEach((propertyName) => {
+        const id = `property-${propertyName}`;
+        const domElement = document.getElementById(id);
+        domElement.textContent = "";
+      });
+    }
   });
   //
   //
   //
   // await loader.ifcManager.getPropertySets(modelId, elementId);
 
-
   // feature activating event handling
   document.addEventListener("startFeatures", async (event) => {
-    emitEventOnElement(wrapper, "featureReady")
+    emitEventOnElement(wrapper, "featureReady");
   });
 
   return wrapper;
 }
 
-function buildLi(property, value) {
+function buildLi(property, value, ref) {
   const li = createElement("li");
-  const id = `property-${property}`;
+  const id = `property-${ref}`;
   const propertySpan = createElement("span", { textContent: property });
   const valueSpan = createElement("span", { textContent: value, id: id });
   li.appendChild(propertySpan);
