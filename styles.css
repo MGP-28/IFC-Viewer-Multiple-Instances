@@ -51,7 +51,7 @@ body {
 }
 
 .tools-side-feature {
-  max-width: 360px;
+  max-width: 370px;
   display: grid;
   place-items: start;
   overflow: hidden;
@@ -125,7 +125,6 @@ body {
 
 .tools-side-feature-content {
   width: 340px;
-  max-width: 33vw;
   background-color: white;
   grid-column: span 3;
 }
@@ -380,7 +379,7 @@ body {
   0% {
     width: 40px;
     border-radius: 4px;
-    opacity: 60%;
+    opacity: 70%;
   }
   100% {
     width: 100%;
