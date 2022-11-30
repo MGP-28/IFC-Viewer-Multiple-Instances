@@ -24,10 +24,10 @@ export default class Selected {
     }
   }
   isValid() {
-    return hasOneObject();
+    return hasOneObject(this.objects);
   }
   isGroupSelection() {
-    return hasMultipleObject();
+    return hasMultipleObject(this.objects);
   }
   includesObjectByID(modelIdx, expressID) {
     const objectsByModel = this.objects[modelIdx];
@@ -36,28 +36,28 @@ export default class Selected {
   }
 }
 
-function hasOneObject() {
+function hasOneObject(objects) {
   let counter = 0;
-  for (const key in this.objects) {
-    counter += this.objects[key].length;
+  for (const key in objects) {
+    counter += objects[key].length;
     if (counter > 0) return true;
   }
   return false;
 }
 
-function hasMultipleObject() {
+function hasMultipleObject(objects) {
   let counter = 0;
-  for (const key in this.objects) {
-    counter += this.objects[key].length;
+  for (const key in objects) {
+    counter += objects[key].length;
     if (counter > 1) return true;
   }
   return false;
 }
 
-function countObjects() {
+function countObjects(objects) {
   let counter = 0;
-  for (const key in this.objects) {
-    counter += this.objects[key].length;
+  for (const key in objects) {
+    counter += objects[key].length;
   }
   return counter;
 }

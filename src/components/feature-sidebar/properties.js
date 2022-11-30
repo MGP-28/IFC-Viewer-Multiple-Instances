@@ -97,7 +97,8 @@ export default function startPropertiesFeature() {
     mainProperties.forEach((propertyName) => {
       const id = `property-${propertyName}`;
       const domElement = document.getElementById(id);
-      domElement.textContent = selected.props[propertyName].value;
+      if(selected.props[propertyName]) domElement.textContent = selected.props[propertyName].value;
+      else domElement.textContent = "-"
     });
   });
   //
