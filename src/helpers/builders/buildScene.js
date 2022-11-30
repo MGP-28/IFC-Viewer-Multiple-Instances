@@ -58,7 +58,7 @@ export default function buildScene() {
 
   //Creates the orbit controls (to navigate the scene)
   const controls = new OrbitControls(Stored.camera, Stored.threeCanvas);
-  controls.enableDamping = true;
+  controls.enableDamping = false;
   controls.target.set(-2, 0, 0);
 
   //Stats debug component
