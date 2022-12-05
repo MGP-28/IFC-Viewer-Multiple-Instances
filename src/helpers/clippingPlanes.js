@@ -54,8 +54,7 @@ export default function clipping() {
 
     let frontFaceStencilMat;
     let backFaceStencilMat;
-    let planeStencilMat;
-    let invisible;
+    // let planeStencilMat;
 
     initStencilMaterials();
 
@@ -72,7 +71,7 @@ export default function clipping() {
 
     planeMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(planeSize.x + 6, planeSize.z + 6),
-      invisible
+      Materials.materials.transparent
     );
     planeMesh.scale.setScalar(100);
     plane.coplanarPoint(planeMesh.position);
@@ -104,18 +103,15 @@ export default function clipping() {
       frontFaceStencilMat.stencilZFail = THREE.DecrementWrapStencilOp;
       frontFaceStencilMat.stencilZPass = THREE.DecrementWrapStencilOp;
 
-      //   planeStencilMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      //   Plane clipping with filling
+      //
+      //   planeStencilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
       //   planeStencilMat.stencilWrite = true;
       //   planeStencilMat.stencilRef = 0;
       //   planeStencilMat.stencilFunc = THREE.NotEqualStencilFunc;
       //   planeStencilMat.stencilFail = THREE.ReplaceStencilOp;
       //   planeStencilMat.stencilZFail = THREE.ReplaceStencilOp;
       //   planeStencilMat.stencilZPass = THREE.ReplaceStencilOp;
-
-      invisible = new THREE.ShaderMaterial({
-        vertexShader: CAPS.SHADER.invisibleVertexShader,
-        fragmentShader: CAPS.SHADER.invisibleFragmentShader,
-      });
     }
   }
 }

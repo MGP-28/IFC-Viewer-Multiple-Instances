@@ -53,9 +53,7 @@ async function pickClippingPlane(event) {
   // aux functions
   function castPlanes() {
     const visualPlanes = ClippingPlanesStore.visualPlanes;
-    const results = RaycastStore.raycaster.intersectObjects(visualPlanes);
-    console.log("result", results);
-    const result = results[0];
+    const result = RaycastStore.raycaster.intersectObjects(visualPlanes)[0];
     return result;
   }
 }

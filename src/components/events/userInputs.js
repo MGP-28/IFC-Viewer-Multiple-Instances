@@ -20,7 +20,6 @@ export default function startUserInputs() {
       if (isMouseDragging) return;
       if (userInteractions.clippingPlanes) {
         const isPlaneFound = await pickClippingPlane(event);
-        console.log('found plane', isPlaneFound)
         // if no plane is found, exits
         if (!isPlaneFound) {
           resetVisualPlanesColoring();
