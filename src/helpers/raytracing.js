@@ -1,4 +1,5 @@
 import RaycastIntersectObject from "../models/raycastIntersectObject.js";
+import * as ClippingPlanesStore from "../stores/clippingPlanes.js";
 import * as Models from "../stores/models.js";
 import * as RaycastStore from "../stores/raycast.js";
 import * as Scene from "../stores/scene.js";
@@ -9,7 +10,7 @@ import * as SelectedStore from "../stores/selection.js";
  * @param {Event} event event triggered
  * @param {Boolean} isSelection is user selection or hover highlighting
  */
-async function pick(event, isSelection) {
+async function pickObject(event, isSelection) {
   setupCast(event);
 
   // Casts a ray for each model uploaded, returns object
@@ -31,7 +32,35 @@ async function pick(event, isSelection) {
   return response;
 }
 
-function setupCast(event) {
+/**
+ * Gets users' mouse position, casts a ray to intercept planes on the render
+ * @param {Event} event event triggered
+ * @return true if plane is found, false otherwise
+ */
+async function pickClippingPlane(event) {
+  setupCast(event, "plane");
+
+  const planeFound = castPlanes();
+
+  if (!planeFound) {
+    ClippingPlanesStore.resetFoundPlane();
+    return false;
+  }
+
+  ClippingPlanesStore.setFoundPlane(planeFound);
+  return true;
+
+  // aux functions
+  function castPlanes() {
+    const visualPlanes = ClippingPlanesStore.visualPlanes;
+    const results = RaycastStore.raycaster.intersectObjects(visualPlanes);
+    console.log("result", results);
+    const result = results[0];
+    return result;
+  }
+}
+
+function setupCast(event, type = false) {
   // Computes the position of the mouse on the screen
   const bounds = Scene.threeCanvas.getBoundingClientRect();
 
@@ -44,6 +73,7 @@ function setupCast(event) {
   RaycastStore.mouse.y = -(y1 / y2) * 2 + 1;
 
   // Places it on the camera pointing to the mouse
+
   RaycastStore.raycaster.setFromCamera(RaycastStore.mouse, Scene.camera);
 }
 
@@ -83,10 +113,22 @@ async function storeFoundObjectProperties(isSelection) {
   const ifcLoader = Models.models[modelIdx].loader;
   const id = ifcLoader.ifcManager.getExpressId(geometry, index);
   const props = await ifcLoader.ifcManager.getItemProperties(0, id);
-  if (isSelection) SelectedStore.setSelectedProperties(props, [props.expressID], modelIdx, true);
-  else SelectedStore.setHighlightedProperties("fake props", [props.expressID], modelIdx, true);
+  if (isSelection)
+    SelectedStore.setSelectedProperties(
+      props,
+      [props.expressID],
+      modelIdx,
+      true
+    );
+  else
+    SelectedStore.setHighlightedProperties(
+      "fake props",
+      [props.expressID],
+      modelIdx,
+      true
+    );
 
   return true;
 }
 
-export { pick, setupCast as cast, castEachModel };
+export { pickObject, pickClippingPlane };

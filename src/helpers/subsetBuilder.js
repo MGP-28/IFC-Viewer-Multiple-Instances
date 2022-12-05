@@ -1,4 +1,4 @@
-import materials from "../configs/materials.js";
+import {materials} from "../configs/materials.js";
 import * as Scene from "../stores/scene.js";
 import Model from "../models/Model.js";
 import { models } from "../stores/models.js";

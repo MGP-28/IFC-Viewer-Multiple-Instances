@@ -5,19 +5,12 @@
 const threeCanvas = document.getElementById("three-canvas");
 
 let scene = undefined;
-
-let camera = undefined;
-
 const setScene = (value) => (scene = value);
 
+let camera = undefined;
 const setCamera = (value) => (camera = value);
 
-// const removeAllObjectsInScene = () => {
-//   for (let idx = 0; idx < Models.models.length; idx++) {
-//     const model = Models.models[idx];
-//     const ids = model.getAllIDs();
-//     SubsetBuilder.removeFromSubset(idx, ids);
-//   }
-// };
+let controls = undefined;
+const setControls = (value) => (controls = value);
 
-export { threeCanvas, scene, setScene, camera, setCamera, /*removeAllObjectsInScene*/ };
+export { threeCanvas, scene, setScene, camera, setCamera, controls, setControls };

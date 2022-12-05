@@ -8,12 +8,12 @@ import {
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import * as Stored from "../../stores/scene";
+import * as SceneStore from "../../stores/scene";
 import Stats from "stats.js/src/Stats";
 
 export default function buildScene() {
   //Start scene in Three
-  Stored.setScene(new Scene());
+  SceneStore.setScene(new Scene());
 
   //Object to store the size of the viewport
   const size = {
@@ -22,25 +22,25 @@ export default function buildScene() {
   };
 
   //Creates the camera (point of view of the user)
-  Stored.setCamera(new PerspectiveCamera(75, size.width / size.height));
-  Stored.camera.position.z = 15;
-  Stored.camera.position.y = 13;
-  Stored.camera.position.x = 8;
+  SceneStore.setCamera(new PerspectiveCamera(75, size.width / size.height));
+  SceneStore.camera.position.z = 15;
+  SceneStore.camera.position.y = 13;
+  SceneStore.camera.position.x = 8;
 
   //Creates the lights of the scene
   const lightColor = 0xffffff;
 
   const ambientLight = new AmbientLight(lightColor, 0.5);
-  Stored.scene.add(ambientLight);
+  SceneStore.scene.add(ambientLight);
 
   const directionalLight = new DirectionalLight(lightColor, 1);
   directionalLight.position.set(0, 10, 0);
   directionalLight.target.position.set(-5, 0, 0);
-  Stored.scene.add(directionalLight);
-  Stored.scene.add(directionalLight.target);
+  SceneStore.scene.add(directionalLight);
+  SceneStore.scene.add(directionalLight.target);
 
   const renderer = new WebGLRenderer({
-    canvas: Stored.threeCanvas,
+    canvas: SceneStore.threeCanvas,
     alpha: true,
     antialias: true,
   });
@@ -57,9 +57,10 @@ export default function buildScene() {
   // Stored.scene.add(axes);
 
   //Creates the orbit controls (to navigate the scene)
-  const controls = new OrbitControls(Stored.camera, Stored.threeCanvas);
+  const controls = new OrbitControls(SceneStore.camera, SceneStore.threeCanvas);
   controls.enableDamping = false;
   controls.target.set(-2, 0, 0);
+  SceneStore.setControls(controls);
 
   //Stats debug component
   var stats = new Stats();
@@ -73,7 +74,7 @@ export default function buildScene() {
     stats.begin();
 
     controls.update();
-    renderer.render(Stored.scene, Stored.camera);
+    renderer.render(SceneStore.scene, SceneStore.camera);
 
     stats.end();
 
@@ -85,8 +86,8 @@ export default function buildScene() {
   //Adjust the viewport to the size of the browser
   window.addEventListener("resize", () => {
     (size.width = window.innerWidth), (size.height = window.innerHeight);
-    Stored.camera.aspect = size.width / size.height;
-    Stored.camera.updateProjectionMatrix();
+    SceneStore.camera.aspect = size.width / size.height;
+    SceneStore.camera.updateProjectionMatrix();
     renderer.setSize(size.width, size.height);
   });
 }

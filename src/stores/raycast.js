@@ -20,7 +20,6 @@ const mouse = new Vector2();
 function setupRaycaster() {
   raycaster.firstHitOnly = true;
 }
-
 export let subsetRaycast = [];
 
 export { found, setFound, resetFound, isFoundValid, raycaster, mouse };
