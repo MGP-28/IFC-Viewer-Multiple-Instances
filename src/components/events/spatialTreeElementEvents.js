@@ -1,7 +1,5 @@
-import { Scene } from "three";
 import * as SubsetBuilder from "../../helpers/subsetBuilder";
 import * as Models from "../../stores/models";
-import { scene } from "../../stores/scene";
 import * as SelectionStore from "../../stores/selection";
 
 async function processLeafNodeEvents(titleEl, icons, expressID, modelIdx) {
@@ -127,17 +125,18 @@ async function handleEvents(titleEl, icons, objectIDs, modelIdx) {
     icons.isolation.addEventListener("click", (e) => {
       e.stopPropagation();
 
-      isEnabled = true;
+      // Removes all objects from each model subsets
+      for (let idx = 0; idx < Models.models.length; idx++) {
+        const modelIds = Models.models[idx].getAllIDs();
+        SubsetBuilder.removeFromSubset(idx, modelIds);
+      }
 
-      // for (let idx = 0; idx < Models.models.length; idx++) {
-      //   const model = Models.models[idx];
-      //   const ids = model.getAllIDs();
-      //   SubsetBuilder.removeFromSubset(idx, ids);
-      // }
-
+      // Turns off all object references
       SelectionStore.resetVisible();
-
-      handleMainSubset(objectIDs, modelIdx);
+      
+      // Enables only the selected objects
+      isEnabled = true;
+      handleMainSubset(objectIDs, modelIdx, isEnabled);
     });
   }
 

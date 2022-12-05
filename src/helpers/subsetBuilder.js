@@ -1,7 +1,7 @@
 import materials from "../configs/materials.js";
-import { models } from "../stores/models.js";
 import * as Scene from "../stores/scene.js";
 import Model from "../models/Model.js";
+import { models } from "../stores/models.js";
 
 /**
  *  Creates subset with custom material, used for highlighting
@@ -33,20 +33,18 @@ function removeSubset(model, type) {
 /**
  * Creates subset for a specific model. UNUSED
  * @param {Model} model 
- * @param {Integer} expressID 
+ * @param {Integer} ids 
  * @returns subset
  */
-function createObjectSubset(model, expressID) {
-  const arr = [];
-  arr.push(expressID);
-  const subset = model.loader.ifcManager.createSubset({
+function resetSubset(modelIdx) {
+  const loader = models[modelIdx].loader;
+  loader.ifcManager.createSubset({
     modelID: 0,
-    ids: arr,
+    ids: [],
     scene: Scene.scene,
     removePrevious: true,
-    customID: expressID,
+    customID: modelIdx
   });
-  return subset;
 }
 
 /**
@@ -78,7 +76,7 @@ function removeFromSubset(modelIdx, expressIDs) {
 export {
   createSubset,
   removeSubset,
-  createObjectSubset,
+  resetSubset,
   addToSubset,
   removeFromSubset,
 };

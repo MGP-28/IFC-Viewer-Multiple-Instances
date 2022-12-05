@@ -1,12 +1,23 @@
- //Sets up the renderer, fetching the canvas of the HTML
- const threeCanvas = document.getElementById("three-canvas");
+// import * as SubsetBuilder from "../helpers/subsetBuilder";
+// import * as Models from "./models";
 
- let scene = undefined;
+//Sets up the renderer, fetching the canvas of the HTML
+const threeCanvas = document.getElementById("three-canvas");
 
- let camera = undefined;
+let scene = undefined;
 
- const setScene = (value) => scene = value;
+let camera = undefined;
 
- const setCamera = (value) => camera = value;
+const setScene = (value) => (scene = value);
 
- export { threeCanvas, scene, setScene, camera, setCamera }
+const setCamera = (value) => (camera = value);
+
+// const removeAllObjectsInScene = () => {
+//   for (let idx = 0; idx < Models.models.length; idx++) {
+//     const model = Models.models[idx];
+//     const ids = model.getAllIDs();
+//     SubsetBuilder.removeFromSubset(idx, ids);
+//   }
+// };
+
+export { threeCanvas, scene, setScene, camera, setCamera, /*removeAllObjectsInScene*/ };

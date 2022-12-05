@@ -13,7 +13,6 @@ const addNewModelReferenceToVisible = (modelIdx) => {
 };
 
 const addIdsToVisible = (modelIdx, ids) => {
-  console.log(ids)
   for (let idx = 0; idx < ids.length; idx++) {
     const element = ids[idx];
     visibilityByIds[modelIdx][element] = true;
@@ -30,28 +29,12 @@ const removeIdsFromVisible = (modelIdx, ids) => {
 };
 
 const resetVisible = () => {
-  console.log('reset')
   for (const modelIdx in visibilityByIds) {
     const visibleIdsByModel = visibilityByIds[modelIdx];
-    console.log('model', visibleIdsByModel)
     for (const expressID in visibleIdsByModel) {
-    // for (let expressID = 0; expressID < visibleIdsByModel.length; expressID++) {
-      console.log('id', visibleIdsByModel[expressID])
-
-      //////
-
-
       visibleIdsByModel[expressID] = false;
     }
   }
-  // for (let modelIdx = 0; modelIdx < visibilityByIds.length; modelIdx++) {
-  //   console.log('model')
-  //   const visibleIdsByModel = visibilityByIds[modelIdx];
-  //   for (let expressID = 0; expressID < visibleIdsByModel.length; expressID++) {
-  //     console.log('id', visibleIdsByModel[expressID])
-  //     visibleIdsByModel[expressID] = false;
-  //   }
-  // }
   emitGlobalEvent("visibilityChanged");
 }
 
