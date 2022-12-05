@@ -31,16 +31,31 @@ export default function startUserInputs() {
       } else pickObject(event, false);
     };
 
+
+    let isMovingPlanes = false;
     // Prevents highlighting when moving camera (more fluid movement)
     canvas.onmousedown = (event) => {
       isMouseDragging = true;
 
-      // // aux functions
-      // function addPlaneControlEvents() {}
-
-      // function removePlaneControlEvents() {}
+      // clipping plane
+      if(!foundPlane) return
+      
+      isMovingPlanes = true;
+      //
+      // plane moving logic
+      //
     };
-    canvas.onmouseup = (event) => (isMouseDragging = false);
+    canvas.onmouseup = (event) => {
+      (isMouseDragging = false);
+
+      // clipping plane
+      if(!isMovingPlanes) return;
+
+      isMovingPlanes = false;
+      //
+      // plane end movement logic
+      //
+    }
   });
 }
 

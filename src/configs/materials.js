@@ -28,7 +28,7 @@ const defaultValues = {
     depthTest: false,
   },
   planeStencilMat: {
-    color: 0xffffff,
+    color: 0x888888,
     stencilWrite: true,
     stencilRef: 0,
     stencilFunc: THREE.NotEqualStencilFunc,
