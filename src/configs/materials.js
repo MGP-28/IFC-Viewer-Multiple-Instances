@@ -18,7 +18,7 @@ const defaultValues = {
   clipping: {
     transparent: true,
     opacity: 0.2,
-    color: parseInt(UIConfigs.primaryColorLight, 16),
+    color: parseInt(UIConfigs.primaryColor, 16),
     depthTest: false,
   },
 };
@@ -33,6 +33,5 @@ for (const key in defaultValues) {
     depthTest: defaultValues[key].depthTest,
   });
 }
-console.log('materials', materials)
 
 export { materials, defaultValues };

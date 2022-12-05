@@ -44,6 +44,7 @@ export default function buildScene() {
     alpha: true,
     antialias: true,
   });
+  renderer.localClippingEnabled = true;
   renderer.setSize(size.width, size.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 

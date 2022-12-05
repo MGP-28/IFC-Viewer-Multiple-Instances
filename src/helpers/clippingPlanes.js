@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {materials, defaultValues} from "../configs/materials";
+import * as Materials from "../configs/materials";
 import * as ClippingPlanesStore from "../stores/clippingPlanes";
 import * as ModelStore from "../stores/models";
 import * as SceneStore from "../stores/scene";
@@ -25,7 +25,7 @@ export default function clipping() {
     const planeSize = box3.getSize(size);
     const center = new THREE.Vector3();
     const planePosition = box3.getCenter(center);
-    const planeMaterial = materials.clipping;
+    const planeMaterial = Materials.materials.clipping;
     visualPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(planeSize.x + 6, planeSize.z + 6),
       planeMaterial
@@ -54,6 +54,8 @@ export default function clipping() {
 
     let frontFaceStencilMat;
     let backFaceStencilMat;
+    let planeStencilMat;
+    let invisible;
 
     initStencilMaterials();
 
@@ -70,7 +72,7 @@ export default function clipping() {
 
     planeMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(planeSize.x + 6, planeSize.z + 6),
-      planeStencilMat
+      invisible
     );
     planeMesh.scale.setScalar(100);
     plane.coplanarPoint(planeMesh.position);
@@ -102,13 +104,18 @@ export default function clipping() {
       frontFaceStencilMat.stencilZFail = THREE.DecrementWrapStencilOp;
       frontFaceStencilMat.stencilZPass = THREE.DecrementWrapStencilOp;
 
-      planeStencilMat = new THREE.MeshBasicMaterial({ color: 0x12cccb });
-      planeStencilMat.stencilWrite = true;
-      planeStencilMat.stencilRef = 0;
-      planeStencilMat.stencilFunc = THREE.NotEqualStencilFunc;
-      planeStencilMat.stencilFail = THREE.ReplaceStencilOp;
-      planeStencilMat.stencilZFail = THREE.ReplaceStencilOp;
-      planeStencilMat.stencilZPass = THREE.ReplaceStencilOp;
+      //   planeStencilMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      //   planeStencilMat.stencilWrite = true;
+      //   planeStencilMat.stencilRef = 0;
+      //   planeStencilMat.stencilFunc = THREE.NotEqualStencilFunc;
+      //   planeStencilMat.stencilFail = THREE.ReplaceStencilOp;
+      //   planeStencilMat.stencilZFail = THREE.ReplaceStencilOp;
+      //   planeStencilMat.stencilZPass = THREE.ReplaceStencilOp;
+
+      invisible = new THREE.ShaderMaterial({
+        vertexShader: CAPS.SHADER.invisibleVertexShader,
+        fragmentShader: CAPS.SHADER.invisibleFragmentShader,
+      });
     }
   }
 }
