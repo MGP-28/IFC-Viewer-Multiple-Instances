@@ -1,5 +1,5 @@
 import UIConfigs from "./ui";
-import { MeshBasicMaterial } from "three";
+import * as THREE from "three";
 
 // Set values
 const defaultValues = {
@@ -21,17 +21,50 @@ const defaultValues = {
     color: parseInt(UIConfigs.primaryColor, 16),
     depthTest: false,
   },
+  transparent: {
+    transparent: true,
+    opacity: 0.1,
+    color: 0x000000,
+    depthTest: false,
+  },
+  planeStencilMat: {
+    color: 0xffffff,
+    stencilWrite: true,
+    stencilRef: 0,
+    stencilFunc: THREE.NotEqualStencilFunc,
+    stencilFail: THREE.ReplaceStencilOp,
+    stencilZFail: THREE.ReplaceStencilOp,
+    stencilZPass: THREE.ReplaceStencilOp,
+  },
+  frontFaceStencilMat: {
+    depthWrite: false,
+    depthTest: false,
+    colorWrite: false,
+    stencilWrite: true,
+    stencilFunc: THREE.AlwaysStencilFunc,
+    side: THREE.FrontSide,
+    stencilFail: THREE.DecrementWrapStencilOp,
+    stencilZFail: THREE.DecrementWrapStencilOp,
+    stencilZPass: THREE.DecrementWrapStencilOp,
+  },
+  backFaceStencilMat: {
+    depthWrite: false,
+    depthTest: false,
+    colorWrite: false,
+    stencilWrite: true,
+    stencilFunc: THREE.AlwaysStencilFunc,
+    side: THREE.BackSide,
+    stencilFail: THREE.IncrementWrapStencilOp,
+    stencilZFail: THREE.IncrementWrapStencilOp,
+    stencilZPass: THREE.IncrementWrapStencilOp,
+  },
 };
 
 // Creates subset material
 const materials = {};
 for (const key in defaultValues) {
-  materials[key] = new MeshBasicMaterial({
-    transparent: defaultValues[key].transparent,
-    opacity: defaultValues[key].opacity,
-    color: defaultValues[key].color,
-    depthTest: defaultValues[key].depthTest,
-  });
+  const materialData = defaultValues[key];
+  materials[key] = new THREE.MeshBasicMaterial(materialData);
 }
 
 export { materials, defaultValues };

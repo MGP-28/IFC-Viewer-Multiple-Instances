@@ -52,26 +52,20 @@ export default function clipping() {
       mesh.material[subMat].clippingPlanes = planes;
     }
 
-    let frontFaceStencilMat;
-    let backFaceStencilMat;
-    // let planeStencilMat;
+    Materials.materials.frontFaceStencilMat.clippingPlanes = planes;
+    Materials.materials.backFaceStencilMat.clippingPlanes = planes;
 
-    initStencilMaterials();
-
-    frontFaceStencilMat.clippingPlanes = planes;
-    backFaceStencilMat.clippingPlanes = planes;
-
-    frontMesh = new THREE.Mesh(geometry, frontFaceStencilMat);
+    frontMesh = new THREE.Mesh(geometry, Materials.materials.frontFaceStencilMat);
     frontMesh.rotation.copy(mesh.rotation);
     SceneStore.scene.add(frontMesh);
 
-    backMesh = new THREE.Mesh(geometry, backFaceStencilMat);
+    backMesh = new THREE.Mesh(geometry, Materials.materials.backFaceStencilMat);
     backMesh.rotation.copy(mesh.rotation);
     SceneStore.scene.add(backMesh);
 
     planeMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(planeSize.x + 6, planeSize.z + 6),
-      Materials.materials.transparent
+      Materials.materials.planeStencilMat
     );
     planeMesh.scale.setScalar(100);
     plane.coplanarPoint(planeMesh.position);
@@ -79,39 +73,5 @@ export default function clipping() {
     planeMesh.renderOrder = 1;
 
     SceneStore.scene.add(planeMesh);
-
-    function initStencilMaterials() {
-      backFaceStencilMat = new THREE.MeshBasicMaterial();
-      backFaceStencilMat.depthWrite = false;
-      backFaceStencilMat.depthTest = false;
-      backFaceStencilMat.colorWrite = false;
-      backFaceStencilMat.stencilWrite = true;
-      backFaceStencilMat.stencilFunc = THREE.AlwaysStencilFunc;
-      backFaceStencilMat.side = THREE.BackSide;
-      backFaceStencilMat.stencilFail = THREE.IncrementWrapStencilOp;
-      backFaceStencilMat.stencilZFail = THREE.IncrementWrapStencilOp;
-      backFaceStencilMat.stencilZPass = THREE.IncrementWrapStencilOp;
-
-      frontFaceStencilMat = new THREE.MeshBasicMaterial();
-      frontFaceStencilMat.depthWrite = false;
-      frontFaceStencilMat.depthTest = false;
-      frontFaceStencilMat.colorWrite = false;
-      frontFaceStencilMat.stencilWrite = true;
-      frontFaceStencilMat.stencilFunc = THREE.AlwaysStencilFunc;
-      frontFaceStencilMat.side = THREE.FrontSide;
-      frontFaceStencilMat.stencilFail = THREE.DecrementWrapStencilOp;
-      frontFaceStencilMat.stencilZFail = THREE.DecrementWrapStencilOp;
-      frontFaceStencilMat.stencilZPass = THREE.DecrementWrapStencilOp;
-
-      //   Plane clipping with filling
-      //
-      //   planeStencilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-      //   planeStencilMat.stencilWrite = true;
-      //   planeStencilMat.stencilRef = 0;
-      //   planeStencilMat.stencilFunc = THREE.NotEqualStencilFunc;
-      //   planeStencilMat.stencilFail = THREE.ReplaceStencilOp;
-      //   planeStencilMat.stencilZFail = THREE.ReplaceStencilOp;
-      //   planeStencilMat.stencilZPass = THREE.ReplaceStencilOp;
-    }
   }
 }
