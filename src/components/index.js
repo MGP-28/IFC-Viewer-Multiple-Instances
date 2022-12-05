@@ -5,6 +5,7 @@ import startRenderingEvents from "./events/viewerRenderingEvents.js";
 import startFeatureSidebar from "./feature-sidebar/index.js";
 import startLoadingPopup from "./loading.js";
 import startTimer from "./events/timer.js";
+import startFeatureButtons from "./feature-buttons/index.js";
 
 export default function render() {
   startLoadingPopup();
@@ -14,4 +15,5 @@ export default function render() {
   startRenderingEvents();
   //startObjectDetail();
   startFeatureSidebar();
+  startFeatureButtons();
 }

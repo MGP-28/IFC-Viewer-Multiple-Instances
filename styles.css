@@ -364,6 +364,18 @@ body {
 }
 /* #endregion Spatial Tree */
 
+/* #region Floating buttons features */
+
+.features-floating-buttons{
+  position: absolute;
+  width: max-content;
+  top: calc(100% - 50px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* #endregion Floating buttons features */
+
 /* Modal */
 
 .modal {
