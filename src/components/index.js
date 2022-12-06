@@ -6,6 +6,7 @@ import startFeatureSidebar from "./feature-sidebar/index.js";
 import startLoadingPopup from "./loading.js";
 import startTimer from "./events/timer.js";
 import startFeatureButtons from "./feature-buttons/index.js";
+import loadClippingPlanes from "../helpers/clipping/index.js";
 
 export default function render() {
   startLoadingPopup();
@@ -16,4 +17,5 @@ export default function render() {
   //startObjectDetail();
   startFeatureSidebar();
   startFeatureButtons();
+  loadClippingPlanes();
 }

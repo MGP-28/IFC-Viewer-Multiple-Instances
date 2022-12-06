@@ -43,7 +43,7 @@ export default function clipping() {
     const forwardVector = new THREE.Vector3(0, 0, -1);
 
     plane = new THREE.Plane(planeNormal, planeElevation);
-    const planes = [plane];
+    const planes = [plane]; 
 
     ClippingPlanesStore.addClippingPlane(undefined, visualPlane);
     SceneStore.scene.add(visualPlane);
