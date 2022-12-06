@@ -39,7 +39,6 @@ export default function clipping() {
   // Get plane max size
   const boundingBoxSize = new THREE.Vector3();
   boundingBox.getSize(boundingBoxSize);
-  const maxSize = getHighestSize();
 
   const boxCenter = new Vector3();
   boundingBox.getCenter(boxCenter);
@@ -51,51 +50,55 @@ export default function clipping() {
 
   for (const key in referenceVectors) {
     const vNormal = referenceVectors[key];
-    let position = 0;
-    let angle = THREE.Math.degToRad(90);
-    let vAxle = new THREE.Vector3();
+    // preset for x1 plane
+    let width = boundingBoxSize.z;
+    let height = boundingBoxSize.y;
+    let position = vMax.x;
+    let angle = "90º";
+    let vAxle = referenceVectors.y2;
+    // assigns the correct vars for each case
     if (vNormal.x > 0) {
-      position = vMax.x;
-      vAxle = referenceVectors.y2;
+      // values already in preset
     } else if (vNormal.x < 0) {
       position = vMin.x;
       vAxle = referenceVectors.y2;
-      angle = THREE.Math.degToRad(270);
+      angle = "-90º";
     } else if (vNormal.y > 0) {
       position = vMax.y;
       vAxle = referenceVectors.x2;
+      width = boundingBoxSize.x;
+      height = boundingBoxSize.z;
     } else if (vNormal.y < 0) {
       position = vMin.y;
       vAxle = referenceVectors.x2;
-      angle = THREE.Math.degToRad(270);
+      angle = "-90º";
+      width = boundingBoxSize.x;
+      height = boundingBoxSize.z;
     } else if (vNormal.z > 0) {
       position = vMax.z;
       vAxle = referenceVectors.z2;
+      width = boundingBoxSize.y;
+      height = boundingBoxSize.x;
     } else if (vNormal.z < 0) {
       position = vMin.z;
       vAxle = referenceVectors.z2;
-      angle = THREE.Math.degToRad(270);
+      angle = "-90º";
+      width = boundingBoxSize.y;
+      height = boundingBoxSize.x;
     }
 
-    buildPlane(vNormal, position, vAxle, angle);
+    angle = angle == "90º" ? THREE.Math.degToRad(90) : THREE.Math.degToRad(270);
+
+    buildPlane(vNormal, position, vAxle, angle, width, height);
   }
 
-  console.log('visual', planes.visual)
+  console.log("visual", planes.visual);
 
   updateModelsMaterials();
 
   assignClippingPlanes();
 
   // #region Auxiliary functions in scope
-
-  function getHighestSize() {
-    let highest = undefined;
-    for (const key in boundingBoxSize) {
-      if (highest === undefined || boundingBoxSize[key] > highest)
-        highest = boundingBoxSize[key];
-    }
-    return highest;
-  }
 
   function getMeshes() {
     for (let idx = 0; idx < ModelStore.models.length; idx++) {
@@ -160,12 +163,12 @@ export default function clipping() {
     //#endregion render box in scene - comment return for it
   }
 
-  function buildPlane(vNormal, position, vAxle, angle) {
+  function buildPlane(vNormal, position, vAxle, angle, width, height) {
     const planeMaterial = Materials.materials.transparent;
 
     // visual plane
     const visualPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(maxSize, maxSize),
+      new THREE.PlaneGeometry(width, height),
       planeMaterial
     );
 
@@ -182,27 +185,19 @@ export default function clipping() {
     planes.visual.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
-    return;
+    // return;
 
     // cutting plane
-    const cuttingPlane = new THREE.Plane(vNormal, position);
 
-    const cuttingPlaneMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(maxSize, maxSize),
-      Materials.materials.planeStencilMat
-    );
-    for (const key in cuttingPlaneMesh.position) {
-      cuttingPlaneMesh.position[key] = visualPlane.position[key];
-    }
-    cuttingPlaneMesh.renderOrder = 1;
-
-    console.log("cuttingPlaneMesh", cuttingPlaneMesh);
+    const cuttingPlaneMesh = visualPlane.clone(true);
+    cuttingPlaneMesh.material = Materials.materials.transparent;
 
     planes.cutting.push(cuttingPlaneMesh);
     SceneStore.scene.add(cuttingPlaneMesh);
   }
 
   function updateModelsMaterials() {
+    assignClippingPlanes();
     // assign each cutting plane as a clipping plane of all models
     for (let idx = 0; idx < meshes.length; idx++) {
       const mesh = meshes[idx];
