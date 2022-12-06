@@ -95,9 +95,9 @@ export default function startPropertiesFeature() {
   document.addEventListener("selectedChanged", () => {
     const selected = SelectionStore.vars.selected;
 
-    let category = getCuratedCategoryNameById(selected.props.type);
-
     if (selected.isValid() && !selected.isGroupSelection()) {
+      
+      let category = getCuratedCategoryNameById(selected.props.type);
 
       mainProperties.forEach((propertyName) => {
 
