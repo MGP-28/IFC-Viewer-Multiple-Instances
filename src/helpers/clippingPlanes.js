@@ -14,13 +14,13 @@ const referenceVectors = {
   z2: new THREE.Vector3(0, 0, 1).normalize(),
 };
 
-let visualPlanes = [];
-let visualPlane = undefined;
-let planeElevation = undefined;
-let frontMesh = undefined;
-let backMesh = undefined;
-let planeMesh = undefined;
-let plane = new THREE.Plane();
+// let visualPlanes = [];
+// let visualPlane = undefined;
+// let planeElevation = undefined;
+// let frontMesh = undefined;
+// let backMesh = undefined;
+// let planeMesh = undefined;
+// let plane = new THREE.Plane();
 
 export default function clipping() {
   // prevents clipping plane rendering when no models are loaded
@@ -30,82 +30,53 @@ export default function clipping() {
   getMeshes();
 
   const boundingBox = getBoundingBox();
-  SceneStore.scene.add(boundingBox); // test
 
-  return
-
-  const modelBoxContainer = new THREE.Box3();
-  modelBoxContainer.setFromObject(boundingBox);
-
-  const modelBoxSize = new THREE.Vector3();
-  const planeSize = modelBoxContainer.getSize(modelBoxSize);
-
-  // get vector with center point of box -> to be replaced
-  const center = new THREE.Vector3();
-  const planePosition = modelBoxContainer.getCenter(center);
-
+  // Initialize variables for plane creation
   // get box's min and max vectors
-  const modelBoxMinVec = modelBoxContainer.min;
-  const modelBoxMaxVec = modelBoxContainer.max;
+  const vMin = boundingBox.min;
+  const vMax = boundingBox.max;
 
-  // #region TEST
-  // const geometryTest = new THREE.SphereGeometry(0.5, 32, 16);
-  // const materialTest = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
-  // const circleTest = new THREE.Mesh(geometryTest, materialTest);
-  // circleTest.position.x = 0
-  // circleTest.position.y = 2
-  // circleTest.position.z = 0
-  // SceneStore.scene.add(circleTest);
+  // Get plane max size
+  const boundingBoxSize = new THREE.Vector3();
+  boundingBox.getSize(boundingBoxSize);
+  const maxSize = getHighestSize();
 
-  const axesHelper = new THREE.AxesHelper(5);
-  SceneStore.scene.add(axesHelper);
+  const boxCenter = new Vector3();
+  boundingBox.getCenter(boxCenter)
 
-  // #endregion TEST
+  const planes = {
+    visual: [],
+    cutting: [],
+  };
 
-  const planeMaterial = Materials.materials.clipping;
-  visualPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(planeSize.x + 10, planeSize.z + 10),
-    planeMaterial
-  );
-  visualPlane.position.x = planePosition.x;
-  visualPlane.position.y = planePosition.y;
-  visualPlane.position.z = planePosition.z;
-  visualPlane.rotation.x = -0.5 * Math.PI;
-  visualPlane.material.side = THREE.DoubleSide;
-  planeElevation = planePosition.y;
+  for (const key in referenceVectors) {
+    const vNormal = referenceVectors[key];
+    // const vForward =
+    let position = 0;
+    if (vNormal.x > 0) position = vMax.x;
+    else if (vNormal.x < 0) position = vMin.x;
+    else if (vNormal.y > 0) position = vMax.y;
+    else if (vNormal.y < 0) position = vMin.y;
+    else if (vNormal.z > 0) position = vMax.z;
+    else if (vNormal.z < 0) position = vMin.z;
 
-  visualPlanes.push(visualPlane);
-
-  const planeNormal = referenceVectors.y1;
-  const forwardVector = referenceVectors.z1;
-
-  plane = new THREE.Plane(planeNormal, planeElevation);
-  const planes = [plane];
-
-  ClippingPlanesStore.addClippingPlane(undefined, visualPlane);
-  SceneStore.scene.add(visualPlane);
-
-  for (const subMat in mesh.material) {
-    mesh.material[subMat].clippingPlanes = planes;
+    buildPlane(vNormal, position, key);
   }
 
-  Materials.materials.frontFaceStencilMat.clippingPlanes = planes;
-  Materials.materials.backFaceStencilMat.clippingPlanes = planes;
+  updateModelsMaterials();
 
-  buildMeshRenderTextures();
-
-  planeMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(planeSize.x + 6, planeSize.z + 6),
-    Materials.materials.planeStencilMat
-  );
-  planeMesh.scale.setScalar(100);
-  plane.coplanarPoint(planeMesh.position);
-  planeMesh.quaternion.setFromUnitVectors(forwardVector, planeNormal);
-  planeMesh.renderOrder = 1;
-
-  SceneStore.scene.add(planeMesh);
+  assignClippingPlanes();
 
   // #region Auxiliary functions in scope
+
+  function getHighestSize() {
+    let highest = undefined;
+    for (const key in boundingBoxSize) {
+      if (highest === undefined || boundingBoxSize[key] > highest)
+        highest = boundingBoxSize[key];
+    }
+    return highest;
+  }
 
   function getMeshes() {
     for (let idx = 0; idx < ModelStore.models.length; idx++) {
@@ -116,10 +87,11 @@ export default function clipping() {
 
   /**
    * Renders a bounding box for each model and calculates a container box that fits all bounding boxes inside.
-   * 
+   *
    * This container is the starting point to render the planes
    */
-  function getBoundingBox(){
+  function getBoundingBox() {
+    // cycles each model's min and max vectors and computes the lowest values for minVector and the highest values for maxVector
     const minVector = new Vector3();
     const maxVector = new Vector3();
     for (let idx = 0; idx < meshes.length; idx++) {
@@ -128,44 +100,108 @@ export default function clipping() {
       const box = new THREE.Box3();
       box.setFromObject(boundingBox);
       // if first model, just copies values
-      if(idx == 0) {
-        minVector.copy(box.min)
-        maxVector.copy(box.max)
+      if (idx == 0) {
+        minVector.copy(box.min);
+        maxVector.copy(box.max);
         continue;
       }
       // if not, calculates which axle value needs to be replaced
       for (const key in minVector) {
-        if(minVector[key] > box.min[key]) minVector[key] = box.min[key];
+        if (minVector[key] > box.min[key]) minVector[key] = box.min[key];
       }
       for (const key in maxVector) {
-        if(maxVector[key] < box.max[key]) maxVector[key] = box.max[key];
+        if (maxVector[key] < box.max[key]) maxVector[key] = box.max[key];
       }
     }
-    const box3 =  new THREE.Box3(minVector, maxVector);
 
+    const box3 = new THREE.Box3(minVector, maxVector);
+
+    return box3;
+
+    //#region render box in scene - comment return for it
     const size = {
-      x: (box3.max.x - box3.min.x) + 2,
-      y: (box3.max.y - box3.min.y) + 2,
-      z: (box3.max.z - box3.min.z) + 2
-    }
+      x: box3.max.x - box3.min.x + 2,
+      y: box3.max.y - box3.min.y + 2,
+      z: box3.max.z - box3.min.z + 2,
+    };
     const center = new Vector3();
     box3.getCenter(center);
-    
-    const boundingGeometry = new THREE.BoxGeometry( size.x, size.y, size.z );
-    const boundingMaterial = new THREE.MeshBasicMaterial( {
+
+    const boundingGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    const boundingMaterial = new THREE.MeshBasicMaterial({
       color: 0xffff00,
       opacity: 0.2,
       transparent: true,
-      side: THREE.DoubleSide
-    } );
-    const boundingMesh = new THREE.Mesh( boundingGeometry, boundingMaterial );
+      side: THREE.DoubleSide,
+    });
+    const boundingMesh = new THREE.Mesh(boundingGeometry, boundingMaterial);
     boundingMesh.position.copy(center);
 
-    return boundingMesh;
+    SceneStore.scene.add(boundingBox); // test~
+    //#endregion render box in scene - comment return for it
   }
 
-  function buildPlane(vNormal, vForward, vPosition) {
-    //
+  function buildPlane(vNormal, position, key, vForward = undefined) {
+
+    console.log('vNormal', vNormal)
+    console.log('position', position)
+
+    const planeMaterial = Materials.materials.transparent;
+
+    // visual plane
+    const visualPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(maxSize, maxSize),
+      planeMaterial
+    );
+
+    visualPlane.position.copy(boxCenter);
+
+    // cycles axles in positon
+    for (const key in visualPlane.position) {
+      if (vNormal[key] !== 0) visualPlane.position[key] = position;
+    }
+    visualPlane.material.side = THREE.DoubleSide;
+
+    console.log('visualPlane', visualPlane)
+
+    planes.visual.push(visualPlane);
+    SceneStore.scene.add(visualPlane);
+
+    return
+
+    // cutting plane
+    const cuttingPlane = new THREE.Plane(vNormal, position);
+
+    const cuttingPlaneMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(maxSize, maxSize),
+      Materials.materials.planeStencilMat
+    );
+    for (const key in cuttingPlaneMesh.position) {
+      cuttingPlaneMesh.position[key] = visualPlane.position[key];
+    }
+    cuttingPlaneMesh.renderOrder = 1;
+
+    console.log('cuttingPlaneMesh', cuttingPlaneMesh)
+
+    planes.cutting.push(cuttingPlaneMesh);
+    SceneStore.scene.add(cuttingPlaneMesh);
+  }
+
+  function updateModelsMaterials() {
+    // assign each cutting plane as a clipping plane of all models
+    for (let idx = 0; idx < meshes.length; idx++) {
+      const mesh = meshes[idx];
+      for (const subMat in mesh.material) {
+        mesh.material[subMat].clippingPlanes = planes.cutting;
+      }
+      buildMeshRenderTextures(mesh);
+    }
+  }
+
+  function assignClippingPlanes() {
+    // assing clipping planes to the planes' materials
+    Materials.materials.frontFaceStencilMat.clippingPlanes = planes.cutting;
+    Materials.materials.backFaceStencilMat.clippingPlanes = planes.cutting;
   }
 
   /**
@@ -173,14 +209,14 @@ export default function clipping() {
    * @param {} mesh models' mesh
    */
   function buildMeshRenderTextures(mesh) {
-    frontMesh = new THREE.Mesh(
+    const frontMesh = new THREE.Mesh(
       mesh.geometry,
       Materials.materials.frontFaceStencilMat
     );
     frontMesh.rotation.copy(mesh.rotation);
     SceneStore.scene.add(frontMesh);
 
-    backMesh = new THREE.Mesh(
+    const backMesh = new THREE.Mesh(
       mesh.geometry,
       Materials.materials.backFaceStencilMat
     );
@@ -189,4 +225,22 @@ export default function clipping() {
   }
 
   // #endregion Auxiliary functions in scope
+
+  // test
+
+  const axesHelper = new THREE.AxesHelper(5);
+  SceneStore.scene.add(axesHelper);
+
+  function testShape() {
+    const geometryTest = new THREE.SphereGeometry(0.5, 32, 16);
+    const materialTest = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      side: THREE.DoubleSide,
+    });
+    const circleTest = new THREE.Mesh(geometryTest, materialTest);
+    circleTest.position.x = 0;
+    circleTest.position.y = 2;
+    circleTest.position.z = 0;
+    SceneStore.scene.add(circleTest);
+  }
 }
