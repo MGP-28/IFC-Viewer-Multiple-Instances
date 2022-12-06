@@ -42,7 +42,7 @@ export default function clipping() {
   const maxSize = getHighestSize();
 
   const boxCenter = new Vector3();
-  boundingBox.getCenter(boxCenter)
+  boundingBox.getCenter(boxCenter);
 
   const planes = {
     visual: [],
@@ -51,17 +51,36 @@ export default function clipping() {
 
   for (const key in referenceVectors) {
     const vNormal = referenceVectors[key];
-    // const vForward =
     let position = 0;
-    if (vNormal.x > 0) position = vMax.x;
-    else if (vNormal.x < 0) position = vMin.x;
-    else if (vNormal.y > 0) position = vMax.y;
-    else if (vNormal.y < 0) position = vMin.y;
-    else if (vNormal.z > 0) position = vMax.z;
-    else if (vNormal.z < 0) position = vMin.z;
+    let angle = THREE.Math.degToRad(90);
+    let vAxle = new THREE.Vector3();
+    if (vNormal.x > 0) {
+      position = vMax.x;
+      vAxle = referenceVectors.y2;
+    } else if (vNormal.x < 0) {
+      position = vMin.x;
+      vAxle = referenceVectors.y2;
+      angle = THREE.Math.degToRad(270);
+    } else if (vNormal.y > 0) {
+      position = vMax.y;
+      vAxle = referenceVectors.x2;
+    } else if (vNormal.y < 0) {
+      position = vMin.y;
+      vAxle = referenceVectors.x2;
+      angle = THREE.Math.degToRad(270);
+    } else if (vNormal.z > 0) {
+      position = vMax.z;
+      vAxle = referenceVectors.z2;
+    } else if (vNormal.z < 0) {
+      position = vMin.z;
+      vAxle = referenceVectors.z2;
+      angle = THREE.Math.degToRad(270);
+    }
 
-    buildPlane(vNormal, position, key);
+    buildPlane(vNormal, position, vAxle, angle);
   }
+
+  console.log('visual', planes.visual)
 
   updateModelsMaterials();
 
@@ -141,11 +160,7 @@ export default function clipping() {
     //#endregion render box in scene - comment return for it
   }
 
-  function buildPlane(vNormal, position, key, vForward = undefined) {
-
-    console.log('vNormal', vNormal)
-    console.log('position', position)
-
+  function buildPlane(vNormal, position, vAxle, angle) {
     const planeMaterial = Materials.materials.transparent;
 
     // visual plane
@@ -162,12 +177,12 @@ export default function clipping() {
     }
     visualPlane.material.side = THREE.DoubleSide;
 
-    console.log('visualPlane', visualPlane)
+    visualPlane.rotateOnWorldAxis(vAxle, angle);
 
     planes.visual.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
-    return
+    return;
 
     // cutting plane
     const cuttingPlane = new THREE.Plane(vNormal, position);
@@ -181,7 +196,7 @@ export default function clipping() {
     }
     cuttingPlaneMesh.renderOrder = 1;
 
-    console.log('cuttingPlaneMesh', cuttingPlaneMesh)
+    console.log("cuttingPlaneMesh", cuttingPlaneMesh);
 
     planes.cutting.push(cuttingPlaneMesh);
     SceneStore.scene.add(cuttingPlaneMesh);
