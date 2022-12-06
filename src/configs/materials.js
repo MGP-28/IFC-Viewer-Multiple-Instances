@@ -26,6 +26,7 @@ const defaultValues = {
     opacity: 0.1,
     color: 0x000000,
     depthTest: false,
+    side: THREE.DoubleSide
   },
   planeStencilMat: {
     color: 0x888888,
