@@ -14,14 +14,6 @@ const referenceVectors = {
   z2: new THREE.Vector3(0, 0, 1).normalize(),
 };
 
-// let visualPlanes = [];
-// let visualPlane = undefined;
-// let planeElevation = undefined;
-// let frontMesh = undefined;
-// let backMesh = undefined;
-// let planeMesh = undefined;
-// let plane = new THREE.Plane();
-
 export default function clipping() {
   // prevents clipping plane rendering when no models are loaded
   if (ModelStore.models.length == 0) return;
@@ -185,7 +177,7 @@ export default function clipping() {
     planes.visual.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
-    // return;
+    return;
 
     // cutting plane
 
