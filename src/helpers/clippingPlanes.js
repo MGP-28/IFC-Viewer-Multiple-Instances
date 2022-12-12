@@ -40,7 +40,11 @@ export default function clipping() {
     cutting: [],
   };
 
+  let counter = -1;
   for (const key in referenceVectors) {
+    counter++;
+    if (counter > 0) break;
+    // if (counter < 3) continue;
     const vNormal = referenceVectors[key];
     // preset for x1 plane
     let width = boundingBoxSize.z;
@@ -78,13 +82,42 @@ export default function clipping() {
       width = boundingBoxSize.y;
       height = boundingBoxSize.x;
     }
-
     angle = angle == "90º" ? THREE.Math.degToRad(90) : THREE.Math.degToRad(270);
 
     buildPlane(vNormal, position, vAxle, angle, width, height);
   }
 
-  console.log("visual", planes.visual);
+  // console.log("visual", planes.visual);
+
+  //testing
+  const planeGeom = new THREE.PlaneGeometry(1, 1);
+  const planeMat = new THREE.MeshBasicMaterial({
+    color: 0xa6cfe2,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.5,
+    depthWrite: false,
+  });
+  const planeXY = new THREE.Mesh(planeGeom, planeMat);
+  const planeXZ = new THREE.Mesh(planeGeom, planeMat);
+  const planeYZ = new THREE.Mesh(planeGeom, planeMat);
+
+  // Default plane already occupies XY plane
+  planeXY.rotation.set(0, 0, 0);
+  planeXY.material.clippingPlanes = planes.cutting;
+  SceneStore.scene.add(planeXY);
+
+  // Rotate around x-axis to occupy XZ plane
+  planeXZ.rotation.set(Math.PI / 2, 0, 0);
+  planeXZ.material.clippingPlanes = planes.cutting;
+  SceneStore.scene.add(planeXZ);
+
+  // Rotate around y-axis to occupy YZ plane
+  planeYZ.rotation.set(0, Math.PI / 2, 0);
+  planeYZ.material.clippingPlanes = planes.cutting;
+  SceneStore.scene.add(planeYZ);
+  //
+  //
 
   updateModelsMaterials();
 
@@ -156,6 +189,7 @@ export default function clipping() {
   }
 
   function buildPlane(vNormal, position, vAxle, angle, width, height) {
+    //position = position + 1;
     const planeMaterial = Materials.materials.transparent;
 
     // visual plane
@@ -174,18 +208,36 @@ export default function clipping() {
 
     visualPlane.rotateOnWorldAxis(vAxle, angle);
 
+    // Gives each cube face a colored edge
+    // const wireframeGeometry = new THREE.EdgesGeometry(visualPlane.geometry);
+    // const wireframeMaterial = new THREE.LineBasicMaterial({
+    //   color: Materials.defaultValues.highlighted.color,
+    // });
+    // const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+    // visualPlane.add(wireframe);
+
     planes.visual.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
-    return;
+    // return;
 
     // cutting plane
 
-    const cuttingPlaneMesh = visualPlane.clone(true);
-    cuttingPlaneMesh.material = Materials.materials.transparent;
+    const constant = position * -1;
+    const cuttingPlane = new THREE.Plane(vNormal, constant);
+    //
 
-    planes.cutting.push(cuttingPlaneMesh);
-    SceneStore.scene.add(cuttingPlaneMesh);
+    // const cuttingPlaneMesh = visualPlane.clone(true);
+    // cuttingPlaneMesh.material = Materials.materials.highlighted;
+    // cuttingPlaneMesh.material.side = THREE.DoubleSide;
+    // cuttingPlaneMesh.position = new THREE.Vector3(0, 0, 0);
+    // for (const axle in cuttingPlane.normal) {
+    //   if(cuttingPlane.normal[axle] !== 0) cuttingPlaneMesh.position[axle] = cuttingPlane.constant
+    // }
+
+    planes.cutting.push(cuttingPlane);
+
+    // SceneStore.scene.add(cuttingPlaneMesh);
   }
 
   function updateModelsMaterials() {
