@@ -14,7 +14,11 @@ const referenceVectors = {
   z1: new THREE.Vector3(0, 0, -1),
 };
 
-export default function clipping() {
+export default function clipping(isEnabled) {
+  if(!isEnabled) {
+    destroyPlanes()
+    return;
+  }
   // prevents clipping plane rendering when no models are loaded
   if (ModelStore.models.length == 0) return;
 
@@ -207,7 +211,8 @@ export default function clipping() {
   ) {
     // position = position * 2 / 3
 
-    const planeMaterial = Materials.materials.transparent;
+    const planeMaterial = Materials.materials.transparent.clone();
+    console.log('PM', planeMaterial)
 
     // visual plane
     const visualPlane = new THREE.Mesh(
@@ -233,6 +238,7 @@ export default function clipping() {
     // visualPlane.add(wireframe);
 
     planes.visual.push(visualPlane);
+    ClippingPlanesStore.visualPlanes.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
     // visual plane edge renderer
@@ -295,6 +301,10 @@ export default function clipping() {
     );
     backMesh.rotation.copy(mesh.rotation);
     SceneStore.scene.add(backMesh);
+  }
+
+  function destroyPlanes(){
+    //
   }
 
   // #endregion Auxiliary functions in scope

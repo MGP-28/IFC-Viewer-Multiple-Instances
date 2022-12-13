@@ -10,8 +10,8 @@ export default function renderClippingPlanesFeature() {
   let isEnabled = false;
   btn.addEventListener("click", (e) => {
     isEnabled = !isEnabled;
-    userInteractions.clippingPlanes = true;
-    clipping();
+    userInteractions.clippingPlanes = isEnabled;
+    clipping(isEnabled);
     //
   });
 

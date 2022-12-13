@@ -42,7 +42,9 @@ export default function startUserInputs() {
       
       isMovingPlanes = true;
       //
-      // plane moving logic
+      // // plane moving logic
+      // disable camera
+      // drag plane
       //
     };
     canvas.onmouseup = (event) => {
@@ -53,7 +55,9 @@ export default function startUserInputs() {
 
       isMovingPlanes = false;
       //
-      // plane end movement logic
+      // // plane end movement logic
+      // enable camera
+      // fix plane
       //
     }
   });
@@ -62,11 +66,13 @@ export default function startUserInputs() {
 function resetVisualPlanesColoring(){
   for (let idx = 0; idx < visualPlanes.length; idx++) {
     const visualPlane = visualPlanes[idx];
-    visualPlane.material.opacity = Materials.defaultValues.clipping.opacity;
+    visualPlane.material = Materials.materials.transparent.clone();
   }
 }
 
 function highlightVisualPlane(){
+  resetVisualPlanesColoring();
   const visualPlane = foundPlane.object;
   visualPlane.material.opacity = 0.28;
+  visualPlane.material.color = Materials.materials.highlighted.color;
 }
