@@ -242,7 +242,6 @@ export default function clipping(isEnabled) {
     // visualPlane.add(wireframe);
 
     planes.visual.push(visualPlane);
-    ClippingPlanesStore.visualPlanes.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
     // visual plane edge renderer
@@ -255,8 +254,9 @@ export default function clipping(isEnabled) {
     const constant = invertConstant ? position * -1 : position;
     const cuttingPlane = new THREE.Plane(vNormal, constant);
 
-    ClippingPlanesStore.clippingPlanes.push(cuttingPlane);
     planes.cutting.push(cuttingPlane);
+
+    ClippingPlanesStore.addClippingPlane(visualPlane, cuttingPlane, vNormal)
   }
 
   function updateModelsMaterials() {

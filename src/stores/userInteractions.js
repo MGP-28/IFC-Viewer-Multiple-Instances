@@ -1,5 +1,6 @@
 const userInteractions = {
-    clippingPlanes: false
+    clippingPlanes: false,
+    draggingPlane: false
 }
 
 export { userInteractions }

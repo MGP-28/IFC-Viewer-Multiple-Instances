@@ -180,7 +180,7 @@ async function processIconEvents(span, icons, node) {
   const branchLevel = getElementLevel();
   switch (branchLevel) {
     case "building": {
-      console.log("building");
+      // console.log("building");
       isFirstElementOfTree = false;
       useIconOnLabel = false;
       await SpatialTreeInterelementEventHandling.processBuildingEvents(
@@ -193,7 +193,7 @@ async function processIconEvents(span, icons, node) {
     }
 
     case "level": {
-      console.log("level");
+      // console.log("level");
       const levelName = await getNodePropertyName(node, currentTreeIdx);
       await SpatialTreeInterelementEventHandling.processLevelEvents(
         span,
@@ -206,7 +206,7 @@ async function processIconEvents(span, icons, node) {
     }
 
     case "category": {
-      console.log("category");
+      // console.log("category");
       references.categoryRef = new SpatialTreeReference(node.type, icons);
       await SpatialTreeInterelementEventHandling.processCategoryNodeEvents(
         span,
@@ -218,7 +218,7 @@ async function processIconEvents(span, icons, node) {
       break;
     }
     default: {
-      console.log("leaf");
+      // console.log("leaf");
       await SpatialTreeInterelementEventHandling.processLeafNodeEvents(
         span,
         icons,

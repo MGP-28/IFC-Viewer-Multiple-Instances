@@ -1,16 +1,15 @@
 import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { pickObject, pickClippingPlane } from "../../helpers/raytracing";
-import { foundPlane, visualPlanes } from "../../stores/clippingPlanes";
+import * as ClippingPlanesStore from "../../stores/clippingPlanes";
 import { userInteractions } from "../../stores/userInteractions";
 import * as Materials from "../../configs/materials";
-import { controls, scene } from "../../stores/scene";
+import { controls } from "../../stores/scene";
 
 let isMouseDragging = false;
+const canvas = document.getElementById("three-canvas");
 
 export default function startUserInputs() {
   document.addEventListener("wereReady", () => {
-    const canvas = document.getElementById("three-canvas");
-
     emitGlobalEvent("loadingComplete");
 
     // Double-click => highlights and shows details of pointed object
@@ -18,16 +17,14 @@ export default function startUserInputs() {
 
     // Mouse move => highlights object being hovered
     canvas.onmousemove = async (event) => {
-      if (isMouseDragging) return;
+      if (isMouseDragging) {
+        if (userInteractions.draggingPlane) dragClippingPlane(event);
+        return;
+      }
       if (userInteractions.clippingPlanes) {
         const isPlaneFound = await pickClippingPlane(event);
-        // if no plane is found, exits
-        if (!isPlaneFound) {
-          resetVisualPlanesColoring();
-          return;
-        }
-        // if there's a plane being interacted, enable highlight
-        highlightVisualPlane();
+        if (!isPlaneFound) resetVisualPlanesColoring();
+        else highlightVisualPlane();
       } else pickObject(event, false);
     };
 
@@ -37,12 +34,12 @@ export default function startUserInputs() {
       isMouseDragging = true;
 
       // clipping plane
-      if (!foundPlane) return;
+      if (!ClippingPlanesStore.foundPlane) return;
 
       isMovingPlanes = true;
 
       // plane moving logic
-      moveClippingPlane();
+      moveClippingPlane(event);
     };
     canvas.onmouseup = (event) => {
       isMouseDragging = false;
@@ -53,7 +50,7 @@ export default function startUserInputs() {
       isMovingPlanes = false;
 
       // plane end movement logic
-      stopMovingClippingPlane();
+      stopMovingClippingPlane(event);
     };
   });
 }
@@ -62,9 +59,9 @@ let _opacity = undefined;
 let _color = undefined;
 let _uuid = undefined;
 function resetVisualPlanesColoring() {
-  if(!_uuid) return;
-  for (let idx = 0; idx < visualPlanes.length; idx++) {
-    const visualPlane = visualPlanes[idx];
+  if (!_uuid) return;
+  for (let idx = 0; idx < ClippingPlanesStore.visualPlanes.length; idx++) {
+    const visualPlane = ClippingPlanesStore.visualPlanes[idx];
     visualPlane.material.opacity = _opacity;
     visualPlane.material.color = _color;
   }
@@ -72,31 +69,57 @@ function resetVisualPlanesColoring() {
 }
 
 function highlightVisualPlane() {
-  const visualPlane = foundPlane.object;
+  const visualPlane = ClippingPlanesStore.foundPlane.object;
 
-  if(visualPlane.uuid == _uuid) return;
+  if (visualPlane.uuid == _uuid) return;
 
   resetVisualPlanesColoring();
 
-  const noRef = {...visualPlane};
+  const noRef = { ...visualPlane };
   _uuid = noRef.uuid;
-  if(!_opacity) _opacity = noRef.material.opacity
-  if(!_color) _color = noRef.material.color
+  if (!_opacity) _opacity = noRef.material.opacity;
+  if (!_color) _color = noRef.material.color;
 
   visualPlane.material.opacity = 0.28;
   visualPlane.material.color = Materials.materials.highlighted.color;
 }
 
-function moveClippingPlane() {
+function moveClippingPlane(event) {
   // disable camera
   controls.enabled = false;
   // drag plane
-
+  userInteractions.draggingPlane = true;
+  ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
 }
 
-function stopMovingClippingPlane() {
+function stopMovingClippingPlane(event) {
   // enable camera
   controls.enabled = true;
   // stop plane
+  userInteractions.draggingPlane = false;
+  ClippingPlanesStore.resetDragPositions();
+}
 
+function dragClippingPlane(event) {
+  console.log("dragging");
+
+  ClippingPlanesStore.setDragFinalPositions(event.clientX, event.clientY);
+  const visualPlane = ClippingPlanesStore.foundPlane.object;
+  const vNormal =
+  ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
+
+  console.log('normals', ClippingPlanesStore.normals)
+  console.log("vp", visualPlane);
+  console.log("vN", vNormal);
+  console.log('position', visualPlane.position)
+
+  const key = vNormal.y !== 0 ? "y" : "x";
+  const initialPosition = ClippingPlanesStore.dragPositions.initial[key];
+  const finalPosition = ClippingPlanesStore.dragPositions.final[key];
+  const dif = -0.1 * (finalPosition - initialPosition);
+  visualPlane.position[key] += dif;
+  const cuttingPlane =
+    ClippingPlanesStore.clippingPlanes[ClippingPlanesStore.selectedPlaneIdx];
+  cuttingPlane.constant = cuttingPlane.constant + dif;
+  ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
 }
