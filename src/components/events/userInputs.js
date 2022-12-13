@@ -52,6 +52,28 @@ export default function startUserInputs() {
       // plane end movement logic
       stopMovingClippingPlane(event);
     };
+    window.addEventListener("keydown", (event) => {
+      const keyPressed = event.code;
+      switch (keyPressed) {
+        case "ControlLeft":
+          userInteractions.controlActive = true;
+          break;
+
+        default:
+          break;
+      }
+    });
+    window.addEventListener("keyup", (event) => {
+      const keyPressed = event.code;
+      switch (keyPressed) {
+        case "ControlLeft":
+          userInteractions.controlActive = false;
+          break;
+
+        default:
+          break;
+      }
+    });
   });
 }
 
@@ -101,25 +123,41 @@ function stopMovingClippingPlane(event) {
 }
 
 function dragClippingPlane(event) {
-  console.log("dragging");
-
   ClippingPlanesStore.setDragFinalPositions(event.clientX, event.clientY);
   const visualPlane = ClippingPlanesStore.foundPlane.object;
   const vNormal =
-  ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
-
-  console.log('normals', ClippingPlanesStore.normals)
-  console.log("vp", visualPlane);
-  console.log("vN", vNormal);
-  console.log('position', visualPlane.position)
+    ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
 
   const key = vNormal.y !== 0 ? "y" : "x";
   const initialPosition = ClippingPlanesStore.dragPositions.initial[key];
   const finalPosition = ClippingPlanesStore.dragPositions.final[key];
-  const dif = -0.1 * (finalPosition - initialPosition);
-  visualPlane.position[key] += dif;
+
+  const multiplier = userInteractions.controlActive ? -0.02 : -0.1;
+  const dif = multiplier * (finalPosition - initialPosition);
+
+  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
+  let positionInAxle = visualPlane.position[axleOfMovement];
+  positionInAxle += dif;
+  const absoluteMinPosition =
+    ClippingPlanesStore.edgePositions.min[axleOfMovement];
+  const absoluteMaxPosition =
+    ClippingPlanesStore.edgePositions.max[axleOfMovement];
+
+  // Checks for plane positioning reaching the minimum or maximum
+  if (absoluteMinPosition > positionInAxle)
+    positionInAxle = absoluteMinPosition;
+  else if (absoluteMaxPosition < positionInAxle)
+    positionInAxle = absoluteMaxPosition;
+  visualPlane.position[axleOfMovement] = positionInAxle;
+
+  const edgeVectorChanged = (vNormal[axleOfMovement] > 0) ? "currentMin" : "currentMax"
+  ClippingPlanesStore.edgePositions[edgeVectorChanged][axleOfMovement] = positionInAxle;
+
   const cuttingPlane =
     ClippingPlanesStore.clippingPlanes[ClippingPlanesStore.selectedPlaneIdx];
-  cuttingPlane.constant = cuttingPlane.constant + dif;
+
+  const newConstant = positionInAxle * vNormal[axleOfMovement] * -1;
+  cuttingPlane.constant = newConstant;
+
   ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
 }

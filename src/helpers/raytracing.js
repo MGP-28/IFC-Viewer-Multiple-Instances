@@ -53,8 +53,32 @@ async function pickClippingPlane(event) {
   // aux functions
   function castPlanes() {
     const visualPlanes = ClippingPlanesStore.visualPlanes;
-    const result = RaycastStore.raycaster.intersectObjects(visualPlanes)[0];
-    return result;
+    const results = RaycastStore.raycaster.intersectObjects(visualPlanes);
+    const boxDimensions = {
+      min: ClippingPlanesStore.edgePositions.currentMin,
+      max: ClippingPlanesStore.edgePositions.currentMax,
+    };
+
+    for (let idx = 0; idx < results.length; idx++) {
+      const object = results[idx];
+      const point = object.point;
+      if (isPointInsideBox(point)) return object;
+    }
+
+    return false;
+
+    function isPointInsideBox(point) {
+      for (const axle in point) {
+        const value = point[axle];
+        if (value > boxDimensions.max[axle]) {
+          if(value - boxDimensions.max[axle] > 0.0001) return false
+        }
+        if (value < boxDimensions.min[axle]) {
+          if(value - boxDimensions.min[axle] > 0.0001) return false
+        }
+      }
+      return true;
+    }
   }
 }
 

@@ -15,8 +15,8 @@ const referenceVectors = {
 };
 
 export default function clipping(isEnabled) {
-  if(!isEnabled) {
-    destroyPlanes()
+  if (!isEnabled) {
+    destroyPlanes();
     return;
   }
   // prevents clipping plane rendering when no models are loaded
@@ -40,6 +40,8 @@ export default function clipping(isEnabled) {
     }
   }
 
+  ClippingPlanesStore.setEdgePositions(vMin, vMax);
+
   // Get plane max size
   const boundingBoxSize = new THREE.Vector3();
   boundingBox.getSize(boundingBoxSize);
@@ -47,10 +49,30 @@ export default function clipping(isEnabled) {
   const boxCenter = new Vector3();
   boundingBox.getCenter(boxCenter);
 
+  buildWireframe();
+  function buildWireframe(){
+    const size = {
+      x: vMax.x - vMin.x,
+      y: vMax.y - vMin.y,
+      z: vMax.z - vMin.z,
+    }
+    const boxGeometry = new THREE.BoxGeometry( size.x, size.y, size.z );
+    const wireframeGeometry = new THREE.EdgesGeometry(boxGeometry);
+    const wireframeMaterial = Materials.materials.transparent.clone();
+    const wireframe = new THREE.LineSegments(
+      wireframeGeometry,
+      wireframeMaterial
+    );
+    for (const axle in boxCenter) {
+      wireframe.position[axle] = boxCenter[axle]
+    }
+    SceneStore.scene.add(wireframe);
+  }
+
   const planes = {
     visual: [],
     cutting: [],
-    edges: []
+    edges: [],
   };
 
   for (const key in referenceVectors) {
@@ -256,7 +278,7 @@ export default function clipping(isEnabled) {
 
     planes.cutting.push(cuttingPlane);
 
-    ClippingPlanesStore.addClippingPlane(visualPlane, cuttingPlane, vNormal)
+    ClippingPlanesStore.addClippingPlane(visualPlane, cuttingPlane, vNormal);
   }
 
   function updateModelsMaterials() {
@@ -273,10 +295,14 @@ export default function clipping(isEnabled) {
     for (let idx = 0; idx < ClippingPlanesStore.visualPlanes.length; idx++) {
       let clippingPlanes = [];
       const vP = ClippingPlanesStore.visualPlanes[idx];
-      for (let idx2 = 0; idx2 < ClippingPlanesStore.clippingPlanes.length; idx2++) {
+      for (
+        let idx2 = 0;
+        idx2 < ClippingPlanesStore.clippingPlanes.length;
+        idx2++
+      ) {
         const cP = ClippingPlanesStore.clippingPlanes[idx2];
-        if(idx == idx2) continue;
-        clippingPlanes.push(cP)
+        if (idx == idx2) continue;
+        clippingPlanes.push(cP);
       }
       vP.material.clippingPlanes = clippingPlanes;
     }
@@ -319,7 +345,7 @@ export default function clipping(isEnabled) {
     SceneStore.scene.add(backMesh);
   }
 
-  function destroyPlanes(){
+  function destroyPlanes() {
     //
   }
 

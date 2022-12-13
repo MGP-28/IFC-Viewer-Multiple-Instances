@@ -1,3 +1,5 @@
+import * as THREE from 'three'
+
 const clippingPlanes = [];
 const visualPlanes = [];
 const normals = [];
@@ -66,6 +68,36 @@ function setDragFinalPositions(fX = undefined, fY = undefined) {
   if (fY) dragPositions.final.y = fY;
 }
 
+const edgePositions = {
+  min: {
+    x: undefined,
+    y: undefined,
+    z: undefined
+  },
+  max: {
+    x: undefined,
+    y: undefined,
+    z: undefined
+  },
+  currentMin: {
+    x: undefined,
+    y: undefined,
+    z: undefined
+  },
+  currentMax: {
+    x: undefined,
+    y: undefined,
+    z: undefined
+  }
+};
+
+function setEdgePositions(vMin, vMax) {
+  edgePositions.min = new THREE.Vector3(vMin.x, vMin.y, vMin.z)
+  edgePositions.currentMin = new THREE.Vector3(vMin.x, vMin.y, vMin.z)
+  edgePositions.max = new THREE.Vector3(vMax.x, vMax.y, vMax.z)
+  edgePositions.currentMax = new THREE.Vector3(vMax.x, vMax.y, vMax.z)
+}
+
 export {
   clippingPlanes,
   visualPlanes,
@@ -81,4 +113,6 @@ export {
   setDragPositions,
   setDragInitialPositions,
   setDragFinalPositions,
+  edgePositions,
+  setEdgePositions,
 };
