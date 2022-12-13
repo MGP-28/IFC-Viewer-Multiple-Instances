@@ -255,6 +255,7 @@ export default function clipping(isEnabled) {
     const constant = invertConstant ? position * -1 : position;
     const cuttingPlane = new THREE.Plane(vNormal, constant);
 
+    ClippingPlanesStore.clippingPlanes.push(cuttingPlane);
     planes.cutting.push(cuttingPlane);
   }
 
@@ -267,6 +268,17 @@ export default function clipping(isEnabled) {
       for (const subMat in mesh.material) {
         mesh.material[subMat].clippingPlanes = planes.cutting;
       }
+    }
+
+    for (let idx = 0; idx < ClippingPlanesStore.visualPlanes.length; idx++) {
+      let clippingPlanes = [];
+      const vP = ClippingPlanesStore.visualPlanes[idx];
+      for (let idx2 = 0; idx2 < ClippingPlanesStore.clippingPlanes.length; idx2++) {
+        const cP = ClippingPlanesStore.clippingPlanes[idx2];
+        if(idx == idx2) continue;
+        clippingPlanes.push(cP)
+      }
+      vP.material.clippingPlanes = clippingPlanes;
     }
 
     // for (let idx = 0; idx < planes.edges.length; idx++) {

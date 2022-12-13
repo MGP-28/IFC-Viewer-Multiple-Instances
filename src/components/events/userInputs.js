@@ -58,16 +58,31 @@ export default function startUserInputs() {
   });
 }
 
+let _opacity = undefined;
+let _color = undefined;
+let _uuid = undefined;
 function resetVisualPlanesColoring() {
+  if(!_uuid) return;
   for (let idx = 0; idx < visualPlanes.length; idx++) {
     const visualPlane = visualPlanes[idx];
-    visualPlane.material = Materials.materials.transparent.clone();
+    visualPlane.material.opacity = _opacity;
+    visualPlane.material.color = _color;
   }
+  _uuid = undefined;
 }
 
 function highlightVisualPlane() {
-  resetVisualPlanesColoring();
   const visualPlane = foundPlane.object;
+
+  if(visualPlane.uuid == _uuid) return;
+
+  resetVisualPlanesColoring();
+
+  const noRef = {...visualPlane};
+  _uuid = noRef.uuid;
+  if(!_opacity) _opacity = noRef.material.opacity
+  if(!_color) _color = noRef.material.color
+
   visualPlane.material.opacity = 0.28;
   visualPlane.material.color = Materials.materials.highlighted.color;
 }
