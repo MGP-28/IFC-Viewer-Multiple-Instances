@@ -109,29 +109,34 @@ export default function clipping(isEnabled) {
     opacity: 0.6,
     depthWrite: false,
   });
-  const planeXY = new THREE.Mesh(planeGeom, planeMat);
-  const planeXZ = new THREE.Mesh(planeGeom, planeMat);
-  const planeYZ = new THREE.Mesh(planeGeom, planeMat);
 
-  // Default plane already occupies XY plane
-  planeXY.rotation.set(0, 0, 0);
-  planeXY.scale.addScalar(100);
-  planeXY.material.clippingPlanes = planes.cutting;
-  SceneStore.scene.add(planeXY);
+  // #region Axle plane helpers (debug)
+  // // Axle planes, for debug
+  //
+  // const planeXY = new THREE.Mesh(planeGeom, planeMat);
+  // const planeXZ = new THREE.Mesh(planeGeom, planeMat);
+  // const planeYZ = new THREE.Mesh(planeGeom, planeMat);
 
-  // Rotate around x-axis to occupy XZ plane
-  planeXZ.rotation.set(Math.PI / 2, 0, 0);
-  planeXZ.scale.addScalar(100);
-  planeXZ.material.clippingPlanes = planes.cutting;
-  SceneStore.scene.add(planeXZ);
+  // // Default plane already occupies XY plane
+  // planeXY.rotation.set(0, 0, 0);
+  // planeXY.scale.addScalar(100);
+  // planeXY.material.clippingPlanes = planes.cutting;
+  // SceneStore.scene.add(planeXY);
 
-  // Rotate around y-axis to occupy YZ plane
-  planeYZ.rotation.set(0, Math.PI / 2, 0);
-  planeYZ.scale.addScalar(100);
-  planeYZ.material.clippingPlanes = planes.cutting;
-  SceneStore.scene.add(planeYZ);
+  // // Rotate around x-axis to occupy XZ plane
+  // planeXZ.rotation.set(Math.PI / 2, 0, 0);
+  // planeXZ.scale.addScalar(100);
+  // planeXZ.material.clippingPlanes = planes.cutting;
+  // SceneStore.scene.add(planeXZ);
+
+  // // Rotate around y-axis to occupy YZ plane
+  // planeYZ.rotation.set(0, Math.PI / 2, 0);
+  // planeYZ.scale.addScalar(100);
+  // planeYZ.material.clippingPlanes = planes.cutting;
+  // SceneStore.scene.add(planeYZ);
   //
   //
+  // #endregion
 
   updateModelsMaterials();
 
@@ -212,7 +217,6 @@ export default function clipping(isEnabled) {
     // position = position * 2 / 3
 
     const planeMaterial = Materials.materials.transparent.clone();
-    console.log('PM', planeMaterial)
 
     // visual plane
     const visualPlane = new THREE.Mesh(
