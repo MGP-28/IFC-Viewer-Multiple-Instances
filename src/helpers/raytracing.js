@@ -68,13 +68,14 @@ async function pickClippingPlane(event) {
     return false;
 
     function isPointInsideBox(point) {
+      const buffer = 0.000000001
       for (const axle in point) {
         const value = point[axle];
         if (value > boxDimensions.max[axle]) {
-          if(value - boxDimensions.max[axle] > 0.0001) return false
+          if(Math.abs(value - boxDimensions.max[axle]) > buffer) return false
         }
         if (value < boxDimensions.min[axle]) {
-          if(value - boxDimensions.min[axle] > 0.0001) return false
+          if(Math.abs(value - boxDimensions.min[axle]) > buffer) return false
         }
       }
       return true;
