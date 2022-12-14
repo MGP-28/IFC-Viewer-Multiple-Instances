@@ -51,6 +51,10 @@ async function pickClippingPlane(event) {
   return true;
 
   // aux functions
+  /**
+   * Uses raycasting to intersect visual planes with user input
+   * @returns Intersection object, if found. Otherwise, false
+   */
   function castPlanes() {
     const visualPlanes = ClippingPlanesStore.visualPlanes;
     const results = RaycastStore.raycaster.intersectObjects(visualPlanes);
@@ -67,6 +71,16 @@ async function pickClippingPlane(event) {
 
     return false;
 
+    /**
+     * Checks if intersection point found by raycasting in part of the active clipping box
+     * 
+     * This check prevents a bug where user could select hidden parts of a plane to move it
+     * 
+     * Due to raycasting error margins, a customizable buffer is used.
+     * This buffer prevents edge cases where a legitimate intersection point would be discarded, leading to unwanted behaviour
+     * @param {Intersection Point} point 
+     * @returns true if point is inside the active planes' box, false otherwise
+     */
     function isPointInsideBox(point) {
       const buffer = 0.000000001
       for (const axle in point) {
