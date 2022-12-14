@@ -11,4 +11,10 @@ function clearDuplicatesFromArray(array){
   return Array.from(new Set(array))
 }
 
-export { removeElementsFromArray, clearDuplicatesFromArray };
+function resetArray(arr) {
+  while (arr.length > 0) {
+    arr.pop();
+  }
+}
+
+export { removeElementsFromArray, clearDuplicatesFromArray, resetArray };
