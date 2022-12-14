@@ -9,6 +9,8 @@ import { userInteractions } from "../../stores/userInteractions";
 import * as Materials from "../../configs/materials";
 import { controls, scene } from "../../stores/scene";
 import * as THREE from "three";
+import { clippingConfigs } from "../../configs/clippingPlanes";
+import { consoleLogObject } from "../../helpers/generic/logging";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -116,7 +118,6 @@ async function moveClippingPlane(event) {
   controls.enabled = false;
   // drag plane
   userInteractions.draggingPlane = true;
-  ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
 
   const vNormal =
     ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
@@ -126,18 +127,21 @@ async function moveClippingPlane(event) {
   const normals = {
     x: new THREE.Vector3(1, 0, 0),
     y: new THREE.Vector3(0, 1, 0),
-    z: new THREE.Vector3(0, 0, 1)
-  }
+    z: new THREE.Vector3(0, 0, 1),
+  };
 
   for (const axle in normals) {
-    if(axle == axleOfMovement) continue;
+    if (axle == axleOfMovement) continue;
 
-    const normal = normals[axle]
-    const crossPlane = new THREE.Plane(normal, 0);
+    const normal = normals[axle];
+    const crossPlane = new THREE.Plane(
+      normal,
+      ClippingPlanesStore.center[axle]
+    );
     ClippingPlanesStore.crossPlane.planes.push(crossPlane);
 
-    // const helper = new THREE.PlaneHelper( crossPlane, 100, 0x000000 );
-    // scene.add( helper );
+    // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
+    // scene.add(helper);
   }
 
   ClippingPlanesStore.crossPlane.points.start = await pickCrossPlane(event);
@@ -148,36 +152,38 @@ function stopMovingClippingPlane(event) {
   controls.enabled = true;
   // stop plane
   userInteractions.draggingPlane = false;
-  ClippingPlanesStore.resetDragPositions();
   ClippingPlanesStore.resetCrossPlane();
 }
 
 async function dragClippingPlane(event) {
-  ClippingPlanesStore.setDragFinalPositions(event.clientX, event.clientY);
   const visualPlane = ClippingPlanesStore.foundPlane.object;
   const vNormal =
     ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
 
   const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
 
-  const multiplier = userInteractions.controlActive ? 0.1 : 1;
+  const multiplier = userInteractions.controlActive ? clippingConfigs.multiplier.precision : clippingConfigs.multiplier.normal;
+  const maximum = clippingConfigs.maxJump;
 
-  ClippingPlanesStore.crossPlane.points.end = await pickCrossPlane(event);
+  const endPoint = await pickCrossPlane(event);
+
+  if (!endPoint) return;
+
+  ClippingPlanesStore.crossPlane.points.end.copy(endPoint);
+
   const initialPosition = ClippingPlanesStore.crossPlane.points.start;
   const finalPosition = ClippingPlanesStore.crossPlane.points.end;
+
+  let value = (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) * multiplier;
+  if (value > maximum) value = maximum;
+  else if(value < maximum * -1) value = maximum * -1
+
+  console.log(value.toString())
+
   const vectorAxles = {
-    x:
-      axleOfMovement == "x"
-        ? (finalPosition.x - initialPosition.x) * multiplier
-        : 0,
-    y:
-      axleOfMovement == "y"
-        ? (finalPosition.y - initialPosition.y) * multiplier
-        : 0,
-    z:
-      axleOfMovement == "z"
-        ? (finalPosition.z - initialPosition.z) * multiplier
-        : 0,
+    x: axleOfMovement == "x" ? value : 0,
+    y: axleOfMovement == "y" ? value : 0,
+    z: axleOfMovement == "z" ? value : 0,
   };
   const moveVector = new THREE.Vector3(
     vectorAxles.x,
@@ -188,7 +194,7 @@ async function dragClippingPlane(event) {
   visualPlane.position.add(moveVector);
 
   // Checks for plane positioning reaching the minimum or maximum
-  const buffer = 0.01;
+  const buffer = clippingConfigs.buffer;
   const absoluteMinPosition =
     ClippingPlanesStore.edgePositions.min[axleOfMovement] + buffer;
   const absoluteMaxPosition =
@@ -207,12 +213,11 @@ async function dragClippingPlane(event) {
     ClippingPlanesStore.edgePositions[edgeVectorOther][axleOfMovement];
 
   if (edgeVectorChanged == "currentMax") {
-    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]){
+    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]) {
       visualPlane.position[axleOfMovement] = relativeEdgePosition + buffer;
     }
-  }
-  else{
-    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]){
+  } else {
+    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]) {
       visualPlane.position[axleOfMovement] = relativeEdgePosition - buffer;
     }
   }
@@ -226,8 +231,6 @@ async function dragClippingPlane(event) {
   const newConstant =
     visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
   cuttingPlane.constant = newConstant;
-
-  ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
 
   ClippingPlanesStore.crossPlane.points.start.copy(
     ClippingPlanesStore.crossPlane.points.end

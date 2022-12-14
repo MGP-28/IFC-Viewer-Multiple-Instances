@@ -58,6 +58,7 @@ export default function clipping(isEnabled) {
 
   const boxCenter = new Vector3();
   boundingBox.getCenter(boxCenter);
+  ClippingPlanesStore.center.copy(boxCenter);
 
   buildWireframe();
   function buildWireframe() {

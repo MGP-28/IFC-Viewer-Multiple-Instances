@@ -104,13 +104,13 @@ async function pickCrossPlane(event) {
   const result = new THREE.Vector3();
   for (let idx = 0; idx < ClippingPlanesStore.crossPlane.planes.length; idx++) {
     const plane = ClippingPlanesStore.crossPlane.planes[idx];
-    RaycastStore.raycaster.ray.intersectPlane(plane, result)[0];
-    console.log('result', result.x.toString(), result.y.toString(), result.z.toString())
-    for (const key in result) {
+    RaycastStore.raycaster.ray.intersectPlane(plane, result);
+    const coordinates = {...({x, y, z} = result)}
+    for (const key in coordinates) {
       if(result[key] != 0) return result
     }
   }
-  return result;
+  return false;
 }
 
 function setupCast(event, type = false) {

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { scene } from "./scene";
 
+let center = new THREE.Vector3();
+
 const clippingPlanes = [];
 const visualPlanes = [];
 const normals = [];
@@ -137,6 +139,7 @@ function resetCrossPlane(){
 }
 
 export {
+  center,
   clippingPlanes,
   visualPlanes,
   normals,
