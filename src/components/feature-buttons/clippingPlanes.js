@@ -1,21 +1,21 @@
 import clipping from "../../helpers/clippingPlanes";
 import { models } from "../../stores/models";
 import { userInteractions } from "../../stores/userInteractions";
+import { featureButton } from "./button";
 
 export default function renderClippingPlanesFeature() {
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = `
-    <button>Clipping planes</button>
-  `;
-  const btn = wrapper.getElementsByTagName("button")[0];
+  const element = featureButton("cube-04", "Clipping planes");
+
   let isEnabled = false;
-  btn.addEventListener("click", (e) => {
-    if(models.length == 0) return;
-    isEnabled = !isEnabled;
-    userInteractions.clippingPlanes = isEnabled;
-    clipping(isEnabled);
-    //
+
+  element.addEventListener("startFeature", (e) => {
+    element.addEventListener("click", (e) => {
+      isEnabled = !isEnabled;
+      userInteractions.clippingPlanes = isEnabled;
+      clipping(isEnabled);
+      element.classList.toggle("active");
+    });
   });
 
-  return wrapper;
+  return element;
 }

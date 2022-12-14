@@ -19,14 +19,14 @@ function renderFeatureContainer(icon, header, name) {
   const closeWrapper = featureContainer.getElementsByClassName(
     "tools-side-feature-close"
   )[0];
-  closeWrapper.classList.add("notready");
+  closeWrapper.classList.add("not-ready");
   closeWrapper.appendChild(iconClose);
 
   const iconMain = buildIcon(icon);
   const iconWrapper = featureContainer.getElementsByClassName(
     "tools-side-feature-icon"
   )[0];
-  iconWrapper.classList.add("notready");
+  iconWrapper.classList.add("not-ready");
   iconWrapper.appendChild(iconMain);
 
   // manage events
@@ -35,7 +35,7 @@ function renderFeatureContainer(icon, header, name) {
 
   function eventControl() {
     featureContainer.addEventListener("featureReady", () => {
-      iconWrapper.classList.remove("notready");
+      iconWrapper.classList.remove("not-ready");
       iconWrapper.classList.add("interaction-cursor");
       iconWrapper.addEventListener("click", (e) => {
         isActive = !isActive;

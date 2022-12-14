@@ -92,7 +92,7 @@ body {
   z-index: 99;
 }
 
-.tools-side-feature-icon.notready {
+.tools-side-feature-icon.not-ready {
   opacity: 50%;
   cursor: not-allowed;
 }
@@ -370,9 +370,43 @@ body {
 .features-floating-buttons{
   position: absolute;
   width: max-content;
-  top: calc(100% - 50px);
+  top: calc(100% - 80px);
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  gap: 40px;
+}
+
+.features-floating-buttons .feature-button{
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: var(--primary-color-dark);
+  box-shadow: 0px 1px 1px 0 var(--primary-color);
+  z-index: 99;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+  transition: all 0.6s;
+}
+
+.features-floating-buttons .feature-button.not-ready {
+  opacity: 50%;
+  cursor: not-allowed;
+}
+
+.features-floating-buttons .feature-button:not(.not-ready):hover{
+  transform: scale(1.1);
+  /* animation: icon-shadow-pulsing 1s infinite alternate; */
+  box-shadow: 0 0 4px var(--primary-color-light);
+  transition: all 0.6s;
+}
+
+.features-floating-buttons .feature-button.active {
+  transform: scale(1.1);
+  box-shadow: 0 0 5px 2px var(--primary-color-light);
 }
 
 /* #endregion Floating buttons features */
@@ -459,6 +493,17 @@ body {
     border-radius: 8px;
   }
 }
+
+/* icon pulsing */
+@keyframes icon-shadow-pulsing {
+  /* 0% {
+    box-shadow: 0 0 10px 3px var(--primary-color-light);
+  } */
+  to {
+    box-shadow: 0 0 10px var(--primary-color-light);
+  }
+}
+
 
 /* #endregion animations */
 
