@@ -4,6 +4,7 @@ import * as Models from "../stores/models.js";
 import * as RaycastStore from "../stores/raycast.js";
 import * as Scene from "../stores/scene.js";
 import * as SelectedStore from "../stores/selection.js";
+import * as THREE from "three";
 
 /**
  * Gets users' mouse position, casts a ray to intercept objects on the render and returns their properties
@@ -73,28 +74,43 @@ async function pickClippingPlane(event) {
 
     /**
      * Checks if intersection point found by raycasting in part of the active clipping box
-     * 
+     *
      * This check prevents a bug where user could select hidden parts of a plane to move it
-     * 
+     *
      * Due to raycasting error margins, a customizable buffer is used.
      * This buffer prevents edge cases where a legitimate intersection point would be discarded, leading to unwanted behaviour
-     * @param {Intersection Point} point 
+     * @param {Intersection Point} point
      * @returns true if point is inside the active planes' box, false otherwise
      */
     function isPointInsideBox(point) {
-      const buffer = 0.000000001
+      const buffer = 0.000000001;
       for (const axle in point) {
         const value = point[axle];
         if (value > boxDimensions.max[axle]) {
-          if(Math.abs(value - boxDimensions.max[axle]) > buffer) return false
+          if (Math.abs(value - boxDimensions.max[axle]) > buffer) return false;
         }
         if (value < boxDimensions.min[axle]) {
-          if(Math.abs(value - boxDimensions.min[axle]) > buffer) return false
+          if (Math.abs(value - boxDimensions.min[axle]) > buffer) return false;
         }
       }
       return true;
     }
   }
+}
+
+async function pickCrossPlane(event) {
+  setupCast(event);
+
+  const result = new THREE.Vector3();
+  for (let idx = 0; idx < ClippingPlanesStore.crossPlane.planes.length; idx++) {
+    const plane = ClippingPlanesStore.crossPlane.planes[idx];
+    RaycastStore.raycaster.ray.intersectPlane(plane, result)[0];
+    console.log('result', result.x.toString(), result.y.toString(), result.z.toString())
+    for (const key in result) {
+      if(result[key] != 0) return result
+    }
+  }
+  return result;
 }
 
 function setupCast(event, type = false) {
@@ -168,4 +184,4 @@ async function storeFoundObjectProperties(isSelection) {
   return true;
 }
 
-export { pickObject, pickClippingPlane };
+export { pickObject, pickClippingPlane, pickCrossPlane };

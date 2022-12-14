@@ -7,8 +7,8 @@ const normals = [];
 let selectedPlaneIdx = undefined;
 let wireframe = undefined;
 
-function addWireframe(newWireframe){
-  wireframe = newWireframe
+function addWireframe(newWireframe) {
+  wireframe = newWireframe;
 }
 
 function addClippingPlane(visualPlane, plane, vNormal) {
@@ -122,6 +122,20 @@ function hide() {
   wireframe.removeFromParent();
 }
 
+const crossPlane = {
+  points: {
+    start: new THREE.Vector3(),
+    end: new THREE.Vector3(),
+  },
+  planes: [],
+};
+
+function resetCrossPlane(){
+  crossPlane.points.start = new THREE.Vector3();
+  crossPlane.points.end = new THREE.Vector3();
+  crossPlane.planes = [];
+}
+
 export {
   clippingPlanes,
   visualPlanes,
@@ -142,4 +156,6 @@ export {
   setEdgePositions,
   reset,
   hide,
+  crossPlane,
+  resetCrossPlane,
 };

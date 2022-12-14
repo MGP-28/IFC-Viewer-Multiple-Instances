@@ -1,9 +1,14 @@
 import { emitGlobalEvent } from "../../helpers/emitEvent";
-import { pickObject, pickClippingPlane } from "../../helpers/raytracing";
+import {
+  pickObject,
+  pickClippingPlane,
+  pickCrossPlane,
+} from "../../helpers/raytracing";
 import * as ClippingPlanesStore from "../../stores/clippingPlanes";
 import { userInteractions } from "../../stores/userInteractions";
 import * as Materials from "../../configs/materials";
-import { controls } from "../../stores/scene";
+import { controls, scene } from "../../stores/scene";
+import * as THREE from "three";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -18,7 +23,7 @@ export default function startUserInputs() {
     // Mouse move => highlights object being hovered
     canvas.onmousemove = async (event) => {
       if (isMouseDragging) {
-        if (userInteractions.draggingPlane) dragClippingPlane(event);
+        if (userInteractions.draggingPlane) await dragClippingPlane(event);
         return;
       }
       if (userInteractions.clippingPlanes) {
@@ -30,7 +35,7 @@ export default function startUserInputs() {
 
     let isMovingPlanes = false;
     // Prevents highlighting when moving camera (more fluid movement)
-    canvas.onmousedown = (event) => {
+    canvas.onmousedown = async (event) => {
       isMouseDragging = true;
 
       // clipping plane
@@ -39,7 +44,7 @@ export default function startUserInputs() {
       isMovingPlanes = true;
 
       // plane moving logic
-      moveClippingPlane(event);
+      await moveClippingPlane(event);
     };
     canvas.onmouseup = (event) => {
       isMouseDragging = false;
@@ -106,12 +111,36 @@ function highlightVisualPlane() {
   visualPlane.material.color = Materials.materials.highlighted.color;
 }
 
-function moveClippingPlane(event) {
+async function moveClippingPlane(event) {
   // disable camera
   controls.enabled = false;
   // drag plane
   userInteractions.draggingPlane = true;
   ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
+
+  const vNormal =
+    ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
+  const key = vNormal.y !== 0 ? "y" : "x";
+  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
+
+  const normals = {
+    x: new THREE.Vector3(1, 0, 0),
+    y: new THREE.Vector3(0, 1, 0),
+    z: new THREE.Vector3(0, 0, 1)
+  }
+
+  for (const axle in normals) {
+    if(axle == axleOfMovement) continue;
+
+    const normal = normals[axle]
+    const crossPlane = new THREE.Plane(normal, 0);
+    ClippingPlanesStore.crossPlane.planes.push(crossPlane);
+
+    // const helper = new THREE.PlaneHelper( crossPlane, 100, 0x000000 );
+    // scene.add( helper );
+  }
+
+  ClippingPlanesStore.crossPlane.points.start = await pickCrossPlane(event);
 }
 
 function stopMovingClippingPlane(event) {
@@ -120,44 +149,87 @@ function stopMovingClippingPlane(event) {
   // stop plane
   userInteractions.draggingPlane = false;
   ClippingPlanesStore.resetDragPositions();
+  ClippingPlanesStore.resetCrossPlane();
 }
 
-function dragClippingPlane(event) {
+async function dragClippingPlane(event) {
   ClippingPlanesStore.setDragFinalPositions(event.clientX, event.clientY);
   const visualPlane = ClippingPlanesStore.foundPlane.object;
   const vNormal =
     ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
 
-  const key = vNormal.y !== 0 ? "y" : "x";
-  const initialPosition = ClippingPlanesStore.dragPositions.initial[key];
-  const finalPosition = ClippingPlanesStore.dragPositions.final[key];
+  const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
 
-  const multiplier = userInteractions.controlActive ? -0.02 : -0.1;
-  const dif = multiplier * (finalPosition - initialPosition);
+  const multiplier = userInteractions.controlActive ? 0.1 : 1;
 
-  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
-  let positionInAxle = visualPlane.position[axleOfMovement];
-  positionInAxle += dif;
-  const absoluteMinPosition =
-    ClippingPlanesStore.edgePositions.min[axleOfMovement];
-  const absoluteMaxPosition =
-    ClippingPlanesStore.edgePositions.max[axleOfMovement];
+  ClippingPlanesStore.crossPlane.points.end = await pickCrossPlane(event);
+  const initialPosition = ClippingPlanesStore.crossPlane.points.start;
+  const finalPosition = ClippingPlanesStore.crossPlane.points.end;
+  const vectorAxles = {
+    x:
+      axleOfMovement == "x"
+        ? (finalPosition.x - initialPosition.x) * multiplier
+        : 0,
+    y:
+      axleOfMovement == "y"
+        ? (finalPosition.y - initialPosition.y) * multiplier
+        : 0,
+    z:
+      axleOfMovement == "z"
+        ? (finalPosition.z - initialPosition.z) * multiplier
+        : 0,
+  };
+  const moveVector = new THREE.Vector3(
+    vectorAxles.x,
+    vectorAxles.y,
+    vectorAxles.z
+  );
+
+  visualPlane.position.add(moveVector);
 
   // Checks for plane positioning reaching the minimum or maximum
-  if (absoluteMinPosition > positionInAxle)
-    positionInAxle = absoluteMinPosition;
-  else if (absoluteMaxPosition < positionInAxle)
-    positionInAxle = absoluteMaxPosition;
-  visualPlane.position[axleOfMovement] = positionInAxle;
+  const buffer = 0.01;
+  const absoluteMinPosition =
+    ClippingPlanesStore.edgePositions.min[axleOfMovement] + buffer;
+  const absoluteMaxPosition =
+    ClippingPlanesStore.edgePositions.max[axleOfMovement] - buffer;
+  if (absoluteMinPosition > visualPlane.position[axleOfMovement])
+    visualPlane.position[axleOfMovement] = absoluteMinPosition;
+  else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
+    visualPlane.position[axleOfMovement] = absoluteMaxPosition;
 
-  const edgeVectorChanged = (vNormal[axleOfMovement] > 0) ? "currentMin" : "currentMax"
-  ClippingPlanesStore.edgePositions[edgeVectorChanged][axleOfMovement] = positionInAxle;
+  const edgeVectorChanged =
+    vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
+  const edgeVectorOther =
+    edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
+
+  const relativeEdgePosition =
+    ClippingPlanesStore.edgePositions[edgeVectorOther][axleOfMovement];
+
+  if (edgeVectorChanged == "currentMax") {
+    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]){
+      visualPlane.position[axleOfMovement] = relativeEdgePosition + buffer;
+    }
+  }
+  else{
+    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]){
+      visualPlane.position[axleOfMovement] = relativeEdgePosition - buffer;
+    }
+  }
+
+  ClippingPlanesStore.edgePositions[edgeVectorChanged][axleOfMovement] =
+    visualPlane.position[axleOfMovement];
 
   const cuttingPlane =
     ClippingPlanesStore.clippingPlanes[ClippingPlanesStore.selectedPlaneIdx];
 
-  const newConstant = positionInAxle * vNormal[axleOfMovement] * -1;
+  const newConstant =
+    visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
   cuttingPlane.constant = newConstant;
 
   ClippingPlanesStore.setDragInitialPositions(event.clientX, event.clientY);
+
+  ClippingPlanesStore.crossPlane.points.start.copy(
+    ClippingPlanesStore.crossPlane.points.end
+  );
 }
