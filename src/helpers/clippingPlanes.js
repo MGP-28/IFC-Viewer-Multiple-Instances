@@ -1,9 +1,11 @@
 import * as THREE from "three";
+import { Scene } from "three";
 import { Vector3 } from "three";
 import * as Materials from "../configs/materials";
 import * as ClippingPlanesStore from "../stores/clippingPlanes";
 import * as ModelStore from "../stores/models";
 import * as SceneStore from "../stores/scene";
+import { userInteractions } from "../stores/userInteractions";
 
 const referenceVectors = {
   x2: new THREE.Vector3(1, 0, 0),
@@ -15,15 +17,23 @@ const referenceVectors = {
 };
 
 export default function clipping(isEnabled) {
-  if (!isEnabled) {
-    destroyPlanes();
-    return;
-  }
   // prevents clipping plane rendering when no models are loaded
   if (ModelStore.models.length == 0) return;
 
   const meshes = [];
   getMeshes();
+
+  if (!isEnabled) {
+    updateModelsMaterials(false);
+    removePlanes();
+    return;
+  }
+
+  if (ClippingPlanesStore.visualPlanes.length > 0) {
+    resetPlanes();
+    updateModelsMaterials(true);
+    return;
+  }
 
   const boundingBox = getBoundingBox();
 
@@ -50,13 +60,13 @@ export default function clipping(isEnabled) {
   boundingBox.getCenter(boxCenter);
 
   buildWireframe();
-  function buildWireframe(){
+  function buildWireframe() {
     const size = {
       x: vMax.x - vMin.x,
       y: vMax.y - vMin.y,
       z: vMax.z - vMin.z,
-    }
-    const boxGeometry = new THREE.BoxGeometry( size.x, size.y, size.z );
+    };
+    const boxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
     const wireframeGeometry = new THREE.EdgesGeometry(boxGeometry);
     const wireframeMaterial = Materials.materials.transparent.clone();
     const wireframe = new THREE.LineSegments(
@@ -64,16 +74,11 @@ export default function clipping(isEnabled) {
       wireframeMaterial
     );
     for (const axle in boxCenter) {
-      wireframe.position[axle] = boxCenter[axle]
+      wireframe.position[axle] = boxCenter[axle];
     }
+    ClippingPlanesStore.addWireframe(wireframe);
     SceneStore.scene.add(wireframe);
   }
-
-  const planes = {
-    visual: [],
-    cutting: [],
-    edges: [],
-  };
 
   for (const key in referenceVectors) {
     const vNormal = referenceVectors[key];
@@ -122,16 +127,6 @@ export default function clipping(isEnabled) {
     buildPlane(vNormal, position, vAxle, angle, width, height, invertConstant);
   }
 
-  //testing
-  const planeGeom = new THREE.PlaneGeometry(1, 1);
-  const planeMat = new THREE.MeshBasicMaterial({
-    color: 0xff0088,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.6,
-    depthWrite: false,
-  });
-
   // #region Axle plane helpers (debug)
   // // Axle planes, for debug
   //
@@ -142,25 +137,25 @@ export default function clipping(isEnabled) {
   // // Default plane already occupies XY plane
   // planeXY.rotation.set(0, 0, 0);
   // planeXY.scale.addScalar(100);
-  // planeXY.material.clippingPlanes = planes.cutting;
+  // planeXY.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
   // SceneStore.scene.add(planeXY);
 
   // // Rotate around x-axis to occupy XZ plane
   // planeXZ.rotation.set(Math.PI / 2, 0, 0);
   // planeXZ.scale.addScalar(100);
-  // planeXZ.material.clippingPlanes = planes.cutting;
+  // planeXZ.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
   // SceneStore.scene.add(planeXZ);
 
   // // Rotate around y-axis to occupy YZ plane
   // planeYZ.rotation.set(0, Math.PI / 2, 0);
   // planeYZ.scale.addScalar(100);
-  // planeYZ.material.clippingPlanes = planes.cutting;
+  // planeYZ.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
   // SceneStore.scene.add(planeYZ);
   //
   //
   // #endregion
 
-  updateModelsMaterials();
+  updateModelsMaterials(true);
 
   // #region Auxiliary functions in scope
 
@@ -255,64 +250,52 @@ export default function clipping(isEnabled) {
     visualPlane.material.side = THREE.DoubleSide;
     visualPlane.rotateOnWorldAxis(vAxle, angle);
 
-    // Gives each cube face a colored edge
-    // const wireframeGeometry = new THREE.EdgesGeometry(visualPlane.geometry);
-    // const wireframeMaterial = new THREE.LineBasicMaterial({
-    //   color: Materials.defaultValues.highlighted.color,
-    // });
-    // const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
-    // visualPlane.add(wireframe);
-
-    planes.visual.push(visualPlane);
     SceneStore.scene.add(visualPlane);
 
-    // visual plane edge renderer
-    // const edgePlane = visualPlane.clone(true);
-    // edgePlane.material = Materials.materials.planeStencilMat;
-    // planes.edges.push(edgePlane);
-    // SceneStore.scene.add(edgePlane);
-
     // cutting plane
+    // Align movement with plane normal
     const constant = invertConstant ? position * -1 : position;
     const cuttingPlane = new THREE.Plane(vNormal, constant);
 
-    planes.cutting.push(cuttingPlane);
-
+    // Add normal vector and visual and clipping planes to the store
     ClippingPlanesStore.addClippingPlane(visualPlane, cuttingPlane, vNormal);
   }
 
-  function updateModelsMaterials() {
-    // assignClippingPlanes();
+  function updateModelsMaterials(isClipping) {
+    if (!isClipping) {
+      assignClippingPlanesToModels([]);
+      return;
+    }
 
-    // assign each cutting plane as a clipping plane of all models
-    for (let idx = 0; idx < meshes.length; idx++) {
-      const mesh = meshes[idx];
-      for (const subMat in mesh.material) {
-        mesh.material[subMat].clippingPlanes = planes.cutting;
+    assignClippingPlanesToModels(ClippingPlanesStore.clippingPlanes);
+    assignClippingPlanesToEachPlane();
+
+    function assignClippingPlanesToModels(planes) {
+      // assign each cutting plane as a clipping plane of all models
+      for (let idx = 0; idx < meshes.length; idx++) {
+        const mesh = meshes[idx];
+        for (const subMat in mesh.material) {
+          mesh.material[subMat].clippingPlanes = planes;
+        }
       }
     }
 
-    for (let idx = 0; idx < ClippingPlanesStore.visualPlanes.length; idx++) {
-      let clippingPlanes = [];
-      const vP = ClippingPlanesStore.visualPlanes[idx];
-      for (
-        let idx2 = 0;
-        idx2 < ClippingPlanesStore.clippingPlanes.length;
-        idx2++
-      ) {
-        const cP = ClippingPlanesStore.clippingPlanes[idx2];
-        if (idx == idx2) continue;
-        clippingPlanes.push(cP);
+    function assignClippingPlanesToEachPlane() {
+      for (let idx = 0; idx < ClippingPlanesStore.visualPlanes.length; idx++) {
+        let clippingPlanes = [];
+        const vP = ClippingPlanesStore.visualPlanes[idx];
+        for (
+          let idx2 = 0;
+          idx2 < ClippingPlanesStore.clippingPlanes.length;
+          idx2++
+        ) {
+          const cP = ClippingPlanesStore.clippingPlanes[idx2];
+          if (idx == idx2) continue;
+          clippingPlanes.push(cP);
+        }
+        vP.material.clippingPlanes = clippingPlanes;
       }
-      vP.material.clippingPlanes = clippingPlanes;
     }
-
-    // for (let idx = 0; idx < planes.edges.length; idx++) {
-    //   const element = planes.edges[idx];
-    //   element.material.clippingPlanes = planes.cutting;
-    // }
-
-    // buildMeshRenderTextures();
   }
 
   /**
@@ -320,8 +303,10 @@ export default function clipping(isEnabled) {
    */
   function assignClippingPlanes() {
     // assing clipping planes to the planes' materials
-    Materials.materials.frontFaceStencilMat.clippingPlanes = planes.cutting;
-    Materials.materials.backFaceStencilMat.clippingPlanes = planes.cutting;
+    Materials.materials.frontFaceStencilMat.clippingPlanes =
+      ClippingPlanesStore.clippingPlanes;
+    Materials.materials.backFaceStencilMat.clippingPlanes =
+      ClippingPlanesStore.clippingPlanes;
   }
 
   /**
@@ -343,10 +328,16 @@ export default function clipping(isEnabled) {
     );
     backMesh.rotation.copy(mesh.rotation);
     SceneStore.scene.add(backMesh);
+
+    assignClippingPlanes();
   }
 
-  function destroyPlanes() {
-    //
+  function removePlanes() {
+    ClippingPlanesStore.hide();
+  }
+
+  function resetPlanes() {
+    ClippingPlanesStore.reset();
   }
 
   // #endregion Auxiliary functions in scope

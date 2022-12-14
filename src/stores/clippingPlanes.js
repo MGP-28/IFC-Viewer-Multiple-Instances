@@ -1,9 +1,15 @@
-import * as THREE from 'three'
+import * as THREE from "three";
+import { scene } from "./scene";
 
 const clippingPlanes = [];
 const visualPlanes = [];
 const normals = [];
 let selectedPlaneIdx = undefined;
+let wireframe = undefined;
+
+function addWireframe(newWireframe){
+  wireframe = newWireframe
+}
 
 function addClippingPlane(visualPlane, plane, vNormal) {
   visualPlanes.push(visualPlane);
@@ -21,7 +27,9 @@ function resetClippingPlanes() {
 let foundPlane = undefined;
 function setFoundPlane(newPlane) {
   foundPlane = newPlane;
-  selectedPlaneIdx = visualPlanes.map(x => x.uuid).indexOf(foundPlane.object.uuid);
+  selectedPlaneIdx = visualPlanes
+    .map((x) => x.uuid)
+    .indexOf(foundPlane.object.uuid);
 }
 function resetFoundPlane() {
   foundPlane = undefined;
@@ -72,36 +80,53 @@ const edgePositions = {
   min: {
     x: undefined,
     y: undefined,
-    z: undefined
+    z: undefined,
   },
   max: {
     x: undefined,
     y: undefined,
-    z: undefined
+    z: undefined,
   },
   currentMin: {
     x: undefined,
     y: undefined,
-    z: undefined
+    z: undefined,
   },
   currentMax: {
     x: undefined,
     y: undefined,
-    z: undefined
-  }
+    z: undefined,
+  },
 };
 
 function setEdgePositions(vMin, vMax) {
-  edgePositions.min = new THREE.Vector3(vMin.x, vMin.y, vMin.z)
-  edgePositions.currentMin = new THREE.Vector3(vMin.x, vMin.y, vMin.z)
-  edgePositions.max = new THREE.Vector3(vMax.x, vMax.y, vMax.z)
-  edgePositions.currentMax = new THREE.Vector3(vMax.x, vMax.y, vMax.z)
+  edgePositions.min = new THREE.Vector3(vMin.x, vMin.y, vMin.z);
+  edgePositions.currentMin = new THREE.Vector3(vMin.x, vMin.y, vMin.z);
+  edgePositions.max = new THREE.Vector3(vMax.x, vMax.y, vMax.z);
+  edgePositions.currentMax = new THREE.Vector3(vMax.x, vMax.y, vMax.z);
+}
+
+function reset() {
+  for (let idx = 0; idx < visualPlanes.length; idx++) {
+    const vP = visualPlanes[idx];
+    scene.add(vP);
+  }
+  scene.add(wireframe);
+}
+
+function hide() {
+  for (let idx = 0; idx < visualPlanes.length; idx++) {
+    const vP = visualPlanes[idx];
+    vP.removeFromParent();
+  }
+  wireframe.removeFromParent();
 }
 
 export {
   clippingPlanes,
   visualPlanes,
   normals,
+  addWireframe,
   addClippingPlane,
   resetClippingPlanes,
   foundPlane,
@@ -115,4 +140,6 @@ export {
   setDragFinalPositions,
   edgePositions,
   setEdgePositions,
+  reset,
+  hide,
 };
