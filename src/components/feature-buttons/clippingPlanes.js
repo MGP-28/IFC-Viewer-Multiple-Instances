@@ -1,10 +1,11 @@
+import { icons } from "../../configs/icons";
 import clipping from "../../helpers/clippingPlanes";
 import { models } from "../../stores/models";
 import { userInteractions } from "../../stores/userInteractions";
 import { featureButton } from "./button";
 
 export default function renderClippingPlanesFeature() {
-  const element = featureButton("cube-04", "Clipping planes");
+  const element = featureButton(icons.clipping, "Clipping planes");
 
   let isEnabled = false;
 

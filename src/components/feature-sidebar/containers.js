@@ -1,3 +1,4 @@
+import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import { buildIcon } from "../generic/icon";
 
@@ -15,7 +16,7 @@ function renderFeatureContainer(icon, header, name) {
   `;
 
   // add icons
-  const iconClose = buildIcon("x");
+  const iconClose = buildIcon(icons.close);
   const closeWrapper = featureContainer.getElementsByClassName(
     "tools-side-feature-close"
   )[0];

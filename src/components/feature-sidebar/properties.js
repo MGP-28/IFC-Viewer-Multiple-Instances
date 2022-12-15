@@ -1,3 +1,4 @@
+import { icons } from "../../configs/icons";
 import getCuratedCategoryNameById from "../../helpers/categoryNames";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
@@ -18,7 +19,7 @@ const mainProperties = [
 export default function startPropertiesFeature() {
   // build wrapper and content
   const wrapper = renderFeatureContainer(
-    "building-06",
+    icons.properties,
     "Object properties",
     "Select an object"
   );

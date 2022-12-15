@@ -1,4 +1,5 @@
 import { buildIcon } from "../../components/generic/icon";
+import { icons } from "../../configs/icons";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import getNodePropertyName from "../../helpers/getNodePropertyName";
 import { getIfcRegex } from "../../helpers/repositories/regex";
@@ -6,6 +7,7 @@ import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
 import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
 import { renderFeatureContainer } from "./containers";
+import { icons as iconsRep } from '../../configs/icons'
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 
@@ -20,7 +22,7 @@ const references = {
 
 export default async function startSpatialTree() {
   const wrapper = renderFeatureContainer(
-    "dataflow-02",
+    iconsRep.spatialTree,
     "Spatial Tree",
     "Model Name"
   );
@@ -126,7 +128,7 @@ async function buildTitle(node) {
   if(hasChildren) {
     const caretIcon = document.createElement("div");
     caretIcon.classList.add("spatial-tree-caret");
-    caretIcon.appendChild(buildIcon("chevron-right"));
+    caretIcon.appendChild(buildIcon(icons.chevronRight));
     wrapper.appendChild(caretIcon);
     wrapper.classList.add("has-caret")
   }
@@ -147,16 +149,16 @@ async function buildTitle(node) {
 
   if (hasIcon) {
     const visibilityIcon = document.createElement("div");
-    visibilityIcon.appendChild(buildIcon("eye"));
+    visibilityIcon.appendChild(buildIcon(iconsRep.visibility));
 
     let selectIcon = undefined;
     if(hasChildren){
       selectIcon = document.createElement("div");
-      selectIcon.appendChild(buildIcon("target-02"));
+      selectIcon.appendChild(buildIcon(iconsRep.target));
     }
 
     const isolateIcon = document.createElement("div");
-    isolateIcon.appendChild(buildIcon("scale-01"));
+    isolateIcon.appendChild(buildIcon(iconsRep.partof));
 
     const icons = {
       visibility: visibilityIcon,
