@@ -1,6 +1,7 @@
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { featureButton } from "./button";
 import renderClippingPlanesFeature from "./clippingPlanes";
+import renderHelperFeature from "./help";
 
 export default function startFeatureButtons() {
   const wrapper = document.createElement("div");
@@ -10,12 +11,12 @@ export default function startFeatureButtons() {
   wrapper.appendChild(renderClippingPlanesFeature());
 
   // dummies
-  for (let idx = 0; idx < 4; idx++) {
+  for (let idx = 0; idx < 3; idx++) {
     const dummy = dummyFeature();
     wrapper.appendChild(dummy);
   }
 
-  wrapper.appendChild(renderClippingPlanesFeature());
+  wrapper.appendChild(renderHelperFeature());
 
   wrapper.classList.add("features-floating-buttons");
 
