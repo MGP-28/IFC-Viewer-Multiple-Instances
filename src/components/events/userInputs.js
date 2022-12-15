@@ -178,8 +178,6 @@ async function dragClippingPlane(event) {
   if (value > maximum) value = maximum;
   else if(value < maximum * -1) value = maximum * -1
 
-  console.log(value.toString())
-
   const vectorAxles = {
     x: axleOfMovement == "x" ? value : 0,
     y: axleOfMovement == "y" ? value : 0,
