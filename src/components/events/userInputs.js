@@ -196,9 +196,9 @@ async function dragClippingPlane(event) {
   // Checks for plane positioning reaching the minimum or maximum
   const buffer = clippingConfigs.buffer;
   const absoluteMinPosition =
-    ClippingPlanesStore.edgePositions.min[axleOfMovement] + buffer;
+    ClippingPlanesStore.edgePositions.min[axleOfMovement];
   const absoluteMaxPosition =
-    ClippingPlanesStore.edgePositions.max[axleOfMovement] - buffer;
+    ClippingPlanesStore.edgePositions.max[axleOfMovement];
   if (absoluteMinPosition > visualPlane.position[axleOfMovement])
     visualPlane.position[axleOfMovement] = absoluteMinPosition;
   else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
