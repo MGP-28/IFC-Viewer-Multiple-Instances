@@ -9,9 +9,10 @@ export default function startFeatureButtons() {
 
   // dummies
   for (let idx = 0; idx < 4; idx++) {
-    wrapper.appendChild(dummyFeature());
+    const dummy = dummyFeature();
+    wrapper.appendChild(dummy);
   }
-  
+
   wrapper.classList.add("features-floating-buttons");
 
   document.body.appendChild(wrapper);
@@ -20,21 +21,23 @@ export default function startFeatureButtons() {
   document.addEventListener("startFeatures", async (event) => {
     for (let idx = 0; idx < wrapper.childNodes.length; idx++) {
       const element = wrapper.children[idx];
-      console.log('el', element)
       element.classList.remove("not-ready");
       emitEventOnElement(element, "startFeature");
     }
   });
 }
 
-function dummyFeature(){
+function dummyFeature() {
   const element = featureButton("x", "Tester");
 
   element.addEventListener("startFeature", (e) => {
     element.addEventListener("click", (e) => {
       element.classList.toggle("active");
     });
+    element.addEventListener("dblclick", () => {
+      element.classList.toggle("not-ready");
+    });
   });
 
-  return element
+  return element;
 }
