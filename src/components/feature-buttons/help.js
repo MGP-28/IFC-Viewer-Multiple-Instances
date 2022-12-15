@@ -6,21 +6,25 @@ import { buildPopupWithHeader } from "../PopupWithHeader";
 import { featureButton } from "./button";
 
 export default function renderHelperFeature() {
+  //
+  // Feature button element
   const element = featureButton(icons.helper, "Help");
   element.classList.remove("not-ready");
 
   const headerProps = {
     title: HelperHeader.title,
     subtitle: HelperHeader.description,
-    icon: HelperHeader.icon
-  }
+    icon: HelperHeader.icon,
+  };
 
+  //
+  // Popup element
   const popup = buildPopupWithHeader(headerProps);
 
   const container = popup.getElementsByClassName("popup-header-content")[0];
   const content = createElement("div", {
-    classes: ["feature-helper-content-container"]
-  })
+    classes: ["feature-helper-content-container"],
+  });
   // Content
   for (const feature in HelperTips) {
     const tip = HelperTips[feature];
@@ -34,6 +38,7 @@ export default function renderHelperFeature() {
 
   container.appendChild(content);
 
+  //
   // Event handling
   let isEnabled = false;
   // event handling for opening/closing feature
@@ -42,16 +47,17 @@ export default function renderHelperFeature() {
   document.body.appendChild(popup);
 
   return element;
-
+  
+  //
   // aux functions in scope
 
-  function stateHandling(){
+  function stateHandling() {
     popup.addEventListener("toggle", () => {
-        toggleState();
-    })
+      toggleState();
+    });
     element.addEventListener("click", () => {
-        toggleState();
-    })
+      toggleState();
+    });
   }
 
   function toggleState() {

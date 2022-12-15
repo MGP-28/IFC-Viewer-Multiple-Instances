@@ -28,9 +28,8 @@ function render(props, preventPropagation = true) {
   handleStates();
 
   if (preventPropagation) {
-    const container = popup.getElementsByClassName("popup-header-content")[0];
-    container.addEventListener("click", (e) => {
-      e.stopPropagation;
+    wrapper.addEventListener("click", (e) => {
+      e.stopPropagation();
     });
   }
 
@@ -39,8 +38,8 @@ function render(props, preventPropagation = true) {
   // aux functions in scope
 
   function handleStates() {
-    const arr = [popup, close];
-    arr.forEach((element) => {
+    const triggers = [popup, close];
+    triggers.forEach((element) => {
       element.addEventListener("click", (e) => {
         emitEventOnElement(popup, "toggle");
       });
