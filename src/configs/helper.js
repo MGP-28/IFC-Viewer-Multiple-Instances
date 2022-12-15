@@ -13,12 +13,20 @@ const tips = {
   properties: {
     title: "Properties",
     icon: icons.properties,
-    description: ["Placeholder text"],
+    description: [
+      "Placeholder text",
+      "More placeholder text",
+      "Even more placeholder text"
+    ],
   },
   spatialTree: {
     title: "Spatial Tree",
     icon: icons.spatialTree,
-    description: ["Placeholder text"],
+    description: [
+      "Placeholder text",
+      "More placeholder text",
+      "Even more placeholder text"
+    ],
   },
 };
 

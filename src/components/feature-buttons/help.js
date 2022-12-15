@@ -1,66 +1,57 @@
-import { HelperTips, HelperHeader } from "../../configs/helper";
+import { HelperHeader, HelperTips } from "../../configs/helper";
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import { buildIcon } from "../generic/icon";
-import { buildModal } from "../generic/modal";
+import { buildPopupWithHeader } from "../PopupWithHeader";
 import { featureButton } from "./button";
 
 export default function renderHelperFeature() {
   const element = featureButton(icons.helper, "Help");
   element.classList.remove("not-ready");
 
-  const popup = buildModal();
-  popup.innerHTML = `
-    <div class="feature-helper-wrapper">
-        <div class="feature-helper-wrapper-buffer">
-            <div class="feature-helper-container">
-            </div>
-        </div>
-    </div>
-  `;
-  const wrapper = popup.getElementsByClassName("feature-helper-wrapper")[0];
-  const container = popup.getElementsByClassName("feature-helper-container")[0];
+  const headerProps = {
+    title: HelperHeader.title,
+    subtitle: HelperHeader.description,
+    icon: HelperHeader.icon
+  }
 
-  // Header
-  const header = buildHeader();
-  // inserts node on top
-  wrapper.insertBefore(header, wrapper.firstChild);
+  const popup = buildPopupWithHeader(headerProps);
 
+  const container = popup.getElementsByClassName("popup-header-content")[0];
+  const content = createElement("div", {
+    classes: ["feature-helper-content-container"]
+  })
   // Content
   for (const feature in HelperTips) {
     const tip = HelperTips[feature];
     const tipEl = buildTip(tip);
-    container.appendChild(tipEl);
+    content.appendChild(tipEl);
     const seperator = buildSeperator();
-    container.appendChild(seperator);
+    content.appendChild(seperator);
   }
   // remove last seperator
-  container.lastChild.remove();
+  content.lastChild.remove();
 
-  const closer = header.getElementsByClassName(
-    "feature-helper-header-close"
-  )[0];
+  container.appendChild(content);
 
+  // Event handling
   let isEnabled = false;
-
   // event handling for opening/closing feature
-  stateHandling([element, popup, closer]);
-
-  wrapper.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
+  stateHandling();
 
   document.body.appendChild(popup);
 
   return element;
 
-  // In-scope aux functions
-  function stateHandling(stateTogglers) {
-    stateTogglers.forEach((element) => {
-      element.addEventListener("click", (e) => {
+  // aux functions in scope
+
+  function stateHandling(){
+    popup.addEventListener("toggle", () => {
         toggleState();
-      });
-    });
+    })
+    element.addEventListener("click", () => {
+        toggleState();
+    })
   }
 
   function toggleState() {
@@ -68,27 +59,6 @@ export default function renderHelperFeature() {
     popup.classList.toggle("hidden");
     element.classList.toggle("active");
   }
-}
-
-function buildHeader() {
-  const header = createElement("div", {
-    classes: ["feature-helper-header"],
-  });
-  header.innerHTML = `
-    <div class="feature-helper-header-text">${HelperHeader.title}</div>
-    <div class="feature-helper-header-subtitle">${HelperHeader.description}</div>
-    `;
-
-  // add icons
-  const icon = buildIcon(HelperHeader.icon);
-  icon.classList.add("feature-helper-header-icon");
-  header.insertBefore(icon, header.firstElementChild);
-
-  const close = buildIcon(icons.close);
-  close.classList.add("feature-helper-header-close");
-  header.insertBefore(close, header.lastElementChild);
-
-  return header;
 }
 
 function buildTip(tip) {
