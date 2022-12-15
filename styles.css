@@ -535,21 +535,21 @@ body {
 
 @media only screen and (max-width: 889px) {
 
-  .feature-helper-wrapper{
-    width: 90%;
-    padding: 5px;
+  .popup-header-wrapper{
+    width: 95%;
   }
 
-  .feature-helper-wrapper-buffer{
-    padding: 5px;
-  }
-  
-  .feature-helper-container {
-    width: 100%;
-    padding: 5px;
+  .popup-header-subtitle{
+    font-size: 1rem;
   }
 
-  .feature-helper-container .feature-helper-tip-description {
+  .feature-helper-tip-title {
+    grid-column: span 2;
+    padding: 0;
+    font-size: 26px;
+  }
+
+  .feature-helper-tip-description {
     grid-column: span 2;
     padding: 0;
   }
