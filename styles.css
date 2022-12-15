@@ -413,6 +413,20 @@ body {
   animation: icon-shadow-pulsing 1s infinite alternate linear;
 }
 
+@media only screen and (max-width: 444px) {
+  .features-floating-buttons {
+    position: absolute;
+    width: max-content;
+    top: calc(100% - 80px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    width: 100%;
+    justify-content: space-evenly;
+    gap: 0;
+  }
+}
+
 /* #endregion Floating buttons features */
 
 /* #region popup with header */
