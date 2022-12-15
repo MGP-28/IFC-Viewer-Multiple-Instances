@@ -5,6 +5,8 @@ import renderClippingPlanesFeature from "./clippingPlanes";
 export default function startFeatureButtons() {
   const wrapper = document.createElement("div");
 
+  // Add feature buttons
+
   wrapper.appendChild(renderClippingPlanesFeature());
 
   // dummies
@@ -12,6 +14,8 @@ export default function startFeatureButtons() {
     const dummy = dummyFeature();
     wrapper.appendChild(dummy);
   }
+
+  wrapper.appendChild(renderClippingPlanesFeature());
 
   wrapper.classList.add("features-floating-buttons");
 

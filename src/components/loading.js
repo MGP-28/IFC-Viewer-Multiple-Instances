@@ -7,8 +7,8 @@ export default function startLoadingPopup() {
   const content = document.createElement("div");
   content.classList.add("modal-loading-container");
   content.innerHTML = `
-        <i class="fa-solid fa-gear anim-spinner"></i>
-        <p>Loading</p>
+      <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+      <p>Loading</p>
     `;
 
   document.addEventListener("loading", () => {
