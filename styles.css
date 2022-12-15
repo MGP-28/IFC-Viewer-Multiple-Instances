@@ -407,6 +407,7 @@ body {
 .features-floating-buttons .feature-button.active {
   transform: scale(1.1);
   box-shadow: 0 0 5px 2px var(--primary-color-light);
+  animation: icon-shadow-pulsing 1s infinite alternate linear;
 }
 
 /* #endregion Floating buttons features */
@@ -496,14 +497,10 @@ body {
 
 /* icon pulsing */
 @keyframes icon-shadow-pulsing {
-  /* 0% {
-    box-shadow: 0 0 10px 3px var(--primary-color-light);
-  } */
   to {
-    box-shadow: 0 0 10px var(--primary-color-light);
+    box-shadow: 0 0 10px 4px var(--primary-color-light);
   }
 }
-
 
 /* #endregion animations */
 
