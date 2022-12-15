@@ -69,7 +69,7 @@ export default function clipping(isEnabled) {
     };
     const boxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
     const wireframeGeometry = new THREE.EdgesGeometry(boxGeometry);
-    const wireframeMaterial = Materials.materials.transparent.clone();
+    const wireframeMaterial = Materials.materials.wireframe.clone();
     const wireframe = new THREE.LineSegments(
       wireframeGeometry,
       wireframeMaterial
@@ -220,6 +220,8 @@ export default function clipping(isEnabled) {
     boundingMesh.position.copy(center);
 
     SceneStore.scene.add(boundingBox); // test~
+    
+    return box3;
     //#endregion render box in scene - comment return for it
   }
 
@@ -248,7 +250,6 @@ export default function clipping(isEnabled) {
     for (const key in visualPlane.position) {
       if (vNormal[key] !== 0) visualPlane.position[key] = position;
     }
-    visualPlane.material.side = THREE.DoubleSide;
     visualPlane.rotateOnWorldAxis(vAxle, angle);
 
     SceneStore.scene.add(visualPlane);

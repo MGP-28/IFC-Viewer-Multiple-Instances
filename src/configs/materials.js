@@ -15,13 +15,14 @@ const defaultValues = {
     color: parseInt(UIConfigs.primaryColor, 16),
     depthTest: false,
   },
-  clipping: {
-    transparent: true,
-    opacity: 0.2,
-    color: parseInt(UIConfigs.primaryColor, 16),
-    depthTest: false,
-  },
   transparent: {
+    transparent: true,
+    opacity: 0.02,
+    color: 0x000000,
+    depthTest: false,
+    side: THREE.DoubleSide
+  },
+  wireframe: {
     transparent: true,
     opacity: 0.1,
     color: 0x000000,
