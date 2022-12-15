@@ -190,7 +190,7 @@ export default function startLoadingPopup() {
 
   modal.appendChild(content);
 
-  loadCSS("./src/css/loading.css");
+  loadCSS("./src/assets/css/loading.css");
 
   document.body.appendChild(modal);
 }

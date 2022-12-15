@@ -1,20 +1,5 @@
 /* Loading popup */
 
-/* .modal-loading-container {
-  color: var(--primary-color-dark);
-  width: max-content;
-  height: max-content;
-  border: var(--primary-color-dark) 1px solid;
-  background-color: white;
-  padding: 50px 100px;
-  display: grid;
-  place-items: center;
-  gap: 30px;
-  font-size: 30px;
-  border-radius: 10px;
-  user-select: none;
-} */
-
 .cube-container {
   position: relative;
   height: 100px;
