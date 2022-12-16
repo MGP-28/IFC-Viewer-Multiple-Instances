@@ -16,7 +16,7 @@ const referenceVectors = {
   z1: new THREE.Vector3(0, 0, -1),
 };
 
-export default function clipping(isEnabled) {
+function clipping(isEnabled) {
   // prevents clipping plane rendering when no models are loaded
   if (ModelStore.models.length == 0) return;
 
@@ -220,7 +220,7 @@ export default function clipping(isEnabled) {
     boundingMesh.position.copy(center);
 
     SceneStore.scene.add(boundingBox); // test~
-    
+
     return box3;
     //#endregion render box in scene - comment return for it
   }
@@ -246,7 +246,7 @@ export default function clipping(isEnabled) {
 
     visualPlane.position.copy(boxCenter);
 
-    // cycles axles in positon
+    // cycles axles in position
     for (const key in visualPlane.position) {
       if (vNormal[key] !== 0) visualPlane.position[key] = position;
     }
@@ -344,3 +344,42 @@ export default function clipping(isEnabled) {
 
   // #endregion Auxiliary functions in scope
 }
+
+ /**
+   * 
+   * @param {*} positions {vMin, vMax}
+   */
+ function updatePlanesPositions() {
+
+  console.log('here')
+
+  const positions = {
+    vMin: ClippingPlanesStore.edgePositions.currentMin,
+    vMax: ClippingPlanesStore.edgePositions.currentMax
+  }
+  const visualPlanes = ClippingPlanesStore.visualPlanes;
+  const cuttingPlanes = ClippingPlanesStore.clippingPlanes;
+  const normals = ClippingPlanesStore.normals;
+  
+  ClippingPlanesStore.edgePositions.currentMin = positions.vMin.clone();
+  ClippingPlanesStore.edgePositions.currentMax = positions.vMax.clone();
+
+  for (let idx = 0; idx < visualPlanes.length; idx++) {
+    const visualPlane = visualPlanes[idx];
+    const cuttingPlane = cuttingPlanes[idx];
+    const normal = normals[idx];
+
+    const axleOfMovement = normal.y !== 0 ? "y" : normal.x !== 0 ? "x" : "z";
+
+    const edgeVector = normal[axleOfMovement] > 0 ? "vMin" : "vMax";
+
+    visualPlane.position[axleOfMovement] = positions[edgeVector][axleOfMovement];
+
+    const newConstant =
+      visualPlane.position[axleOfMovement] * normal[axleOfMovement] * -1;
+    cuttingPlane.constant = newConstant;
+  }
+
+}
+
+export { clipping, updatePlanesPositions }

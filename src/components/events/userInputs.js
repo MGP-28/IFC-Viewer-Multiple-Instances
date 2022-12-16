@@ -11,6 +11,9 @@ import { controls, scene } from "../../stores/scene";
 import * as THREE from "three";
 import { clippingConfigs } from "../../configs/clippingPlanes";
 import { consoleLogObject } from "../../helpers/generic/logging";
+import { getCameraData, setCameraData } from "../../helpers/camera";
+import { Vector3 } from "three";
+import { updatePlanesPositions } from "../../helpers/clippingPlanes";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -59,13 +62,34 @@ export default function startUserInputs() {
       // plane end movement logic
       stopMovingClippingPlane(event);
     };
+
+    let savedView = {
+      camera: {},
+      clipping: {
+        min: new THREE.Vector3(1, 2, 3),
+        max: new THREE.Vector3(-1, 1, 0),
+      },
+    };
+
     window.addEventListener("keydown", (event) => {
       const keyPressed = event.code;
       switch (keyPressed) {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
-
+        case "KeyT":{
+          savedView.camera = getCameraData();
+          savedView.clipping.min = ClippingPlanesStore.edgePositions.currentMin.clone();
+          savedView.clipping.max = ClippingPlanesStore.edgePositions.currentMax.clone();
+          break;
+        }
+        case "KeyL":{
+          setCameraData(savedView);
+          ClippingPlanesStore.edgePositions.currentMin = savedView.clipping.min.clone();
+          ClippingPlanesStore.edgePositions.currentMax = savedView.clipping.max.clone();
+          updatePlanesPositions();
+          break;
+        }
         default:
           break;
       }
@@ -155,14 +179,16 @@ function stopMovingClippingPlane(event) {
   ClippingPlanesStore.resetCrossPlane();
 }
 
-async function dragClippingPlane(event) {
+async function dragClippingPlane(event, isUserInteraction) {
   const visualPlane = ClippingPlanesStore.foundPlane.object;
   const vNormal =
     ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
 
   const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
 
-  const multiplier = userInteractions.controlActive ? clippingConfigs.multiplier.precision : clippingConfigs.multiplier.normal;
+  const multiplier = userInteractions.controlActive
+    ? clippingConfigs.multiplier.precision
+    : clippingConfigs.multiplier.normal;
   const maximum = clippingConfigs.maxJump;
 
   const endPoint = await pickCrossPlane(event);
@@ -174,9 +200,11 @@ async function dragClippingPlane(event) {
   const initialPosition = ClippingPlanesStore.crossPlane.points.start;
   const finalPosition = ClippingPlanesStore.crossPlane.points.end;
 
-  let value = (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) * multiplier;
+  let value =
+    (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) *
+    multiplier;
   if (value > maximum) value = maximum;
-  else if(value < maximum * -1) value = maximum * -1
+  else if (value < maximum * -1) value = maximum * -1;
 
   const vectorAxles = {
     x: axleOfMovement == "x" ? value : 0,
