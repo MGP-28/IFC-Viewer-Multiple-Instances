@@ -1,5 +1,5 @@
 import { icons } from "../../configs/icons";
-import clipping from "../../helpers/clippingPlanes";
+import { clipping } from "../../helpers/clippingPlanes";
 import { models } from "../../stores/models";
 import { userInteractions } from "../../stores/userInteractions";
 import { featureButton } from "./button";
