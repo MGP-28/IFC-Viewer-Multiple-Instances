@@ -350,9 +350,6 @@ function clipping(isEnabled) {
    * @param {*} positions {vMin, vMax}
    */
  function updatePlanesPositions() {
-
-  console.log('here')
-
   const positions = {
     vMin: ClippingPlanesStore.edgePositions.currentMin,
     vMax: ClippingPlanesStore.edgePositions.currentMax

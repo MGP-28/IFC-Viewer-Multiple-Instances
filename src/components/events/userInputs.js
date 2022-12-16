@@ -77,17 +77,21 @@ export default function startUserInputs() {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
-        case "KeyT":{
+        case "KeyT": {
           savedView.camera = getCameraData();
-          savedView.clipping.min = ClippingPlanesStore.edgePositions.currentMin.clone();
-          savedView.clipping.max = ClippingPlanesStore.edgePositions.currentMax.clone();
+          if (userInteractions.clippingPlanes) {
+            savedView.clipping.min = ClippingPlanesStore.edgePositions.currentMin.clone();
+            savedView.clipping.max = ClippingPlanesStore.edgePositions.currentMax.clone();
+          }
           break;
         }
-        case "KeyL":{
+        case "KeyL": {
           setCameraData(savedView);
-          ClippingPlanesStore.edgePositions.currentMin = savedView.clipping.min.clone();
-          ClippingPlanesStore.edgePositions.currentMax = savedView.clipping.max.clone();
-          updatePlanesPositions();
+          ClippingPlanesStore.edgePositions.currentMin =
+            savedView.clipping.min.clone();
+          ClippingPlanesStore.edgePositions.currentMax =
+            savedView.clipping.max.clone();
+          if (userInteractions.clippingPlanes) updatePlanesPositions();
           break;
         }
         default:
