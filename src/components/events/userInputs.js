@@ -91,7 +91,7 @@ export default function startUserInputs() {
             savedView.clipping.min.clone();
           ClippingPlanesStore.edgePositions.currentMax =
             savedView.clipping.max.clone();
-          if (userInteractions.clippingPlanes) updatePlanesPositions();
+          if (ClippingPlanesStore.visualPlanes.length > 0) updatePlanesPositions();
           break;
         }
         default:
