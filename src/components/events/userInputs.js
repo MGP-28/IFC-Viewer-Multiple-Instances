@@ -13,7 +13,9 @@ import { clippingConfigs } from "../../configs/clippingPlanes";
 import { consoleLogObject } from "../../helpers/generic/logging";
 import { getCameraData, setCameraData } from "../../helpers/camera";
 import { Vector3 } from "three";
-import { updatePlanesPositions } from "../../helpers/clippingPlanes";
+import { clipping, updatePlanesPositions } from "../../helpers/clippingPlanes";
+import SavedView from "../../models/SavedView";
+import { addSavedView, savedViews } from "../../stores/savedViews";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -63,41 +65,25 @@ export default function startUserInputs() {
       stopMovingClippingPlane(event);
     };
 
-    let savedView = {
-      camera: {},
-      clipping: {
-        min: new THREE.Vector3(1, 2, 3),
-        max: new THREE.Vector3(-1, 1, 0),
-      },
-    };
-
     window.addEventListener("keydown", (event) => {
       const keyPressed = event.code;
       switch (keyPressed) {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
-        case "KeyT": {
-          savedView.camera = getCameraData();
-          if (userInteractions.clippingPlanes) {
-            savedView.clipping.min = ClippingPlanesStore.edgePositions.currentMin.clone();
-            savedView.clipping.max = ClippingPlanesStore.edgePositions.currentMax.clone();
-          }
+        case "KeyS": {
+          saveView();
           break;
         }
         case "KeyL": {
-          setCameraData(savedView);
-          ClippingPlanesStore.edgePositions.currentMin =
-            savedView.clipping.min.clone();
-          ClippingPlanesStore.edgePositions.currentMax =
-            savedView.clipping.max.clone();
-          if (ClippingPlanesStore.visualPlanes.length > 0) updatePlanesPositions();
+          loadView();
           break;
         }
         default:
           break;
       }
     });
+
     window.addEventListener("keyup", (event) => {
       const keyPressed = event.code;
       switch (keyPressed) {
@@ -265,4 +251,32 @@ async function dragClippingPlane(event, isUserInteraction) {
   ClippingPlanesStore.crossPlane.points.start.copy(
     ClippingPlanesStore.crossPlane.points.end
   );
+}
+
+function saveView() {
+  const cameraData = getCameraData();
+  if (ClippingPlanesStore.visualPlanes.length == 0) {
+    // build clipping planes
+    clipping(true);
+    // disable their render
+    clipping(false);
+  }
+    const clippingData = {
+      min: ClippingPlanesStore.edgePositions.currentMin.clone(),
+      max: ClippingPlanesStore.edgePositions.currentMax.clone(),
+    };
+  const savedView = new SavedView(cameraData, clippingData);
+  addSavedView(savedView);
+}
+
+function loadView() {
+  if (savedViews.length == 0) return;
+
+  const savedView = savedViews[0];
+  // set camera
+  setCameraData(savedView);
+  ClippingPlanesStore.edgePositions.currentMin = savedView.clipping.min.clone();
+  ClippingPlanesStore.edgePositions.currentMax = savedView.clipping.max.clone();
+  if (ClippingPlanesStore.visualPlanes.length > 0) 
+    updatePlanesPositions();
 }
