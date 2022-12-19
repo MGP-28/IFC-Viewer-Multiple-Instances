@@ -1,14 +1,20 @@
-import { savedViews } from "../stores/savedViews";
 import * as StoreScene from "../stores/scene";
-import { multipleLogsWithSeperator } from "./generic/logging";
 import * as THREE from "three";
+import { cameraConfigs } from "../configs/camera";
+import {
+  getLineVector,
+} from "./generic/vectors";
+import { Vector3 } from "three";
+import { pickAxlePlane } from "./raytracing";
+import { testShape } from "./debug/viewerSphere";
+import { consoleLogObject, multipleLogsWithSeperator } from "./generic/logging";
 
 function getCameraData() {
   const camera = StoreScene.camera;
 
   // get rotation
-  const vRotation = new THREE.Vector3();
-  camera.getWorldDirection(vRotation);
+
+  const pointLookedAt = pickAxlePlane();
 
   // get position
   camera.updateMatrixWorld();
@@ -17,25 +23,99 @@ function getCameraData() {
 
   return {
     position: vPosition,
-    rotation: vRotation,
+    pointLookedAt: pointLookedAt,
   };
 }
 
 // function setCameraData(id) {
-  function setCameraData(savedView) {
-  const camera = StoreScene.camera;
-  // const savedView = savedViews[id];
+function setCameraData(savedView) {
+  const controls = StoreScene.controls;
 
-  const middlePoint = {};
+  controls.enabled = false;
 
-  for (const key in savedView.clipping.min) {
-    middlePoint[key] = (savedView.clipping.min + savedView.clipping.max) / 2;
+  // configs
+  const frames = cameraConfigs.framesPerAnimation;
+
+  // rotation
+  const pointLookingAt = pickAxlePlane();
+  const finalPointLookedAt = savedView.camera.pointLookedAt;
+  const movementVectorRotation = getLineVector(
+    pointLookingAt,
+    finalPointLookedAt
+  );
+  const vecByFrameRotation = getFrameVector(movementVectorRotation, frames);
+
+  const currentPointBeingLookedAt = new Vector3();
+  currentPointBeingLookedAt.copy(pointLookingAt);
+
+  // position
+  const startingPosition = StoreScene.camera.position;
+  const finalPosition = savedView.camera.position;
+  const movementVectorPosition = getLineVector(startingPosition, finalPosition);
+  const vecByFramePosition = getFrameVector(movementVectorPosition, frames);
+  const currentPosition = new Vector3();
+  currentPosition.copy(startingPosition);
+
+  // animation
+  let counter = 0;
+
+  animationLoop();
+
+  controls.enabled = true;
+
+  //
+  // Aux functions in scope
+  //
+  function animationLoop() {
+    if (counter == frames) return;
+    setTimeout(() => {
+      rotationTweening();
+      positionTweening();
+      counter++;
+      animationLoop();
+    }, 1);
   }
 
-  // set values
-  camera.position.copy(savedView.camera.position);
+  function rotationTweening() {
+    const newPointLooked = new THREE.Vector3();
+    newPointLooked.copy(currentPointBeingLookedAt);
+    newPointLooked.add(vecByFrameRotation);
 
-  camera.lookAt(middlePoint);
+    // Update camera point looked at
+    setCameraLookingPoint(newPointLooked);
+    // Update current point looked at, for next frame
+    currentPointBeingLookedAt.copy(newPointLooked);
+  }
+
+  function positionTweening() {
+    const newPosition = new THREE.Vector3();
+    newPosition.copy(currentPosition);
+    newPosition.add(vecByFramePosition);
+
+    // Update camera point looked at
+    consoleLogObject(newPosition, '-')
+    setCameraPosition(newPosition);
+    // Update current point looked at, for next frame
+    currentPosition.copy(newPosition);
+  }
 }
 
-export { getCameraData, setCameraData };
+function setCameraLookingPoint(point) {
+  const controls = StoreScene.controls;
+  controls.target = point;
+  controls.update();
+}
+
+function setCameraPosition(point){
+  const camera = StoreScene.camera;
+  camera.position.copy(point);
+}
+
+export { getCameraData, setCameraData, setCameraLookingPoint, setCameraPosition };
+
+function getFrameVector(movementVector, frames) {
+  const frameVector = new THREE.Vector3();
+  frameVector.copy(movementVector);
+  frameVector.divideScalar(frames);
+  return frameVector;
+}
