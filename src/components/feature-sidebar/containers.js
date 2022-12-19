@@ -38,6 +38,7 @@ function renderFeatureContainer(icon, header, name) {
     featureContainer.addEventListener("featureReady", () => {
       iconWrapper.classList.remove("not-ready");
       iconWrapper.classList.add("interaction-cursor");
+      
       iconWrapper.addEventListener("click", (e) => {
         isActive = !isActive;
         animationControl(isActive);

@@ -6,8 +6,6 @@ import {
 } from "./generic/vectors";
 import { Vector3 } from "three";
 import { pickAxlePlane } from "./raytracing";
-import { testShape } from "./debug/viewerSphere";
-import { consoleLogObject, multipleLogsWithSeperator } from "./generic/logging";
 
 function getCameraData() {
   const camera = StoreScene.camera;
@@ -93,7 +91,6 @@ function setCameraData(savedView) {
     newPosition.add(vecByFramePosition);
 
     // Update camera point looked at
-    consoleLogObject(newPosition, '-')
     setCameraPosition(newPosition);
     // Update current point looked at, for next frame
     currentPosition.copy(newPosition);
