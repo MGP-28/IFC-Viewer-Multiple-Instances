@@ -105,13 +105,58 @@ async function pickCrossPlane(event) {
   for (let idx = 0; idx < ClippingPlanesStore.crossPlane.planes.length; idx++) {
     const plane = ClippingPlanesStore.crossPlane.planes[idx];
     RaycastStore.raycaster.ray.intersectPlane(plane, result);
-    const coordinates = {...({x, y, z} = result)}
+    const coordinates = { ...({ x, y, z } = result) };
     for (const key in coordinates) {
-      if(result[key] != 0) return result
+      if (result[key] != 0) return result;
     }
   }
   return false;
 }
+
+function pickAxlePlane() {
+  RaycastStore.raycaster.setFromCamera( new THREE.Vector2(), Scene.camera );  
+
+  const planes = [];
+  const normals = {
+    x: new THREE.Vector3(1, 0, 0),
+    y: new THREE.Vector3(0, 1, 0),
+    z: new THREE.Vector3(0, 0, 1),
+  };
+
+  for (const axle in normals) {
+    const normal = normals[axle];
+
+    const crossPlane = new THREE.Plane( normal, 0);
+    planes.push(crossPlane);
+
+    // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
+    // Scene.scene.add(helper);
+  }
+
+  // Casts a ray for each model uploaded, returns object
+  const results = [];
+  for (let idx = 0; idx < planes.length; idx++) {
+    const result = new THREE.Vector3();
+    const plane = planes[idx];
+    RaycastStore.raycaster.ray.intersectPlane(plane, result);
+    
+    if(result) {
+      results.push(result);
+    }
+  }
+
+  const result = getRaycastingResultPoint();
+  function getRaycastingResultPoint() {
+    const distances = results.map((pos) => pos.distanceTo(RaycastStore.raycaster.camera.position));
+    const minDistance = Math.min(...distances);
+    const idx = distances.indexOf(minDistance);
+    return results[idx];
+  }
+  return result;
+}
+
+//
+// AUX Functions
 
 function setupCast(event, type = false) {
   // Computes the position of the mouse on the screen
@@ -184,4 +229,4 @@ async function storeFoundObjectProperties(isSelection) {
   return true;
 }
 
-export { pickObject, pickClippingPlane, pickCrossPlane };
+export { pickObject, pickClippingPlane, pickCrossPlane, pickAxlePlane };
