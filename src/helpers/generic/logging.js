@@ -8,7 +8,7 @@ function consoleLogObject(obj, message = "") {
  * @param {Object} logs {title (string), objects (array)}
  */
 function multipleLogsWithSeperator(logs) {
-  const title = logs.title ? log.title : "No title";
+  const title = logs.title ? logs.title : "No title";
   console.log("----- START -----");
   console.log(title);
   console.log("-----------------");
