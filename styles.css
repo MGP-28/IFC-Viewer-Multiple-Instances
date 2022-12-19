@@ -368,6 +368,44 @@ body {
 }
 /* #endregion Spatial Tree */
 
+/* #region saved views */
+
+.saved-wrapper {
+  display: grid;
+  width: 100%;
+}
+
+.saved-toolbar {
+  padding-left: 5px;
+  padding-bottom: 5px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: solid 1px lightgray;
+  font-size: 14px;
+}
+
+.saved-add-text {
+  line-height: 25px;
+}
+
+.saved-add {
+  /**/
+}
+
+.saved-list {
+  width: 100%;
+}
+
+.saved-list > li {
+  width: 100%;
+  height: 25px;
+  display: grid;
+  grid-template-columns: 14px 1fr 14px;
+}
+
+/* #endregion saved views */
+
 /* #region Floating buttons features */
 
 .features-floating-buttons {
@@ -431,7 +469,7 @@ body {
 
 /* #region popup with header */
 
-.popup-header-wrapper{
+.popup-header-wrapper {
   background-color: white;
   border: var(--primary-color-dark) 1px solid;
   border-radius: var(--border-radius-regular);
@@ -439,7 +477,7 @@ body {
   height: 80%;
   display: grid;
 }
-.popup-header{
+.popup-header {
   background-color: var(--primary-color-dark);
   border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
   color: white;
@@ -450,32 +488,32 @@ body {
   place-items: center;
   overflow: hidden;
 }
-.popup-header-icon{
+.popup-header-icon {
   width: 60px;
   height: 60px;
   display: grid;
   place-items: center;
   padding: 8px;
   border-radius: var(--border-radius-small);
-  background-color: var(--primary-color-dark)
+  background-color: var(--primary-color-dark);
 }
-.popup-header-text{
+.popup-header-text {
   color: white;
   width: 100%;
   font-weight: 700;
   user-select: none;
 }
-.popup-header-close{
+.popup-header-close {
   margin: 0 10px 0 5px;
   height: 24px;
   cursor: pointer;
   transition: all 0.5s;
 }
-.popup-header-close:hover{
+.popup-header-close:hover {
   transform: scale(1.2);
   transition: all 0.5s;
 }
-.popup-header-subtitle{
+.popup-header-subtitle {
   font-size: 20px;
   background-color: var(--primary-color-light);
   color: white;
@@ -487,7 +525,7 @@ body {
   user-select: none;
   word-break: break-word;
 }
-.popup-header-content{
+.popup-header-content {
   margin: 20px 0;
   padding: 0 20px;
   width: 100%;
@@ -539,7 +577,7 @@ body {
   line-break: strict;
   line-height: 24px;
 }
-.feature-helper-seperator{
+.feature-helper-seperator {
   width: 100%;
   height: 2px;
   background-color: var(--primary-color-light);
@@ -548,12 +586,11 @@ body {
 }
 
 @media only screen and (max-width: 889px) {
-
-  .popup-header-wrapper{
+  .popup-header-wrapper {
     width: 95%;
   }
 
-  .popup-header-subtitle{
+  .popup-header-subtitle {
     font-size: 1rem;
   }
 

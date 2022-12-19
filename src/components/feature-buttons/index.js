@@ -2,13 +2,15 @@ import { emitEventOnElement } from "../../helpers/emitEvent";
 import { featureButton } from "./button";
 import renderClippingPlanesFeature from "./clippingPlanes";
 import renderHelperFeature from "./help";
+import renderSavedViewsFeature from "./savedViews";
 
 export default function startFeatureButtons() {
   const wrapper = document.createElement("div");
 
-  // Add feature buttons
+  // Add features
 
   wrapper.appendChild(renderClippingPlanesFeature());
+  wrapper.appendChild(renderSavedViewsFeature());
 
   // dummies
   for (let idx = 0; idx < 3; idx++) {

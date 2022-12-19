@@ -3,6 +3,7 @@ const userInteractions = {
     draggingPlane: false,
     controlActive: false,
     animationRunning: false,
+    savedViews: false,
 }
 
 export { userInteractions }
