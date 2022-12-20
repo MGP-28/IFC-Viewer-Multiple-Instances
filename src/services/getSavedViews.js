@@ -16,7 +16,6 @@ function getSavedViews() {
        savedView.note = element.note;
        results.push(savedView);
     });
-    console.log(results)
     return results;
   }
   return null;
