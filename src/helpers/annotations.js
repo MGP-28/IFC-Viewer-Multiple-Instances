@@ -1,7 +1,6 @@
 import { renderFeatureContainer } from "../components/feature-sidebar/containers";
 import { buildIcon } from "../components/generic/icon";
-import { renderNewViewForm } from "../components/annotation.js/form";
-import { renderAnnotation } from "../components/annotation.js/annotation";
+import { renderAnnotation } from "../components/annotation/annotation";
 import { emitEventOnElement } from "./emitEvent";
 import { createElement } from "./generic/domElements";
 import { icons } from "../configs/icons";
@@ -34,7 +33,7 @@ function renderAnnotations() {
     <div class="tree-content-container">
         <div class="annotations-wrapper">
             <div class="annotations-toolbar"></div>
-            <ul id="annotations-list"></ul>
+            <ul class="annotations-list" id="annotations-list"></ul>
         </div>
     </div>
   `;
@@ -101,9 +100,10 @@ function hideAnnotations() {
 }
 
 function openAnnotationForm() {
-  const form = renderNewViewForm();
-  form.classList.remove("hidden");
-  document.body.appendChild(form);
+  //   const form = renderNewViewForm();
+  //   form.classList.remove("hidden");
+  //   document.body.appendChild(form);
+  console.log("form");
 }
 
 export { toggleAnnotations };
