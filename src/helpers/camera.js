@@ -59,13 +59,14 @@ function setCameraData(savedView) {
 
   animationLoop();
 
-  controls.enabled = true;
-
   //
   // Aux functions in scope
   //
   function animationLoop() {
-    if (counter == frames) return;
+    if (counter == frames) {
+      controls.enabled = true;
+      return;
+    }
     setTimeout(() => {
       rotationTweening();
       positionTweening();
