@@ -49,6 +49,8 @@ function removeSavedView(id) {
   });
   const element = document.getElementById("saved-views-list");
   element.dispatchEvent(customEvent);
+
+  saveToLS("savedViews", savedViews);
 }
 
 function getActiveId() {
