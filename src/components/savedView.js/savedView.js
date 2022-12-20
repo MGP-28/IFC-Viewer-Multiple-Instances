@@ -49,8 +49,8 @@ function renderSavedView(savedView, parent) {
     // update active status
     parent.addEventListener("savedViewChanged", () => {
       const activeId = getActiveId();
-      if (savedView.id == activeId) element.classList.add("active-saved-view");
-      else element.classList.remove("active-saved-view");
+      if (savedView.id == activeId) element.classList.add("anim-gradient");
+      else element.classList.remove("anim-gradient");
     });
     // check if removed. When true, removes self
     parent.addEventListener("updateSavedViewsList", (e) => {
