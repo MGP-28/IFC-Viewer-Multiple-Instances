@@ -11,7 +11,7 @@ import * as THREE from "three";
  * @param {Event} event event triggered
  * @param {Boolean} isSelection is user selection or hover highlighting
  */
-async function pickObject(event, isSelection) {
+async function pickObject(event, isPicking, isSelection = false) {
   setupCast(event);
 
   // Casts a ray for each model uploaded, returns object
@@ -20,12 +20,18 @@ async function pickObject(event, isSelection) {
   if (!found) {
     RaycastStore.resetFound();
 
+    if (!isPicking) return false;
+
     if (isSelection) {
       SelectedStore.resetSelectedProperties();
     } else {
       SelectedStore.resetHighlightedProperties();
     }
     return;
+  }
+
+  if (!isPicking) {
+    return found;
   }
 
   RaycastStore.setFound(found);
@@ -114,7 +120,7 @@ async function pickCrossPlane(event) {
 }
 
 function pickAxlePlane() {
-  RaycastStore.raycaster.setFromCamera( new THREE.Vector2(), Scene.camera );  
+  RaycastStore.raycaster.setFromCamera(new THREE.Vector2(), Scene.camera);
 
   const planes = [];
   const normals = {
@@ -126,7 +132,7 @@ function pickAxlePlane() {
   for (const axle in normals) {
     const normal = normals[axle];
 
-    const crossPlane = new THREE.Plane( normal, 0);
+    const crossPlane = new THREE.Plane(normal, 0);
     planes.push(crossPlane);
 
     // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
@@ -139,15 +145,17 @@ function pickAxlePlane() {
     const result = new THREE.Vector3();
     const plane = planes[idx];
     RaycastStore.raycaster.ray.intersectPlane(plane, result);
-    
-    if(result) {
+
+    if (result) {
       results.push(result);
     }
   }
 
   const result = getRaycastingResultPoint();
   function getRaycastingResultPoint() {
-    const distances = results.map((pos) => pos.distanceTo(RaycastStore.raycaster.camera.position));
+    const distances = results.map((pos) =>
+      pos.distanceTo(RaycastStore.raycaster.camera.position)
+    );
     const minDistance = Math.min(...distances);
     const idx = distances.indexOf(minDistance);
     return results[idx];

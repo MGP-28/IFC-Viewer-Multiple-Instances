@@ -7,15 +7,11 @@ import {
 import * as ClippingPlanesStore from "../../stores/clippingPlanes";
 import { userInteractions } from "../../stores/userInteractions";
 import * as Materials from "../../configs/materials";
-import { controls, scene } from "../../stores/scene";
+import * as SceneStore from "../../stores/scene";
 import * as THREE from "three";
 import { clippingConfigs } from "../../configs/clippingPlanes";
-import { consoleLogObject } from "../../helpers/generic/logging";
-import { getCameraData, setCameraData } from "../../helpers/camera";
-import { Vector3 } from "three";
-import { clipping, updatePlanesPositions } from "../../helpers/clippingPlanes";
-import SavedView from "../../models/SavedView";
-import { addSavedView, savedViews } from "../../stores/savedViews";
+import { render2DText } from "../../helpers/2DObject";
+import { found } from "../../stores/raycast";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -25,7 +21,7 @@ export default function startUserInputs() {
     emitGlobalEvent("loadingComplete");
 
     // Double-click => highlights and shows details of pointed object
-    canvas.ondblclick = (event) => pickObject(event, true);
+    canvas.ondblclick = (event) => pickObject(event, true, true);
 
     // Mouse move => highlights object being hovered
     canvas.onmousemove = async (event) => {
@@ -37,7 +33,7 @@ export default function startUserInputs() {
         const isPlaneFound = await pickClippingPlane(event);
         if (!isPlaneFound) resetVisualPlanesColoring();
         else highlightVisualPlane();
-      } else pickObject(event, false);
+      } else pickObject(event, true, false);
     };
 
     let isMovingPlanes = false;
@@ -71,14 +67,6 @@ export default function startUserInputs() {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
-        // case "KeyS": {
-        //   saveView();
-        //   break;
-        // }
-        // case "KeyL": {
-        //   loadView();
-        //   break;
-        // }
         default:
           break;
       }
@@ -97,6 +85,19 @@ export default function startUserInputs() {
     });
   });
 }
+
+window.addEventListener("keydown", (event) => {
+  const keyPressed = event.code;
+  switch (keyPressed) {
+    case "KeyT": {
+      console.log("lets go!");
+      renderText();
+      break;
+    }
+    default:
+      break;
+  }
+});
 
 let _opacity = undefined;
 let _color = undefined;
@@ -129,7 +130,7 @@ function highlightVisualPlane() {
 
 async function moveClippingPlane(event) {
   // disable camera
-  controls.enabled = false;
+  SceneStore.controls.enabled = false;
   // drag plane
   userInteractions.draggingPlane = true;
 
@@ -163,7 +164,7 @@ async function moveClippingPlane(event) {
 
 function stopMovingClippingPlane(event) {
   // enable camera
-  controls.enabled = true;
+  SceneStore.controls.enabled = true;
   // stop plane
   userInteractions.draggingPlane = false;
   ClippingPlanesStore.resetCrossPlane();
@@ -251,4 +252,21 @@ async function dragClippingPlane(event, isUserInteraction) {
   ClippingPlanesStore.crossPlane.points.start.copy(
     ClippingPlanesStore.crossPlane.points.end
   );
+}
+
+function renderText() {
+  const position = {
+    x: 1,
+    y: -1,
+    z: 3,
+  };
+  const text2D = render2DText(position, "Boas");
+
+  SceneStore.renderer2D.group.add(text2D);
+
+  window.addEventListener("click", async (e) => {
+    const result = await pickObject(e, false);
+    if (!result) return;
+    text2D.position.copy(found.object.point);
+  });
 }
