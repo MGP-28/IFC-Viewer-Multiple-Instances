@@ -4,6 +4,7 @@ const userInteractions = {
     controlActive: false,
     animationRunning: false,
     savedViews: false,
+    annotations: false,
 }
 
 export { userInteractions }

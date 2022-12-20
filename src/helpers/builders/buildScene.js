@@ -6,10 +6,12 @@ import {
   GridHelper,
   PerspectiveCamera,
   WebGLRenderer,
+  Group,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as SceneStore from "../../stores/scene";
 import Stats from "stats.js/src/Stats";
+import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 export default function buildScene() {
   //Start scene in Three
@@ -48,6 +50,18 @@ export default function buildScene() {
   renderer.setSize(size.width, size.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+  const labelRenderer = new CSS2DRenderer();
+  labelRenderer.setSize(size.width, size.height);
+  labelRenderer.domElement.style.position = "absolute";
+  labelRenderer.domElement.style.top = "0px";
+  labelRenderer.domElement.style.pointerEvents = "none";
+  document.body.appendChild(labelRenderer.domElement);
+
+  const group2D = new Group();
+  SceneStore.scene.add(group2D);
+
+  SceneStore.setRenderer2D(labelRenderer, group2D);
+
   // //Creates grids and axes in the scene
   // const grid = new GridHelper(50, 30);
   // Stored.scene.add(grid);
@@ -67,7 +81,7 @@ export default function buildScene() {
   var stats = new Stats();
   stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
   const statsWindow = stats.dom;
-  statsWindow.classList.add("stats")
+  statsWindow.classList.add("stats");
   document.body.appendChild(statsWindow);
 
   //Animation loop
@@ -76,6 +90,7 @@ export default function buildScene() {
 
     controls.update();
     renderer.render(SceneStore.scene, SceneStore.camera);
+    labelRenderer.render(SceneStore.scene, SceneStore.camera);
 
     stats.end();
 
@@ -90,5 +105,6 @@ export default function buildScene() {
     SceneStore.camera.aspect = size.width / size.height;
     SceneStore.camera.updateProjectionMatrix();
     renderer.setSize(size.width, size.height);
+    labelRenderer.setSize(size.width, size.height);
   });
 }
