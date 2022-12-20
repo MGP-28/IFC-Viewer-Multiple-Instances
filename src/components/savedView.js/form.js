@@ -74,7 +74,7 @@ function render() {
 
         const message = isEmpty
           ? "Please input a title"
-          : "Theres' already a saved view with the same title!";
+          : "There's already a saved view with the same title!";
 
         errorMessage(message);
 
