@@ -433,7 +433,11 @@ body {
   text-overflow: ellipsis;
 }
 
-#saved-views-list.active-saved-view {
+#saved-views-list li.active-saved-view {
+  background-color: var(--primary-color-light-transparent);
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
 }
 
 .saved-view-form {
