@@ -1,8 +1,10 @@
 import { renderFeatureContainer } from "../components/feature-sidebar/containers";
 import { buildIcon } from "../components/generic/icon";
-import { icons } from "../configs/icons";
+import { renderNewViewForm } from "../components/savedView.js/form";
+import { renderSavedView } from "../components/savedView.js/savedView";
 import { emitEventOnElement } from "./emitEvent";
 import { createElement } from "./generic/domElements";
+import { icons } from '../configs/icons'
 
 let isRendered = false;
 let container = undefined;
@@ -23,8 +25,7 @@ function renderSavedViews() {
     "Manage your saved views"
   );
 
-  emitEventOnElement(wrapper, "featureReady");
-
+  // content
   const contentEl = wrapper.getElementsByClassName(
     "tools-side-feature-content"
   )[0];
@@ -32,7 +33,7 @@ function renderSavedViews() {
     <div class="tree-content-container">
         <div class="saved-wrapper">
             <div class="saved-toolbar"></div>
-            <ul class="saved-list"></ul>
+            <ul class="saved-list" id="saved-views-list"></ul>
         </div>
     </div>
   `;
@@ -51,9 +52,20 @@ function renderSavedViews() {
 
   // list
   const list = contentEl.getElementsByClassName("saved-list")[0];
+  // add new views created
+  list.addEventListener("newSavedView", (e) => {
+    const savedView = e.detail.savedView;
+    const savedViewEl = renderSavedView(savedView);
+    list.appendChild(savedViewEl);
+  });
 
   // events
   handleEvents();
+
+  // gets feature ready and opens it right away
+  emitEventOnElement(wrapper, "featureReady");
+  const icon = wrapper.getElementsByClassName("tools-side-feature-icon")[0];
+  icon.click();
 
   const containerEl = document.getElementsByClassName("tools-side-content")[0];
   containerEl.appendChild(wrapper);
@@ -64,14 +76,10 @@ function renderSavedViews() {
 
   function handleEvents() {
     toolbarIcon.addEventListener("click", (e) => {
-        e.stopPropagation();
+      e.stopPropagation();
 
-        openSavedViewForm();
-    })
-
-    list.addEventListener("updateSavedViewsList", () => {
-        
-    })
+      openSavedViewForm();
+    });
   }
 }
 
@@ -83,8 +91,10 @@ function hideSavedViews() {
   container.removeChild(component);
 }
 
-function openSavedViewForm(){
-    //
+function openSavedViewForm() {
+  const form = renderNewViewForm();
+  form.classList.remove("hidden");
+  document.body.appendChild(form);
 }
 
 export { toggleSavedViews };

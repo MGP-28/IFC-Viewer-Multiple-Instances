@@ -1,5 +1,11 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
+import { loadView } from "../../helpers/savedView";
+import {
+  getActiveId,
+  removeSavedView,
+  savedViews,
+} from "../../stores/savedViews";
 import { buildIcon } from "../generic/icon";
 
 function renderSavedView(savedView) {
@@ -13,7 +19,7 @@ function renderSavedView(savedView) {
 
   const text = createElement("span", {
     classes: ["saved-list-item-text"],
-    textContent: savedView.note
+    textContent: savedView.note,
   });
   element.appendChild(text);
 
@@ -21,8 +27,37 @@ function renderSavedView(savedView) {
   showEl.classList.add("saved-list-item-icon");
   element.appendChild(showEl);
 
+  handleEvents();
+
+  return element;
+
+  //
+  // Aux scoped functions
+  //
   function handleEvents() {
-    
+    // Delete saved view
+    deleteEl.addEventListener("click", () => {
+      removeSavedView(savedView.id);
+      element.remove();
+    });
+
+    // Show saved view
+    showEl.addEventListener("click", () => {
+      loadView(savedView.id);
+    });
+
+    const list = document.getElementById("saved-views-list");
+    // update active status
+    list.addEventListener("savedViewChanged", () => {
+      const activeId = getActiveId();
+      if (savedView.id == activeId) element.classList.add("active-saved-view");
+      else element.classList.remove("active-saved-view");
+    });
+    // check if removed. When true, removes self
+    list.addEventListener("updateSavedViewsList", (e) => {
+      const removedId = e.detail.removedId;
+      if (savedView.id == removedId) element.remove();
+    });
   }
 }
 
