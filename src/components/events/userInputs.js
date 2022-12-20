@@ -86,18 +86,21 @@ export default function startUserInputs() {
   });
 }
 
-window.addEventListener("keydown", (event) => {
-  const keyPressed = event.code;
-  switch (keyPressed) {
-    case "KeyT": {
-      console.log("lets go!");
-      renderText();
-      break;
-    }
-    default:
-      break;
-  }
-});
+//
+// TESTING
+//
+// window.addEventListener("keydown", (event) => {
+//   const keyPressed = event.code;
+//   switch (keyPressed) {
+//     case "KeyT": {
+//       console.log("lets go!");
+//       renderText();
+//       break;
+//     }
+//     default:
+//       break;
+//   }
+// });
 
 let _opacity = undefined;
 let _color = undefined;
@@ -268,5 +271,8 @@ function renderText() {
     const result = await pickObject(e, false);
     if (!result) return;
     text2D.position.copy(found.object.point);
+    // setTimeout(() => {
+    //   text2D.removeFromParent();
+    // }, 2000);
   });
 }
