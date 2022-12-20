@@ -5,19 +5,22 @@ import { buildIcon } from "./generic/icon";
 import { buildModal } from "./generic/modal";
 
 /**
- * 
+ *
  * @param {*} props title, subtitle, icon
  * @param {boolean} preventPropagation default: true, prevents click propagation from content to popup
- * @returns 
+ * @returns
  */
-function render(props, preventPropagation = true) {
+function render(props, occupiesFullScreen = false, preventPropagation = true) {
   const popup = buildModal();
   popup.innerHTML = `
-    <div class="popup-header-wrapper">
-        <div class="popup-header-content"></div>
-    </div>
+  <div class="popup-header-wrapper">
+  <div class="popup-header-content"></div>
+  </div>
   `;
   const wrapper = popup.firstElementChild;
+  if (occupiesFullScreen) {
+    wrapper.classList.add("popup-header-wrapper-full");
+  }
 
   // Header
   const header = buildHeader();
