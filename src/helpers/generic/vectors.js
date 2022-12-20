@@ -27,4 +27,9 @@ function isEqual(v1, v2) {
   return true;
 }
 
-export { getRotationDiferences, getLineVector, isEqual };
+function convertJSONToVector(obj) {
+  const vec = new THREE.Vector3(obj.x, obj.y, obj.z);
+  return vec;
+}
+
+export { getRotationDiferences, getLineVector, isEqual, convertJSONToVector };

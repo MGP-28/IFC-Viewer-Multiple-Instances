@@ -1,6 +1,6 @@
 import SavedView from "../models/SavedView";
 import { loadFromLS } from "./localStorage";
-import * as THREE from 'three'
+import { convertJSONToVector } from "../helpers/generic/vectors";
 
 function getSavedViews() {
   const LSData = loadFromLS("savedViews");
@@ -19,11 +19,6 @@ function getSavedViews() {
     return results;
   }
   return null;
-}
-
-function convertJSONToVector(obj){
-    const vec = new THREE.Vector3(obj.x, obj.y, obj.z)
-    return vec;
 }
 
 export { getSavedViews };
