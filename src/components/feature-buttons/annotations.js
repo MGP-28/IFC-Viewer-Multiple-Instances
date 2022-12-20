@@ -1,4 +1,5 @@
 import { icons } from "../../configs/icons";
+import { toggleAnnotations } from "../../helpers/annotations";
 import { userInteractions } from "../../stores/userInteractions";
 import { featureButton } from "./button";
 
@@ -13,7 +14,7 @@ export default function renderAnnotationsFeature() {
       userInteractions.annotations = isEnabled;
       element.classList.toggle("active");
 
-      //helper function
+      toggleAnnotations(isEnabled);
 
     });
   });
