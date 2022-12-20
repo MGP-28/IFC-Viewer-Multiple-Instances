@@ -1,6 +1,20 @@
+import { getSavedViews } from "../services/getSavedViews";
+import { saveToLS } from "../services/localStorage";
+
 const savedViews = [];
 let id = 0;
 let activeId = undefined;
+
+const savedData = getSavedViews();
+
+if(savedData !== null) {
+  savedData.forEach(savedView => {
+    savedViews.push(savedView)
+  });
+  
+  const maxId = Math.max(...savedViews.map(x => x.id))
+  id = maxId;
+}
 
 function addSavedView(newSavedView) {
   id++;
@@ -16,6 +30,8 @@ function addSavedView(newSavedView) {
   });
   const element = document.getElementById("saved-views-list");
   element.dispatchEvent(customEvent);
+
+  saveToLS("savedViews", savedViews);
 
   return savedView.id;
 }

@@ -8,7 +8,7 @@ import {
 } from "../../stores/savedViews";
 import { buildIcon } from "../generic/icon";
 
-function renderSavedView(savedView) {
+function renderSavedView(savedView, parent) {
   const element = createElement("li", {
     classes: ["saved-list-item"],
   });
@@ -46,15 +46,14 @@ function renderSavedView(savedView) {
       loadView(savedView.id);
     });
 
-    const list = document.getElementById("saved-views-list");
     // update active status
-    list.addEventListener("savedViewChanged", () => {
+    parent.addEventListener("savedViewChanged", () => {
       const activeId = getActiveId();
       if (savedView.id == activeId) element.classList.add("active-saved-view");
       else element.classList.remove("active-saved-view");
     });
     // check if removed. When true, removes self
-    list.addEventListener("updateSavedViewsList", (e) => {
+    parent.addEventListener("updateSavedViewsList", (e) => {
       const removedId = e.detail.removedId;
       if (savedView.id == removedId) element.remove();
     });

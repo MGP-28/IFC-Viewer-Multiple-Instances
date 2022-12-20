@@ -4,7 +4,8 @@ import { renderNewViewForm } from "../components/savedView.js/form";
 import { renderSavedView } from "../components/savedView.js/savedView";
 import { emitEventOnElement } from "./emitEvent";
 import { createElement } from "./generic/domElements";
-import { icons } from '../configs/icons'
+import { icons } from "../configs/icons";
+import { savedViews } from "../stores/savedViews";
 
 let isRendered = false;
 let container = undefined;
@@ -52,12 +53,21 @@ function renderSavedViews() {
 
   // list
   const list = contentEl.getElementsByClassName("saved-list")[0];
+  // add loaded views
+  for (let idx = 0; idx < savedViews.length; idx++) {
+    const savedView = savedViews[idx];
+    renderListItem(savedView);
+  }
   // add new views created
   list.addEventListener("newSavedView", (e) => {
     const savedView = e.detail.savedView;
-    const savedViewEl = renderSavedView(savedView);
-    list.appendChild(savedViewEl);
+    renderListItem(savedView);
   });
+
+  function renderListItem(savedView) {
+    const savedViewEl = renderSavedView(savedView, list);
+    list.appendChild(savedViewEl);
+  }
 
   // events
   handleEvents();

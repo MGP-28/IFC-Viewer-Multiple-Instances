@@ -6,6 +6,8 @@ function saveToLS(key, value){
 function loadFromLS(key){
     const json = localStorage.getItem(key)
     if(json === null) return null;
-    const value = JSON.parse(value);
+    const value = JSON.parse(json);
     return value;
 }
+
+export { saveToLS, loadFromLS }
