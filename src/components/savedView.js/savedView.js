@@ -13,7 +13,7 @@ function renderSavedView(savedView) {
 
   const text = createElement("span", {
     classes: ["saved-list-item-text"],
-    textContent: savedView.textContent
+    textContent: savedView.note
   });
   element.appendChild(text);
 
