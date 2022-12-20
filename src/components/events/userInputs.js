@@ -71,14 +71,14 @@ export default function startUserInputs() {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
-        case "KeyS": {
-          saveView();
-          break;
-        }
-        case "KeyL": {
-          loadView();
-          break;
-        }
+        // case "KeyS": {
+        //   saveView();
+        //   break;
+        // }
+        // case "KeyL": {
+        //   loadView();
+        //   break;
+        // }
         default:
           break;
       }
@@ -251,32 +251,4 @@ async function dragClippingPlane(event, isUserInteraction) {
   ClippingPlanesStore.crossPlane.points.start.copy(
     ClippingPlanesStore.crossPlane.points.end
   );
-}
-
-function saveView() {
-  const cameraData = getCameraData();
-  if (ClippingPlanesStore.visualPlanes.length == 0) {
-    // build clipping planes
-    clipping(true);
-    // disable their render
-    clipping(false);
-  }
-    const clippingData = {
-      min: ClippingPlanesStore.edgePositions.currentMin.clone(),
-      max: ClippingPlanesStore.edgePositions.currentMax.clone(),
-    };
-  const savedView = new SavedView(cameraData, clippingData);
-  addSavedView(savedView);
-}
-
-function loadView() {
-  if (savedViews.length == 0) return;
-
-  const savedView = savedViews[0];
-  // set camera
-  setCameraData(savedView);
-  ClippingPlanesStore.edgePositions.currentMin = savedView.clipping.min.clone();
-  ClippingPlanesStore.edgePositions.currentMax = savedView.clipping.max.clone();
-  if (ClippingPlanesStore.visualPlanes.length > 0) 
-    updatePlanesPositions();
 }
