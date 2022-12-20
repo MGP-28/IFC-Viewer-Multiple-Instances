@@ -19,7 +19,7 @@ export default function renderHelperFeature() {
 
   //
   // Popup element
-  const popup = buildPopupWithHeader(headerProps);
+  const popup = buildPopupWithHeader(headerProps, true);
 
   const container = popup.getElementsByClassName("popup-header-content")[0];
   const content = createElement("div", {
