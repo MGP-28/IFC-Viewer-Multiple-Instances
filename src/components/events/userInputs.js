@@ -12,6 +12,9 @@ import * as THREE from "three";
 import { clippingConfigs } from "../../configs/clippingPlanes";
 import { render2DText } from "../../helpers/2DObject";
 import { found } from "../../stores/raycast";
+import { renderContextMenu } from "../contextMenu/contextMenu";
+import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
+import { renderAnnotationForm } from "../annotation/form";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -86,22 +89,6 @@ export default function startUserInputs() {
   });
 }
 
-//
-// TESTING
-//
-// window.addEventListener("keydown", (event) => {
-//   const keyPressed = event.code;
-//   switch (keyPressed) {
-//     case "KeyT": {
-//       console.log("lets go!");
-//       renderText();
-//       break;
-//     }
-//     default:
-//       break;
-//   }
-// });
-
 let _opacity = undefined;
 let _color = undefined;
 let _uuid = undefined;
@@ -133,7 +120,7 @@ function highlightVisualPlane() {
 
 async function moveClippingPlane(event) {
   // disable camera
-  SceneStore.controls.enabled = false;
+  toggleCameraControls(false);
   // drag plane
   userInteractions.draggingPlane = true;
 
@@ -167,7 +154,7 @@ async function moveClippingPlane(event) {
 
 function stopMovingClippingPlane(event) {
   // enable camera
-  SceneStore.controls.enabled = true;
+  toggleCameraControls(true);
   // stop plane
   userInteractions.draggingPlane = false;
   ClippingPlanesStore.resetCrossPlane();
@@ -257,22 +244,121 @@ async function dragClippingPlane(event, isUserInteraction) {
   );
 }
 
-function renderText() {
-  const position = {
-    x: 1,
-    y: -1,
-    z: 3,
-  };
-  const text2D = render2DText(position, "Boas");
+//
+// TESTING
+//
+// window.addEventListener("keydown", (event) => {
+//   const keyPressed = event.code;
+//   switch (keyPressed) {
+//     case "KeyT": {
+//       console.log("lets go!");
+//       renderText();
+//       break;
+//     }
+//     default:
+//       break;
+//   }
+// });
+window.addEventListener("contextmenu", async (e) => {
+  if (!userInteractions.controlActive) return;
 
-  SceneStore.renderer2D.group.add(text2D);
+  toggleCameraControls(false);
 
-  window.addEventListener("click", async (e) => {
-    const result = await pickObject(e, false);
-    if (!result) return;
-    text2D.position.copy(found.object.point);
-    // setTimeout(() => {
-    //   text2D.removeFromParent();
-    // }, 2000);
-  });
+  const object = await pickObject(e, false);
+  // render menu
+  const contextMenu = renderContextMenu();
+  document.body.appendChild(contextMenu);
+  // position menu
+  contextMenu.style.left = `${e.clientX}px`;
+  contextMenu.style.top = `${e.clientY}px`;
+
+  // Closing event handling
+  document.body.addEventListener("mousedown", closeMenu);
+  function closeMenu() {
+    console.log('here');
+    contextMenu.remove();
+    document.body.removeEventListener("mousedown", closeMenu);
+    toggleCameraControls(true);
+  }
+
+  const menuList = document.getElementById("context-menu-list");
+
+  // Menu content
+  if (object) {
+    objectContextMenu();
+    return;
+  } else freeContextMenu();
+
+  //
+  // Aux functions in scope
+  //
+  function objectContextMenu() {
+    // create annotation
+    const annotationEl = renderContextMenuItem("Create annotation");
+    menuList.appendChild(annotationEl);
+    annotationEl.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+
+      const form = renderAnnotationForm();
+      console.log(form);
+      document.body.appendChild(form);
+
+      closeMenu();
+    });
+    seperatorElement(menuList);
+
+    // testing
+    testerElement(menuList);
+    seperatorElement(menuList);
+    testerElement(menuList);
+    testerElement(menuList);
+    testerElement(menuList);
+    seperatorElement(menuList);
+    testerElement(menuList);
+    testerElement(menuList);
+    ////
+  }
+
+  function freeContextMenu() {
+    console.log("outside object");
+  }
+
+  function seperatorElement(menuList) {
+    const seperator = renderContextMenuItem("");
+    menuList.appendChild(seperator);
+  }
+});
+
+function toggleCameraControls(isOn) {
+  SceneStore.controls.enabled = isOn;
 }
+
+let idx = 0;
+function testerElement(menuList) {
+  const arr = ["Tester", "I'm real", "Dummy", "I'm stuck here!", "Super important tester for sure", "A wizard did this!"];
+  const element = renderContextMenuItem(arr[idx]);
+  idx = idx == 5 ? 0 : idx + 1;
+  menuList.appendChild(element);
+}
+// function renderText() {
+//   const position = {
+//     x: 1,
+//     y: -1,
+//     z: 3,
+//   };
+//   const text2D = render2DText(position, "Boas");
+
+//   SceneStore.renderer2D.group.add(text2D);
+
+//   window.addEventListener("click", async (e) => {
+//     const result = await pickObject(e, false);
+//     if (!result) return;
+//     text2D.position.copy(found.object.point);
+//     // setTimeout(() => {
+//     //   text2D.removeFromParent();
+//     // }, 2000);
+//   });
+// }
+//
+// END TESTING
+//
