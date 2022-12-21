@@ -23,10 +23,6 @@ function renderSavedView(savedView, parent) {
   });
   element.appendChild(text);
 
-  const showEl = buildIcon(icons.chevronRight);
-  showEl.classList.add("saved-list-item-icon");
-  element.appendChild(showEl);
-
   handleEvents();
 
   return element;
@@ -36,24 +32,25 @@ function renderSavedView(savedView, parent) {
   //
   function handleEvents() {
     // Delete saved view
-    deleteEl.addEventListener("click", () => {
+    deleteEl.addEventListener("click", (e) => {
+      e.stopPropagation();
       removeSavedView(savedView.id);
       element.remove();
     });
 
     // Show saved view
-    showEl.addEventListener("click", () => {
+    element.addEventListener("click", () => {
       loadView(savedView.id);
     });
 
     // update active status
-    parent.addEventListener("savedViewChanged", () => {
+    document.addEventListener("savedViewChanged", () => {
       const activeId = getActiveId();
       if (savedView.id == activeId) element.classList.add("anim-gradient");
       else element.classList.remove("anim-gradient");
     });
     // check if removed. When true, removes self
-    parent.addEventListener("updateSavedViewsList", (e) => {
+    document.addEventListener("updateSavedViewsList", (e) => {
       const removedId = e.detail.removedId;
       if (savedView.id == removedId) element.remove();
     });

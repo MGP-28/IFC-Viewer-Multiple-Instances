@@ -7,12 +7,12 @@ let activeId = undefined;
 
 const savedData = getSavedViews();
 
-if(savedData !== null) {
-  savedData.forEach(savedView => {
-    savedViews.push(savedView)
+if (savedData !== null) {
+  savedData.forEach((savedView) => {
+    savedViews.push(savedView);
   });
-  
-  const maxId = Math.max(...savedViews.map(x => x.id))
+
+  const maxId = Math.max(...savedViews.map((x) => x.id));
   id = maxId;
 }
 
@@ -47,8 +47,7 @@ function removeSavedView(id) {
       removedId: id,
     },
   });
-  const element = document.getElementById("saved-views-list");
-  element.dispatchEvent(customEvent);
+  document.dispatchEvent(customEvent);
 
   saveToLS("savedViews", savedViews);
 }
@@ -72,8 +71,7 @@ function removeActiveId() {
 function dispatchActiveIdChanges() {
   // trigger event
   const event = new Event("savedViewChanged");
-  const element = document.getElementById("saved-views-list");
-  element.dispatchEvent(event);
+  document.dispatchEvent(event);
 }
 
 export {
