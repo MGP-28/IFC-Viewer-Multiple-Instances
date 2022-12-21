@@ -1,9 +1,7 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import {
-  getActiveId,
   removeAnnotation,
-  annotations,
 } from "../../stores/annotations";
 import { buildIcon } from "../generic/icon";
 
@@ -22,10 +20,6 @@ function renderAnnotation(annotation, parent) {
   });
   element.appendChild(text);
 
-  const showEl = buildIcon(icons.chevronRight);
-  showEl.classList.add("annotation-list-item-icon");
-  element.appendChild(showEl);
-
   handleEvents();
 
   return element;
@@ -35,26 +29,25 @@ function renderAnnotation(annotation, parent) {
   //
   function handleEvents() {
     // Delete annotation view
-    deleteEl.addEventListener("click", () => {
+    deleteEl.addEventListener("click", (e) => {
+      e.stopPropagation();
       removeAnnotation(annotation.id);
       element.remove();
     });
 
     // Show annotation view
-    showEl.addEventListener("click", () => {
+    element.addEventListener("click", () => {
       // 
     });
 
-    // update active status
-    parent.addEventListener("annotationChanged", () => {
-      const activeId = getActiveId();
-      if (annotation.id == activeId) element.classList.add("anim-gradient");
-      else element.classList.remove("anim-gradient");
+    // highlighting
+    parent.addEventListener("selectAnnotations", (e) => {
+      element.classList.add("anim-gradient");
+      //
     });
-    // check if removed. When true, removes self
-    parent.addEventListener("updateAnnotationsList", (e) => {
-      const removedId = e.detail.removedId;
-      if (annotation.id == removedId) element.remove();
+    parent.addEventListener("deselectAnnotations", (e) => {
+      element.classList.remove("anim-gradient");
+      //
     });
   }
 }
