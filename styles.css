@@ -382,6 +382,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
+  border-bottom: solid 1px lightgray;
 }
 
 .saved-add-text {
@@ -401,10 +402,15 @@ body {
   height: 25px;
   padding: 5px;
   display: grid;
-  grid-template-columns: 20px 1fr 20px;
+  grid-template-columns: 15px 1fr;
   gap: 5px;
   align-items: center;
   box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);
+  cursor: pointer;
+  border-top: 1px solid rgba(240, 240, 240);
+}
+#saved-views-list li:first-child {
+  border-top: none;
 }
 
 #saved-views-list li:hover {
@@ -420,7 +426,7 @@ body {
 }
 
 #saved-views-list li > img:hover {
-  cursor: pointer;
+  /* cursor: ; */
   transform: scale(1.1);
   transition: all 0.3s;
 }
@@ -483,6 +489,104 @@ body {
 }
 
 /* #endregion saved views */
+
+/* #region annotations */
+
+.annotation-list-group {
+  padding-left: 5px;
+  padding-bottom: 5px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 25px;
+  font-size: 14px;
+  row-gap: 5px;
+}
+.annotation-list-group:not(:first-child) {
+  padding-top: 5px;
+}
+.annotation-list-group:last-child {
+  padding-bottom: 0;
+}
+
+.annotation-list-group-text {
+  line-height: 25px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.annotation-list-group:first-child {
+  border-top: none;
+}
+
+.annotation-list-group-disabled {
+  color: var(--grayed);
+}
+
+.annotation-list-group-disabled .caret {
+  display: none;
+}
+
+.annotation-list-group-icon {
+  transition: all 0.4s;
+}
+
+.annotation-list-group-icon.caret-down {
+  transform: rotate(90deg);
+  transition: all 0.4s;
+}
+
+.annotation-list-group .annotation-list-group-list {
+  grid-column: span 2;
+  margin: 0 30px 0 5px;
+}
+
+.annotation-list-group .annotation-list-group-list > li {
+  width: 100%;
+  padding: 5px;
+  display: grid;
+  grid-template-columns: 15px 1fr;
+  gap: 5px;
+  align-items: center;
+  box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);
+  cursor: pointer;
+  border-top: 1px solid rgba(240, 240, 240);
+}
+
+.annotation-list-group-list li:hover {
+  background-color: var(--primary-color-light-transparent);
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
+}
+
+.annotation-list-group-list li > img {
+  height: 15px;
+  transition: all 0.3s;
+}
+
+.annotation-list-group-list li > img:hover {
+  /* cursor: ; */
+  transform: scale(1.1);
+  transition: all 0.3s;
+}
+
+.annotation-list-group-list li > span {
+  font-size: 12px;
+  line-height: 15px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.annotation-list-group-list li.active-annotation {
+  background-color: var(--primary-color-light-transparent);
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
+}
+
+/*  */
 
 /* #region Floating buttons features */
 
@@ -896,7 +1000,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* Debug */
