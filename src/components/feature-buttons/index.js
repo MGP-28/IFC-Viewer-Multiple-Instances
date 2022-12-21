@@ -14,12 +14,6 @@ export default function startFeatureButtons() {
   wrapper.appendChild(renderSavedViewsFeature());
   wrapper.appendChild(renderAnnotationsFeature());
 
-  // dummies
-  for (let idx = 0; idx < 2; idx++) {
-    const dummy = dummyFeature();
-    wrapper.appendChild(dummy);
-  }
-
   wrapper.appendChild(renderHelperFeature());
 
   wrapper.classList.add("features-floating-buttons");
