@@ -3,16 +3,15 @@ import { saveToLS } from "../services/localStorage";
 
 const annotations = [];
 let id = 0;
-let activeId = undefined;
 
 const savedData = getAnnotations();
 
-if(savedData !== null) {
-  savedData.forEach(annotation => {
-    annotations.push(annotation)
+if (savedData !== null) {
+  savedData.forEach((annotation) => {
+    annotations.push(annotation);
   });
-  
-  const maxId = Math.max(...annotations.map(x => x.id))
+
+  const maxId = Math.max(...annotations.map((x) => x.id));
   id = maxId;
 }
 
@@ -28,8 +27,7 @@ function addAnnotation(newAnnotation) {
       annotation: annotation,
     },
   });
-  const element = document.getElementById("annotations-list");
-  element.dispatchEvent(customEvent);
+  document.dispatchEvent(customEvent);
 
   saveToLS("annotations", annotations);
 
@@ -47,40 +45,19 @@ function removeAnnotation(id) {
       removedId: id,
     },
   });
-  const element = document.getElementById("annotations-list");
-  element.dispatchEvent(customEvent);
+  document.dispatchEvent(customEvent);
 
   saveToLS("annotations", annotations);
 }
 
-function getActiveId() {
-  return activeId;
-}
-
-function setActiveId(id) {
-  activeId = id;
-  // trigger event
-  dispatchActiveIdChanges();
-}
-
-function removeActiveId() {
-  activeId = undefined;
-  // trigger event
-  dispatchActiveIdChanges();
-}
-
-function dispatchActiveIdChanges() {
-  // trigger event
-  const event = new Event("savedViewChanged");
-  const element = document.getElementById("annotations-list");
-  element.dispatchEvent(event);
+function getAnnotationsFromSavedView(savedViewId) {
+  const arr = annotations.filter((x) => x.id == savedViewId);
+  return arr;
 }
 
 export {
   annotations,
   addAnnotation,
   removeAnnotation,
-  getActiveId,
-  setActiveId,
-  removeActiveId,
+  getAnnotationsFromSavedView,
 };
