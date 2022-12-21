@@ -20,11 +20,11 @@ function render() {
   const container = popup.getElementsByClassName("popup-header-content")[0];
 
   container.innerHTML = `
-    <form class="saved-view-form">
-      <label for="note" class="saved-view-form-note-label">Title</label>
-      <input type="text" id="saved-view-form-note-input" name="note">
-      <span id="saved-view-form-warning" class="hidden"></span>
-      <input type="submit" value="Save" class="saved-view-form-submit">
+    <form class="styling-form">
+      <label for="note" class="styling-form-note-label">Title</label>
+      <input type="text" id="saved-view-form-note-input" class="styling-form-note-input" name="note">
+      <span id="styling-form-warning" class="styling-form-warning hidden"></span>
+      <input type="submit" value="Save" class="styling-form-submit">
     </form>
   `;
 
