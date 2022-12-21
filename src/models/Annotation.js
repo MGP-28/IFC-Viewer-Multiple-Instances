@@ -8,5 +8,6 @@ export default class Annotation {
     this.position = position ? position.clone() : undefined;
     this.viewId = viewId;
     this.content = content;
+    this.userId = null;
   }
 }
