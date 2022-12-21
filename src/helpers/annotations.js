@@ -92,4 +92,8 @@ function hideAnnotations() {
   container.removeChild(component);
 }
 
+function createAnnotation(position){
+  // annotation form
+}
+
 export { toggleAnnotations };
