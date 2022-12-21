@@ -11,6 +11,7 @@ const icons = {
     target: "target-02",
     partof: "scale-01",
     trash: "trash-01",
+    focus: "maximize-02"
 }
 
 export { icons }
