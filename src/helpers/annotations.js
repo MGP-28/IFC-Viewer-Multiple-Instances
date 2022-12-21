@@ -1,10 +1,12 @@
 import { renderFeatureContainer } from "../components/feature-sidebar/containers";
-import { buildIcon } from "../components/generic/icon";
-import { renderAnnotation } from "../components/annotation/annotation";
 import { emitEventOnElement } from "./emitEvent";
-import { createElement } from "./generic/domElements";
 import { icons } from "../configs/icons";
-import { annotations } from "../stores/annotations";
+import {
+  annotations,
+  getAnnotationsFromSavedView,
+} from "../stores/annotations";
+import { renderAnnotationGroup } from "../components/annotation/annotationGroup";
+import { savedViews } from "../stores/savedViews";
 
 let isRendered = false;
 let container = undefined;
@@ -32,43 +34,42 @@ function renderAnnotations() {
   contentEl.innerHTML = `
     <div class="tree-content-container">
         <div class="annotations-wrapper">
-            <div class="annotations-toolbar"></div>
             <ul class="annotations-list" id="annotations-list"></ul>
         </div>
     </div>
   `;
 
-  // toolbar
-  const toolbar = contentEl.getElementsByClassName("annotations-toolbar")[0];
-  const toolbarSpan = createElement("span", {
-    classes: ["annotations-add-text"],
-    textContent: "Add new annotation",
-  });
-  toolbar.appendChild(toolbarSpan);
-  const toolbarIcon = buildIcon("plus");
-  toolbarIcon.classList.add("annotations-add", "spatial-tree-icon");
-  toolbar.appendChild(toolbarIcon);
-
   // list
   const list = contentEl.getElementsByClassName("annotations-list")[0];
   // add loaded views
-  for (let idx = 0; idx < annotations.length; idx++) {
-    const annotation = annotations[idx];
-    renderListItem(annotation);
+  const globalView = {
+    id: 0,
+    note: "Global",
+  };
+  renderListItem(globalView);
+  for (let idx = 0; idx < savedViews.length; idx++) {
+    const savedView = savedViews[idx];
+    renderListItem(savedView);
   }
-  // add new views created
-  list.addEventListener("newAnnotation", (e) => {
-    const annotation = e.detail.annotation;
-    renderListItem(annotation);
-  });
 
-  function renderListItem(annotation) {
-    const annotationEl = renderAnnotation(annotation, list);
+  function renderListItem(savedView) {
+    //
+    //
+    const tester = { note: "Tester" };
+    let times = Math.floor(Math.random() * 4);
+    const arr = [];
+    for (let index = 0; index < times; index++) {
+      arr.push(tester);
+    }
+    //
+    //
+    const annotations = arr; //getAnnotationsFromSavedView(savedView.id)
+    const annotationEl = renderAnnotationGroup(savedView, annotations, list);
     list.appendChild(annotationEl);
   }
 
   // events
-  handleEvents();
+  // handleEvents();
 
   // gets feature ready and opens it right away
   emitEventOnElement(wrapper, "featureReady");
@@ -81,14 +82,6 @@ function renderAnnotations() {
   isRendered = true;
   container = containerEl;
   component = wrapper;
-
-  function handleEvents() {
-    toolbarIcon.addEventListener("click", (e) => {
-      e.stopPropagation();
-
-      openAnnotationForm();
-    });
-  }
 }
 
 function showAnnotations() {
@@ -97,13 +90,6 @@ function showAnnotations() {
 
 function hideAnnotations() {
   container.removeChild(component);
-}
-
-function openAnnotationForm() {
-  //   const form = renderNewViewForm();
-  //   form.classList.remove("hidden");
-  //   document.body.appendChild(form);
-  console.log("form");
 }
 
 export { toggleAnnotations };
