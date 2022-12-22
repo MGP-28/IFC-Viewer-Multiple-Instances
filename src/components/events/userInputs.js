@@ -275,7 +275,6 @@ window.addEventListener("contextmenu", async (e) => {
   // Closing event handling
   document.body.addEventListener("mousedown", closeMenu);
   function closeMenu() {
-    console.log('here');
     contextMenu.remove();
     document.body.removeEventListener("mousedown", closeMenu);
     toggleCameraControls(true);
@@ -300,7 +299,6 @@ window.addEventListener("contextmenu", async (e) => {
       e.stopPropagation();
 
       const form = renderAnnotationForm();
-      console.log(form);
       document.body.appendChild(form);
 
       closeMenu();
