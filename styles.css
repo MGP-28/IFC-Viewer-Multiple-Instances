@@ -149,6 +149,7 @@ body {
   z-index: 99;
   grid-column: span 2;
   width: 98%;
+  height: 100px;
   position: absolute;
   left: 50%;
   top: 100%;
