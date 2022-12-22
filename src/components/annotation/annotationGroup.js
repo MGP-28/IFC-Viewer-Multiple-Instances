@@ -53,10 +53,14 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       if (savedView.id == id) element.remove();
     });
 
-    const isHighlighted = false;
+    let isHighlighted = false;
     // Highlight annotations
     document.addEventListener("savedViewChanged", (e) => {
+
+      if(listEl.children.length == 0) return;
+
       const id = getActiveId();
+
       if (savedView.id == id) {
         isHighlighted = true;
         openList();
