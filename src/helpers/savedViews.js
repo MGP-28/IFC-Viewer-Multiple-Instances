@@ -47,7 +47,7 @@ function renderSavedViews() {
   });
   toolbar.appendChild(toolbarSpan);
 
-  const toolbarIcon = buildIcon("plus");
+  const toolbarIcon = buildIcon(icons.plus);
   toolbarIcon.classList.add("saved-add", "spatial-tree-icon");
   toolbar.appendChild(toolbarIcon);
 
