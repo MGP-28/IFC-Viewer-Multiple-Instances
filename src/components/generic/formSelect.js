@@ -16,6 +16,17 @@ function render(items) {
 
   for (let idx = 0; idx < items.length; idx++) {
     const item = items[idx];
+    renderItem(item);
+  }
+
+  eventHandlerList();
+
+  return element;
+
+  //
+  // AUX
+  //
+  function renderItem(item) {
     const itemEl = createElement("li", {
       value: item.value,
     });
@@ -27,16 +38,13 @@ function render(items) {
     eventHandlerItem(itemEl, item);
   }
 
-  eventHandlerList();
-
-  return element;
-
-  //
-  // AUX
-  //
   function eventHandlerList() {
     element.addEventListener("click", (e) => {
       list.classList.toggle("hidden");
+    });
+    element.addEventListener("addItem", (e) => {
+      const item = e.detail.item;
+      renderItem(item);
     });
   }
 
@@ -50,4 +58,11 @@ function render(items) {
   }
 }
 
-export { render as renderFormSelect };
+function addItem(formSelect, item) {
+  const detail = {
+    item: item,
+  };
+  emitCustomEventOnElement(formSelect, "addItem", detail);
+}
+
+export { render as renderFormSelect, addItem as addItemToFormSelect };
