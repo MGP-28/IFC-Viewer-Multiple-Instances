@@ -21,8 +21,8 @@ function render() {
 
   container.innerHTML = `
     <form class="styling-form">
-      <label for="note" class="styling-form-note-label">Title</label>
-      <input type="text" id="saved-view-form-note-input" class="styling-form-note-input" name="note">
+      <label for="note" class="styling-form-label">Title</label>
+      <input type="text" id="saved-view-form-note-input" class="styling-form-input" name="note">
       <span id="styling-form-warning" class="styling-form-warning hidden"></span>
       <input type="submit" value="Save" class="styling-form-submit">
     </form>
@@ -91,14 +91,9 @@ function render() {
       }
     });
 
-    // closing
-    const close = popup.getElementsByClassName("popup-header-close")[0];
-    const triggers = [close, popup];
-    triggers.forEach((element) => {
-      element.addEventListener("click", (e) => {
-        popup.remove();
-      });
-    });
+    popup.addEventListener("toggle", () => {
+      popup.remove();
+    })
   }
 }
 

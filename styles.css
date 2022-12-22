@@ -66,23 +66,36 @@ body {
   align-items: center;
 }
 
-.styling-form-note-label {
-  text-align: center;
-}
-
-.styling-form > .styling-form-note-input {
+.styling-form .styling-form-input {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   border-radius: var(--border-radius-small);
   border: solid 1px lightgray;
   height: 30px;
+}
+
+.styling-form .styling-form-input[type="text"] {
   text-align: center;
 }
 
-.styling-form > .styling-form-select {
-  border-radius: var(--border-radius-small);
-  border: solid 1px lightgray;
-  height: 30px;
+.styling-form select.styling-form-input {
   text-align: center;
   background-color: transparent;
+  width: 100%;
+  cursor: pointer;
+}
+
+.styling-form-select-plus-add {
+  display: flex;
+  gap: 8px;
+}
+
+.styling-form-icon {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.styling-form-icon:hover {
+  transform: scale(1.1);
+  transition: all 0.3s;
 }
 
 .styling-form > .styling-form-warning {
@@ -439,7 +452,8 @@ body {
 }
 
 .saved-add:hover {
-  animation: name duration timing-function delay iteration-count direction fill-mode;
+  animation: name duration timing-function delay iteration-count direction
+    fill-mode;
 }
 
 #saved-views-list {
@@ -593,10 +607,18 @@ body {
   background-color: var(--primary-color-light-transparent);
 }
 
+#annotation-form-category-input {
+  width: 100%;
+}
+
 /* Form */
 
-.annotation-form-input{
+.annotation-form-input {
   min-width: 280px;
+}
+
+.styling-form-color-picker-wrapper {
+  height: 180px;
 }
 
 /* #region Floating buttons features */
@@ -827,13 +849,13 @@ body {
 
 /* #region Context Menu */
 
-.context-menu-container{
+.context-menu-container {
   position: fixed;
   width: auto;
   max-width: 280px;
   padding: 4px;
 }
-.context-menu-container::before{
+.context-menu-container::before {
   content: " ";
   display: block;
   position: absolute;
@@ -873,14 +895,14 @@ body {
   background-color: var(--primary-color-light-transparent);
 }
 
-.context-menu-item{
+.context-menu-item {
   list-style: none;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.context-menu-seperator{
+.context-menu-seperator {
   background-color: var(--lightgray);
   width: 100%;
   height: 1px;
