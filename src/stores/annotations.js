@@ -4,6 +4,7 @@ import { saveToLS } from "../services/localStorage";
 const annotations = [];
 let id = 0;
 
+// Get saved annotations
 const savedData = getAnnotations();
 
 if (savedData !== null) {
