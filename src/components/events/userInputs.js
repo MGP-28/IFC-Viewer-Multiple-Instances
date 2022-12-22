@@ -284,22 +284,23 @@ window.addEventListener("contextmenu", async (e) => {
 
   // Menu content
   if (object) {
-    objectContextMenu();
+    objectContextMenu(object);
     return;
   } else freeContextMenu();
 
   //
   // Aux functions in scope
   //
-  function objectContextMenu() {
+  function objectContextMenu(object) {
     // create annotation
     const annotationEl = renderContextMenuItem("Create annotation");
     menuList.appendChild(annotationEl);
     annotationEl.addEventListener("mousedown", (e) => {
       e.stopPropagation();
-
-      const form = renderAnnotationForm();
+      const position = object.object.point;
+      const form = renderAnnotationForm(position);
       document.body.appendChild(form);
+      
 
       closeMenu();
     });
