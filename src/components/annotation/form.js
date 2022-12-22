@@ -1,12 +1,15 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
+import Annotation from "../../models/Annotation";
 import { annotationCategories } from "../../stores/annotationCategories";
+import { addAnnotation } from "../../stores/annotations";
+import { getActiveId } from "../../stores/savedViews";
 import { addItemToFormSelect, renderFormSelect } from "../generic/formSelect";
 import { buildIcon } from "../generic/icon";
 import { buildPopupWithHeader } from "../PopupWithHeader";
 import { renderAnnotationCategoryForm } from "./categoryForm";
 
-function render() {
+function render(position) {
   const headerProps = {
     title: "Annotations",
     subtitle: "Create a new annotation",
@@ -22,10 +25,10 @@ function render() {
 
   container.innerHTML = `
     <form class="styling-form">
-      <label for="note" class="styling-form-label">Category</label>
+      <label for="category" class="styling-form-label">Category</label>
       <div class="styling-form-select-plus-add"></div>
-      <label for="note" class="styling-form-label">Annotation</label>
-      <input type="text" id="annotation-form-note-input" class="styling-form-input annotation-form-input" name="note">
+      <label for="name" class="styling-form-label">Annotation</label>
+      <input type="text" id="annotation-form-name" class="styling-form-input annotation-form-input" name="name">
       <span id="styling-form-warning" class="styling-form-warning hidden"></span>
       <input type="submit" value="Create" class="styling-form-submit">
     </form>
@@ -70,10 +73,23 @@ function render() {
     });
 
     const formEl = container.querySelector(".styling-form");
+    const contentInput = container.querySelector("#annotation-form-name");
+    let categorySelected = undefined;
     formEl.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      //
+      const content = contentInput.value;
+
+      // fields incorrectly filled
+      if (!content) {
+        errorName();
+        return;
+      }
+
+      const categoryId = categorySelected === undefined ? 0 : categorySelected;
+      saveAnnotation(content, categoryId, position);
+
+      popup.remove();
     });
 
     icon.addEventListener("click", (e) => {
@@ -103,6 +119,36 @@ function render() {
       const itemSelected = items.find((x) => x.value == categoryId);
       selectText.textContent = itemSelected.text;
     });
+
+    //
+    // Aux functions in scope
+    //
+    function errorName() {
+      const message = "Please write an annotation";
+      errorField(contentInput, message)
+    }
+  }
+
+  //
+  // Aux functions in scope
+  //
+  function errorField(fieldEl, message) {
+    fieldEl.classList.remove("error");
+    fieldEl.classList.add("error");
+    fieldEl.addEventListener("focus", classing);
+
+    errorMessage(message);
+
+    function classing() {
+      fieldEl.classList.remove("error");
+      fieldEl.removeEventListener("focus", classing);
+    }
+  }
+
+  function errorMessage(message) {
+    const errorEl = container.getElementsByClassName("styling-form-warning")[0];
+    errorEl.classList.remove("hidden");
+    errorEl.textContent = message;
   }
 }
 
@@ -112,6 +158,13 @@ function renderColorTag(color) {
     style: "background-color: #" + color,
   });
   return element;
+}
+
+function saveAnnotation(content, categoryId, position){
+  let viewId = getActiveId();
+  if(!viewId) viewId = 0;
+  const annotation = new Annotation(position, viewId, categoryId, content);
+  addAnnotation(annotation);
 }
 
 export { render as renderAnnotationForm };
