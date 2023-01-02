@@ -21,6 +21,9 @@ function render(position) {
   const popup = buildPopupWithHeader(headerProps);
   popup.classList.toggle("hidden");
 
+  const popupContentContainer = popup.querySelector(".popup-header-content");
+  popupContentContainer.style.overflow = "visible";
+
   const container = popup.getElementsByClassName("popup-header-content")[0];
 
   container.innerHTML = `
