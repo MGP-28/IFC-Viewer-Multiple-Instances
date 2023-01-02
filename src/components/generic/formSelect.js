@@ -50,6 +50,9 @@ function render(items) {
 
   function eventHandlerItem(itemEl, item) {
     itemEl.addEventListener("click", (e) => {
+      // render UI
+      display.textContent = item.text;
+      // emit new value
       const detail = {
         value: item.value,
       };

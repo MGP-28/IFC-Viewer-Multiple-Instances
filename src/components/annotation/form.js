@@ -77,7 +77,7 @@ function render(position) {
 
     const formEl = container.querySelector(".styling-form");
     const contentInput = container.querySelector("#annotation-form-name");
-    let categorySelected = undefined;
+    let selectedCategoryId = undefined;
     formEl.addEventListener("submit", (e) => {
       e.preventDefault();
 
@@ -89,7 +89,7 @@ function render(position) {
         return;
       }
 
-      const categoryId = categorySelected === undefined ? 0 : categorySelected;
+      const categoryId = selectedCategoryId === undefined ? 0 : selectedCategoryId;
       saveAnnotation(content, categoryId, position);
 
       popup.remove();
@@ -116,11 +116,9 @@ function render(position) {
       lastItem.insertBefore(colorTag, lastItem.children[0]);
     });
 
-    const selectText = select.querySelector("span");
     select.addEventListener("selection", (e) => {
       const categoryId = e.detail.value;
-      const itemSelected = items.find((x) => x.value == categoryId);
-      selectText.textContent = itemSelected.text;
+      selectedCategoryId = categoryId;
     });
 
     //
@@ -128,7 +126,7 @@ function render(position) {
     //
     function errorName() {
       const message = "Please write an annotation";
-      errorField(contentInput, message)
+      errorField(contentInput, message);
     }
   }
 
@@ -163,11 +161,11 @@ function renderColorTag(color) {
   return element;
 }
 
-function saveAnnotation(content, categoryId, position){
+function saveAnnotation(content, categoryId, position) {
   let viewId = getActiveId();
-  if(!viewId) viewId = 0;
+  if (!viewId) viewId = 0;
   const annotation = new Annotation(position, viewId, categoryId, content);
   addAnnotation(annotation);
 }
 
-export { render as renderAnnotationForm };
+export { render as renderAnnotationForm, renderColorTag };
