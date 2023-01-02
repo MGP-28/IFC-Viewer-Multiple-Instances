@@ -46,6 +46,7 @@ function renderAnnotation(annotation, parent) {
     deleteEl.addEventListener("click", (e) => {
       e.stopPropagation();
       removeAnnotation(annotation.id);
+      hide();
       element.remove();
     });
 
