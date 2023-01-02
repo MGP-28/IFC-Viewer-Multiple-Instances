@@ -41,8 +41,18 @@ function render(position) {
     "styling-form-select-plus-add"
   )[0];
 
+  // category renderization
   const items = [];
   const colors = [];
+  // Default value
+  items.push({
+    value: 0,
+    text: "No category",
+  });
+  colors.push(
+    renderColorTag("00000000")
+  );
+  // categories
   for (let idx = 0; idx < annotationCategories.length; idx++) {
     const category = annotationCategories[idx];
     const item = {
