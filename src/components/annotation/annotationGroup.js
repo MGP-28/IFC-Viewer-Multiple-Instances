@@ -65,7 +65,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
         isHighlighted = true;
         openList();
       } else {
-        if (!isHighlighted) return; // already disabled, saves performance
+        if (!isHighlighted) return; // already disabled; increases performance
         isHighlighted = false;
       }
       selectAllChildren();
