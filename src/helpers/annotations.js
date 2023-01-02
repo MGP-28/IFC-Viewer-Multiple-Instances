@@ -53,35 +53,30 @@ function renderAnnotations() {
   }
 
   function renderListItem(savedView) {
-    //
-    //
-    const tester = { note: "Tester" };
-    let times = Math.floor(Math.random() * 4);
-    const arr = [];
-    for (let index = 0; index < times; index++) {
-      arr.push(tester);
-    }
-    //
-    //
-    const annotations = arr; //getAnnotationsFromSavedView(savedView.id)
+    const annotations = getAnnotationsFromSavedView(savedView.id)
     const annotationEl = renderAnnotationGroup(savedView, annotations, list);
     list.appendChild(annotationEl);
   }
-
+  
   // events
-  // handleEvents();
+  handleEvents();
 
   // gets feature ready and opens it right away
   emitEventOnElement(wrapper, "featureReady");
   const icon = wrapper.getElementsByClassName("tools-side-feature-icon")[0];
   icon.click();
-
+  
   const containerEl = document.getElementsByClassName("tools-side-content")[0];
   containerEl.appendChild(wrapper);
 
   isRendered = true;
   container = containerEl;
   component = wrapper;
+
+  
+  function handleEvents(){
+
+  }
 }
 
 function showAnnotations() {
