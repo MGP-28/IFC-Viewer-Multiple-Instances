@@ -69,7 +69,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     // Add annotation
     document.addEventListener("newAnnotation", (e) => {
       const annotation = e.detail.annotation;
-      if (annotation.id != savedView.id) return;
+      if (annotation.viewId != savedView.id) return;
       addAnnotation(annotation);
       hasChildren();
     });
