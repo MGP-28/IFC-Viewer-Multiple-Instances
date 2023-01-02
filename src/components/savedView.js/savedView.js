@@ -50,7 +50,7 @@ function renderSavedView(savedView, parent) {
       else element.classList.remove("anim-gradient");
     });
     // check if removed. When true, removes self
-    document.addEventListener("updateSavedViewsList", (e) => {
+    document.addEventListener("removedSavedView", (e) => {
       const removedId = e.detail.removedId;
       if (savedView.id == removedId) element.remove();
     });

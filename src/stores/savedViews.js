@@ -42,7 +42,7 @@ function removeSavedView(id) {
   if (idx == -1) return;
   savedViews.splice(idx, 1);
   // trigger event
-  const customEvent = new CustomEvent("updateSavedViewsList", {
+  const customEvent = new CustomEvent("removedSavedView", {
     detail: {
       removedId: id,
     },

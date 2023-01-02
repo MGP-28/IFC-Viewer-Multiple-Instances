@@ -26,8 +26,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
 
   for (let idx = 0; idx < annotations.length; idx++) {
     const annotation = annotations[idx];
-    const annotationEl = renderAnnotation(annotation, listEl);
-    listEl.appendChild(annotationEl);
+    addAnnotation(annotation);
   }
 
   handleEvents();
@@ -38,17 +37,14 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   //
   // Aux scoped functions
   //
-  function handleEvents() {
-    // Add annotation
-    document.addEventListener("newAnnotation", (e) => {
-      const annotation = e.detail.annotation;
-      if (annotation.id != savedView.id) return;
-      renderListItem(annotation, listEl);
-      hasChildren();
-    });
+  function addAnnotation(annotation) {
+    const annotationEl = renderAnnotation(annotation, listEl);
+    listEl.appendChild(annotationEl);
+  }
 
+  function handleEvents() {
     // Delete annotation group
-    document.addEventListener("updateSavedViewsList", (e) => {
+    document.addEventListener("removedSavedView", (e) => {
       const id = e.detail.removedId;
       if (savedView.id == id) element.remove();
     });
@@ -56,8 +52,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     let isHighlighted = false;
     // Highlight annotations
     document.addEventListener("savedViewChanged", (e) => {
-
-      if(listEl.children.length == 0) return;
+      if (listEl.children.length == 0) return;
 
       const id = getActiveId();
 
@@ -71,8 +66,16 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       selectAllChildren();
     });
 
+    // Add annotation
+    document.addEventListener("newAnnotation", (e) => {
+      const annotation = e.detail.annotation;
+      if (annotation.id != savedView.id) return;
+      addAnnotation(annotation);
+      hasChildren();
+    });
+
     // Delete annotation
-    document.addEventListener("updateAnnotationsList", (e) => {
+    document.addEventListener("removeAnnotation", (e) => {
       const id = e.detail.removedId;
       const annotationsIds = annotations.map((x) => x.id);
       const idx = annotationsIds.indexOf(id);
