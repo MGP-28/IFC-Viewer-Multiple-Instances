@@ -16,7 +16,12 @@ export default function renderClippingPlanesFeature() {
       clipping(isEnabled);
       element.classList.toggle("active");
     });
+
+    document.addEventListener("openClippingPlanes", (e) => {
+      if(!isEnabled) element.click();
+    })
   });
+
 
   return element;
 }
