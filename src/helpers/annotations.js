@@ -42,11 +42,13 @@ function renderAnnotations() {
   // list
   const list = contentEl.getElementsByClassName("annotations-list")[0];
   // add loaded views
+  //// global view
   const globalView = {
     id: 0,
     note: "Global",
   };
   renderListItem(globalView);
+  //// for each saved view
   for (let idx = 0; idx < savedViews.length; idx++) {
     const savedView = savedViews[idx];
     renderListItem(savedView);
@@ -73,9 +75,8 @@ function renderAnnotations() {
   container = containerEl;
   component = wrapper;
 
-  
   function handleEvents(){
-
+    //
   }
 }
 
