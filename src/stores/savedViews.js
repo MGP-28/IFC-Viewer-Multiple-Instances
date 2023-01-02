@@ -3,7 +3,7 @@ import { saveToLS } from "../services/localStorage";
 
 const savedViews = [];
 let id = 0;
-let activeId = undefined;
+let activeId = 0;
 
 const savedData = getSavedViews();
 
@@ -63,7 +63,7 @@ function setActiveId(id) {
 }
 
 function removeActiveId() {
-  activeId = undefined;
+  activeId = 0;
   // trigger event
   dispatchActiveIdChanges();
 }

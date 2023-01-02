@@ -1,5 +1,5 @@
 import * as ClippingPlanesStore from "../stores/clippingPlanes";
-import { savedViews, setActiveId } from "../stores/savedViews";
+import { removeActiveId, savedViews, setActiveId } from "../stores/savedViews";
 import { setCameraData } from "./camera";
 import { updatePlanesPositions } from "./clippingPlanes";
 
@@ -22,4 +22,12 @@ function loadView(id) {
   if (ClippingPlanesStore.visualPlanes.length > 0) updatePlanesPositions();
 }
 
-export { loadView };
+function resetView(){
+  removeActiveId();
+
+  ClippingPlanesStore.edgePositions.currentMin = ClippingPlanesStore.edgePositions.min.clone();
+  ClippingPlanesStore.edgePositions.currentMax = ClippingPlanesStore.edgePositions.max.clone();
+  if (ClippingPlanesStore.visualPlanes.length > 0) updatePlanesPositions();
+}
+
+export { loadView, resetView };
