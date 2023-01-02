@@ -259,6 +259,9 @@ async function dragClippingPlane(event, isUserInteraction) {
 //       break;
 //   }
 // });
+//
+//
+
 window.addEventListener("contextmenu", async (e) => {
   if (!userInteractions.controlActive) return;
 
@@ -300,7 +303,6 @@ window.addEventListener("contextmenu", async (e) => {
       const position = object.object.point;
       const form = renderAnnotationForm(position);
       document.body.appendChild(form);
-      
 
       closeMenu();
     });
@@ -334,11 +336,19 @@ function toggleCameraControls(isOn) {
 
 let idx = 0;
 function testerElement(menuList) {
-  const arr = ["Tester", "I'm real", "Dummy", "I'm stuck here!", "Super important tester for sure", "A wizard did this!"];
+  const arr = [
+    "Tester",
+    "I'm real",
+    "Dummy",
+    "I'm stuck here!",
+    "Super important tester for sure",
+    "A wizard did this!",
+  ];
   const element = renderContextMenuItem(arr[idx]);
   idx = idx == 5 ? 0 : idx + 1;
   menuList.appendChild(element);
 }
+
 // function renderText() {
 //   const position = {
 //     x: 1,

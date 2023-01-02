@@ -1,10 +1,16 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import { getActiveId } from "../../stores/savedViews";
+import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
 import { renderAnnotation } from "./annotation";
 
 function renderAnnotationGroup(savedView, annotations, parent) {
+  // order annotations by category
+  annotations.sort(function (a, b) {
+    return a.categoryId > b.categoryId;
+  });
+
   const element = createElement("li", {
     classes: ["annotation-list-group"],
   });
@@ -26,8 +32,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
 
   for (let idx = 0; idx < annotations.length; idx++) {
     const annotation = annotations[idx];
-    const annotationEl = renderAnnotation(annotation, listEl);
-    listEl.appendChild(annotationEl);
+    addAnnotation(annotation);
   }
 
   handleEvents();
@@ -38,17 +43,14 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   //
   // Aux scoped functions
   //
-  function handleEvents() {
-    // Add annotation
-    document.addEventListener("newAnnotation", (e) => {
-      const annotation = e.detail.annotation;
-      if (annotation.id != savedView.id) return;
-      renderListItem(annotation, listEl);
-      hasChildren();
-    });
+  function addAnnotation(annotation) {
+    const annotationEl = renderAnnotation(annotation, listEl);
+    listEl.appendChild(annotationEl);
+  }
 
+  function handleEvents() {
     // Delete annotation group
-    document.addEventListener("updateSavedViewsList", (e) => {
+    document.addEventListener("removedSavedView", (e) => {
       const id = e.detail.removedId;
       if (savedView.id == id) element.remove();
     });
@@ -56,23 +58,40 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     let isHighlighted = false;
     // Highlight annotations
     document.addEventListener("savedViewChanged", (e) => {
+      handleChildrenRendering();
+    });
 
-      if(listEl.children.length == 0) return;
+    document.addEventListener("enableAnnotations", () => {
+      handleChildrenRendering();
+    });
 
-      const id = getActiveId();
-
-      if (savedView.id == id) {
-        isHighlighted = true;
-        openList();
-      } else {
-        if (!isHighlighted) return; // already disabled, saves performance
-        isHighlighted = false;
-      }
+    document.addEventListener("disableAnnotations", () => {
+      isHighlighted = false;
       selectAllChildren();
     });
 
+    let activeChildrenCounter = 0;
+    // Enable parent on child highlight
+    listEl.addEventListener("childEnabled", () => {
+      activeChildrenCounter++;
+      isHighlighted = true;
+    });
+
+    listEl.addEventListener("childHidden", () => {
+      activeChildrenCounter--;
+      if (activeChildrenCounter == 0) isHighlighted = false;
+    });
+
+    // Add annotation
+    document.addEventListener("newAnnotation", (e) => {
+      const annotation = e.detail.annotation;
+      if (annotation.viewId != savedView.id) return;
+      addAnnotation(annotation);
+      hasChildren();
+    });
+
     // Delete annotation
-    document.addEventListener("updateAnnotationsList", (e) => {
+    document.addEventListener("removeAnnotation", (e) => {
       const id = e.detail.removedId;
       const annotationsIds = annotations.map((x) => x.id);
       const idx = annotationsIds.indexOf(id);
@@ -90,6 +109,27 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     //
     // Aux in scope
     //
+    function handleChildrenRendering() {
+      if (listEl.children.length == 0) return;
+
+      // Force hidding when annotations are disabled by user
+      if (!userInteractions.annotations && isHighlighted) {
+        isHighlighted = false;
+        selectAllChildren();
+        return;
+      }
+
+      const id = getActiveId();
+      if (savedView.id == id) {
+        isHighlighted = true;
+        openList();
+      } else {
+        if (!isHighlighted) return; // already disabled; increases performance
+        isHighlighted = false;
+      }
+      selectAllChildren();
+    }
+
     function openList() {
       showEl.classList.add("caret-down");
       listEl.classList.remove("hidden");

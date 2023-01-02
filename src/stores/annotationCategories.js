@@ -51,8 +51,13 @@ function removeAnnotationCategory(id) {
   saveToLS("annotationCategories", annotationCategories);
 }
 
+function getAnnotationCategoryById(categoryId){
+  return annotationCategories.find(x => x.id == categoryId)
+}
+
 export {
   annotationCategories,
   addAnnotationCategory,
   removeAnnotationCategory,
+  getAnnotationCategoryById
 };
