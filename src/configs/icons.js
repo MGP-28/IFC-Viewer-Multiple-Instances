@@ -8,6 +8,7 @@ const icons = {
     close: "x",
     chevronRight: "chevron-right",
     visibility: "eye",
+    visibilityOff: "eye-off",
     target: "target-02",
     partof: "scale-01",
     trash: "trash-01",

@@ -18,8 +18,19 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   const textEl = createElement("span", {
     classes: ["annotation-list-group-text"],
     textContent: savedView.note,
+    title: savedView.note
   });
   element.appendChild(textEl);
+
+  const iconPaths = {
+    visible: icons.visibility,
+    hidden: icons.visibilityOff
+  }
+  const visibilityEl = buildIcon(iconPaths.hidden);
+  visibilityEl.classList.add("annotation-list-group-icon-vis");
+  element.appendChild(visibilityEl);
+
+  if(annotations.length == 0) visibilityEl.classList.toggle("hidden");
 
   const showEl = buildIcon(icons.chevronRight);
   showEl.classList.add("annotation-list-group-icon", "caret");
@@ -75,11 +86,13 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     listEl.addEventListener("childEnabled", () => {
       activeChildrenCounter++;
       isHighlighted = true;
+      changeVisibilityIcon();
     });
 
     listEl.addEventListener("childHidden", () => {
       activeChildrenCounter--;
       if (activeChildrenCounter == 0) isHighlighted = false;
+      changeVisibilityIcon();
     });
 
     // Add annotation
@@ -88,6 +101,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       if (annotation.viewId != savedView.id) return;
       addAnnotation(annotation);
       hasChildren();
+      visibilityEl.classList.toggle("hidden", false);
     });
 
     // Delete annotation
@@ -105,6 +119,11 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       showEl.classList.toggle("caret-down");
       listEl.classList.toggle("hidden");
     });
+
+    visibilityEl.addEventListener("click", () => {
+      isHighlighted = !isHighlighted;
+      selectAllChildren();
+    })
 
     //
     // Aux in scope
@@ -141,6 +160,12 @@ function renderAnnotationGroup(savedView, annotations, parent) {
         : "deselectAnnotations";
       const event = new Event(eventName);
       listEl.dispatchEvent(event);
+      changeVisibilityIcon();
+    }
+
+    function changeVisibilityIcon(){
+      if (isHighlighted) visibilityEl.src = visibilityEl.src.replace(iconPaths.hidden + ".", iconPaths.visible + ".");
+      else visibilityEl.src = visibilityEl.src.replace(iconPaths.visible + ".", iconPaths.hidden + ".");
     }
   }
   function hasChildren() {
