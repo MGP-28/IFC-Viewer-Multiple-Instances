@@ -52,7 +52,7 @@ function removeAnnotation(id) {
 }
 
 function getAnnotationsFromSavedView(savedViewId) {
-  const arr = annotations.filter((x) => x.id == savedViewId);
+  const arr = annotations.filter((x) => x.viewId == savedViewId);
   return arr;
 }
 
