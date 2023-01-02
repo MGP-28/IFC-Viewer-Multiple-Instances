@@ -1,6 +1,6 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
-import { loadView } from "../../helpers/savedView";
+import { loadView, resetView } from "../../helpers/savedView";
 import {
   getActiveId,
   removeSavedView,
@@ -38,15 +38,19 @@ function renderSavedView(savedView, parent) {
       element.remove();
     });
 
+    let isEnabled = false;
     // Show saved view
     element.addEventListener("click", () => {
-      loadView(savedView.id);
+      isEnabled = !isEnabled;
+      if(isEnabled) loadView(savedView.id);
+      else resetView();
     });
 
     // update active status
     document.addEventListener("savedViewChanged", () => {
       const activeId = getActiveId();
-      if (savedView.id == activeId) element.classList.add("anim-gradient");
+      isEnabled = savedView.id == activeId;
+      if (isEnabled) element.classList.add("anim-gradient");
       else element.classList.remove("anim-gradient");
     });
     // check if removed. When true, removes self
