@@ -16,7 +16,7 @@ function renderAnnotation(annotation, parent) {
 
   const text = createElement("span", {
     classes: ["annotation-list-item-text"],
-    textContent: annotation.note,
+    textContent: annotation.content,
   });
   element.appendChild(text);
 
