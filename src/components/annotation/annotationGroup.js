@@ -1,15 +1,15 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import { getActiveId } from "../../stores/savedViews";
+import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
 import { renderAnnotation } from "./annotation";
 
 function renderAnnotationGroup(savedView, annotations, parent) {
-
   // order annotations by category
   annotations.sort(function (a, b) {
-    return a.categoryId > b.categoryId
-  })
+    return a.categoryId > b.categoryId;
+  });
 
   const element = createElement("li", {
     classes: ["annotation-list-group"],
@@ -58,18 +58,28 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     let isHighlighted = false;
     // Highlight annotations
     document.addEventListener("savedViewChanged", (e) => {
-      if (listEl.children.length == 0) return;
+      handleChildrenRendering();
+    });
 
-      const id = getActiveId();
+    document.addEventListener("enableAnnotations", () => {
+      handleChildrenRendering();
+    });
 
-      if (savedView.id == id) {
-        isHighlighted = true;
-        openList();
-      } else {
-        if (!isHighlighted) return; // already disabled; increases performance
-        isHighlighted = false;
-      }
+    document.addEventListener("disableAnnotations", () => {
+      isHighlighted = false;
       selectAllChildren();
+    });
+
+    let activeChildrenCounter = 0;
+    // Enable parent on child highlight
+    listEl.addEventListener("childEnabled", () => {
+      activeChildrenCounter++;
+      isHighlighted = true;
+    });
+
+    listEl.addEventListener("childHidden", () => {
+      activeChildrenCounter--;
+      if (activeChildrenCounter == 0) isHighlighted = false;
     });
 
     // Add annotation
@@ -99,6 +109,27 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     //
     // Aux in scope
     //
+    function handleChildrenRendering() {
+      if (listEl.children.length == 0) return;
+
+      // Force hidding when annotations are disabled by user
+      if (!userInteractions.annotations && isHighlighted) {
+        isHighlighted = false;
+        selectAllChildren();
+        return;
+      }
+
+      const id = getActiveId();
+      if (savedView.id == id) {
+        isHighlighted = true;
+        openList();
+      } else {
+        if (!isHighlighted) return; // already disabled; increases performance
+        isHighlighted = false;
+      }
+      selectAllChildren();
+    }
+
     function openList() {
       showEl.classList.add("caret-down");
       listEl.classList.remove("hidden");

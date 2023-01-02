@@ -1,9 +1,14 @@
 import { icons } from "../../configs/icons";
 import { render2DText } from "../../helpers/2DObject";
-import { add2DObjectToScene, remove2DObjectFromScene } from "../../helpers/2DRendering";
+import {
+  add2DObjectToScene,
+  remove2DObjectFromScene,
+} from "../../helpers/2DRendering";
+import { emitEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import { getAnnotationCategoryById } from "../../stores/annotationCategories";
 import { removeAnnotation } from "../../stores/annotations";
+import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
 import { renderColorTag } from "./form";
 
@@ -44,28 +49,37 @@ function renderAnnotation(annotation, parent) {
       element.remove();
     });
 
+    let isShowing = false;
     // Show annotation view
-    element.addEventListener("click", () => {
-      //
+    element.addEventListener("click", (e) => {
+      if (isShowing) hide();
+      else show();
     });
 
-    let label2D = undefined;
-    const color = category ? category.color : undefined
+    const color = category ? category.color : undefined;
+    const label2D = render2DText(
+      annotation.position,
+      color,
+      annotation.content
+    );
     // highlighting
-    parent.addEventListener("selectAnnotations", (e) => {
-      element.classList.add("anim-gradient");
-      if (!label2D)
-        label2D = render2DText(
-          annotation.position,
-          color,
-          annotation.content
-        );
+    parent.addEventListener("selectAnnotations", show);
+    parent.addEventListener("deselectAnnotations", hide);
+
+    function show() {
+      if (!userInteractions.annotations) return;
+      isShowing = true;
       add2DObjectToScene(label2D);
-    });
-    parent.addEventListener("deselectAnnotations", (e) => {
-      element.classList.remove("anim-gradient");
+      element.classList.add("anim-gradient");
+      emitEventOnElement(parent, "childEnabled");
+    }
+
+    function hide() {
+      isShowing = false;
       remove2DObjectFromScene(label2D);
-    });
+      element.classList.remove("anim-gradient");
+      emitEventOnElement(parent, "childHidden");
+    }
   }
 }
 
