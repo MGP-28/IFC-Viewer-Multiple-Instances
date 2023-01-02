@@ -5,6 +5,12 @@ import { buildIcon } from "../generic/icon";
 import { renderAnnotation } from "./annotation";
 
 function renderAnnotationGroup(savedView, annotations, parent) {
+
+  // order annotations by category
+  annotations.sort(function (a, b) {
+    return a.categoryId > b.categoryId
+  })
+
   const element = createElement("li", {
     classes: ["annotation-list-group"],
   });
