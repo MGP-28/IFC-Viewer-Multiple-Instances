@@ -52,7 +52,7 @@ function removeAnnotationCategory(id) {
 }
 
 function getAnnotationCategoryById(categoryId){
-  const category = annotationCategories.find(x => x.id == categoryId)
+  return annotationCategories.find(x => x.id == categoryId)
 }
 
 export {

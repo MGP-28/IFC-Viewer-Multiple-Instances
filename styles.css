@@ -188,6 +188,10 @@ body {
   height: 100%;
 }
 
+.annotation-category-select-colortag.undefined{
+  border: 1px dashed var(--grayed);
+}
+
 /* #endregion Form */
 
 /* #region Tools side tab */
@@ -632,7 +636,7 @@ body {
   width: 100%;
   padding: 5px;
   display: grid;
-  grid-template-columns: 15px 1fr;
+  grid-template-columns: 15px auto 1fr;
   gap: 5px;
   align-items: center;
   box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);

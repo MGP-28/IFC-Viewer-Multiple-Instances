@@ -49,9 +49,7 @@ function render(position) {
     value: 0,
     text: "No category",
   });
-  colors.push(
-    renderColorTag("00000000")
-  );
+  colors.push(renderColorTag());
   // categories
   for (let idx = 0; idx < annotationCategories.length; idx++) {
     const category = annotationCategories[idx];
@@ -99,7 +97,8 @@ function render(position) {
         return;
       }
 
-      const categoryId = selectedCategoryId === undefined ? 0 : selectedCategoryId;
+      const categoryId =
+        selectedCategoryId === undefined ? 0 : selectedCategoryId;
       saveAnnotation(content, categoryId, position);
 
       popup.remove();
@@ -163,10 +162,18 @@ function render(position) {
   }
 }
 
+/**
+ * Renders element based on given color. If color if undefined, renders a different styled element
+ * @param {*} color Color code (hex) or undefined
+ * @returns 
+ */
 function renderColorTag(color) {
+  const colorCode = color ? "#" + color : "#00000000";
+  const classes = ["annotation-category-select-colortag"];
+  if (!color) classes.push("undefined");
   const element = createElement("div", {
-    classes: ["annotation-category-select-colortag"],
-    style: "background-color: #" + color,
+    classes: classes,
+    style: "background-color: " + colorCode,
   });
   return element;
 }
