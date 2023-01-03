@@ -67,7 +67,7 @@ function render() {
 
       const name = nameInput.value;
       const color = colorPicker.hex.slice(1);
-      const reference = referenceInput.value;
+      const reference = referenceInput.value.toUpperCase();
       const obj = { name, color, reference };
 
       const result = annotationCategoryValidator(obj);
