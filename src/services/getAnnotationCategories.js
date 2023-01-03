@@ -8,7 +8,8 @@ function getAnnotationCategories() {
     LSData.forEach((element) => {
       const annotationCategory = new AnnotationCategory(
         element.name,
-        element.color
+        element.color,
+        element.reference
       );
       annotationCategory.id = element.id;
       results.push(annotationCategory);

@@ -97,6 +97,12 @@ body {
 .styling-form > .styling-form-warning {
   grid-column: span 2;
   width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.styling-form > .styling-form-warning > span {
+  width: 100%;
   text-align: center;
   color: red;
 }
@@ -685,7 +691,7 @@ body {
   background-color: var(--primary-color-light-transparent);
 }
 
-#annotation-form-category-input {
+#annotation-form-category-name, #annotation-form-category-reference {
   width: 100%;
 }
 
