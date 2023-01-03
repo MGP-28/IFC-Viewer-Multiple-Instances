@@ -5,7 +5,10 @@ import {
   pickCrossPlane,
 } from "../../helpers/raytracing";
 import * as ClippingPlanesStore from "../../stores/clippingPlanes";
-import { userInteractions } from "../../stores/userInteractions";
+import {
+  isUserPressingSpecialKeys,
+  userInteractions,
+} from "../../stores/userInteractions";
 import * as Materials from "../../configs/materials";
 import * as SceneStore from "../../stores/scene";
 import * as THREE from "three";
@@ -26,12 +29,18 @@ export default function startUserInputs() {
     // Double-click => highlights and shows details of pointed object
     canvas.ondblclick = (event) => pickObject(event, true, true);
 
-    // Mouse move => highlights object being hovered
     canvas.onmousemove = async (event) => {
+      // When user is present any special key
+      if (isUserPressingSpecialKeys()) {
+        resetVisualPlanesColoring();
+        return;
+      }
+      // When mouse is dragging (drag clipping plane)
       if (isMouseDragging) {
         if (userInteractions.draggingPlane) await dragClippingPlane(event);
         return;
       }
+      // When mouse is just hovering
       if (userInteractions.clippingPlanes) {
         const isPlaneFound = await pickClippingPlane(event);
         if (!isPlaneFound) resetVisualPlanesColoring();
@@ -45,7 +54,12 @@ export default function startUserInputs() {
       isMouseDragging = true;
 
       // clipping plane
-      if (!ClippingPlanesStore.foundPlane) return;
+      if (
+        !ClippingPlanesStore.foundPlane ||
+        !userInteractions.clippingPlanes ||
+        userInteractions.keyCActive
+      )
+        return;
 
       isMovingPlanes = true;
 
@@ -70,6 +84,9 @@ export default function startUserInputs() {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
+        case "KeyC":
+          userInteractions.keyCActive = true;
+          break;
         default:
           break;
       }
@@ -81,7 +98,11 @@ export default function startUserInputs() {
         case "ControlLeft":
           userInteractions.controlActive = false;
           break;
-
+        case "KeyC": {
+          userInteractions.keyCActive = false;
+          resetVisualPlanesColoring();
+          break;
+        }
         default:
           break;
       }
@@ -263,6 +284,8 @@ async function dragClippingPlane(event, isUserInteraction) {
 //
 
 window.addEventListener("contextmenu", async (e) => {
+  e.preventDefault();
+
   if (!userInteractions.controlActive) return;
 
   toggleCameraControls(false);
