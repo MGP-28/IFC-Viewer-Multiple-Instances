@@ -178,7 +178,7 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
   }
   function hasChildren() {
     const isDisabled = listEl.children.length == 0;
-    element.classList.toggle("annotation-list-group-disabled", isDisabled);
+    if(isDisabled) element.remove();
   }
 }
 
