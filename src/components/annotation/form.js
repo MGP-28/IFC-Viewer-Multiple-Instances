@@ -82,7 +82,7 @@ function render(position) {
 
     const formEl = container.querySelector(".styling-form");
     const contentInput = container.querySelector("#annotation-form-name");
-    let selectedCategoryId = undefined;
+    let selectedCategoryId = 0;
     formEl.addEventListener("submit", (e) => {
       e.preventDefault();
 
@@ -94,9 +94,7 @@ function render(position) {
         return;
       }
 
-      const categoryId =
-        selectedCategoryId === undefined ? 0 : selectedCategoryId;
-      saveAnnotation(content, categoryId, position);
+      saveAnnotation(content, selectedCategoryId, position);
 
       popup.remove();
     });
