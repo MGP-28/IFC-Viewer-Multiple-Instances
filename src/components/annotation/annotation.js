@@ -56,20 +56,23 @@ function renderAnnotation(category, annotation, parent) {
     // highlighting
     parent.addEventListener("selectAnnotations", show);
     parent.addEventListener("deselectAnnotations", hide);
+    element.addEventListener("forceRenderAnnotation", (e) => {
+      show(true);
+    });
 
     function show(isClick) {
       if (!userInteractions.annotations) return;
       isShowing = true;
       add2DObjectToScene(label2D);
       element.classList.add("anim-gradient");
-      if(isClick) emitEventOnElement(parent, "childEnabled");
+      if (isClick) emitEventOnElement(parent, "childEnabled");
     }
 
     function hide(isClick) {
       isShowing = false;
       remove2DObjectFromScene(label2D);
       element.classList.remove("anim-gradient");
-      if(isClick) emitEventOnElement(parent, "childHidden");
+      if (isClick) emitEventOnElement(parent, "childHidden");
     }
   }
 }
