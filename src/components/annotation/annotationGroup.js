@@ -63,7 +63,6 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   });
   element.appendChild(listEl);
 
-  console.log(categories);
   for (const categoryId in categories) {
     const categoryObject = categories[categoryId];
     addAnnotationCategory(categoryObject.category, categoryObject.annotations);
@@ -129,6 +128,15 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       if (annotation.viewId != savedView.id) return;
       // update local array
       _annotations.push(annotation);
+      // checks if category already exists. IF not, creates UI for it
+      const categoryIdsPresent = annotations.map((x) => x.categoryId);
+      if (!categoryIdsPresent.includes(annotation.categoryId)) {
+        const category = getAnnotationCategoryById(annotation.categoryId);
+        addAnnotationCategory(
+          category,
+          []
+        );
+      }
       // dispatchs events to children categories (the correct category category will be the one rendering the annotation)
       emitCustomEventOnElement(listEl, "newAnnotation", e.detail);
       // checks for when saved view is empty
