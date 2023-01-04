@@ -13,7 +13,8 @@ const icons = {
     partof: "scale-01",
     trash: "trash-01",
     focus: "maximize-02",
-    plus: "plus"
+    plus: "plus",
+    dots: "dots-horizontal"
 }
 
 export { icons }
