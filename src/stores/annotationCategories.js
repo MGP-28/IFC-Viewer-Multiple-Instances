@@ -1,8 +1,17 @@
+import AnnotationCategory from "../models/AnnotationCategory";
 import { getAnnotationCategories } from "../services/getAnnotationCategories";
 import { saveToLS } from "../services/localStorage";
 
 const annotationCategories = [];
 let id = 0;
+
+const globalCategory = new AnnotationCategory(
+  "Uncategorized",
+  undefined,
+  undefined
+);
+globalCategory.id = 0;
+annotationCategories.push(globalCategory);
 
 // Get saved annotationCategoryCategories
 const savedData = getAnnotationCategories();
@@ -51,13 +60,13 @@ function removeAnnotationCategory(id) {
   saveToLS("annotationCategories", annotationCategories);
 }
 
-function getAnnotationCategoryById(categoryId){
-  return annotationCategories.find(x => x.id == categoryId)
+function getAnnotationCategoryById(categoryId) {
+  return annotationCategories.find((x) => x.id == categoryId);
 }
 
 export {
   annotationCategories,
   addAnnotationCategory,
   removeAnnotationCategory,
-  getAnnotationCategoryById
+  getAnnotationCategoryById,
 };

@@ -1,50 +1,38 @@
 import { icons } from "../../configs/icons";
-import {
-  emitCustomEventOnElement,
-  emitEventOnElement,
-} from "../../helpers/emitEvent";
+import { emitEventOnElement } from "../../helpers/emitEvent";
+import { lightOrDark } from "../../helpers/generic/colors";
 import { createElement } from "../../helpers/generic/domElements";
-import { getAnnotationCategoryById } from "../../stores/annotationCategories";
 import { getActiveId } from "../../stores/savedViews";
 import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
-import { renderAnnotationCategory } from "./annotationsCategory";
+import { renderAnnotation } from "./annotation";
+import { renderColorTag } from "./form";
 
-function renderAnnotationGroup(savedView, annotations, parent) {
+function renderAnnotationCategory(annotationCategory, annotations, parent) {
   const _annotations = [...annotations];
-
-  // order annotations by category
-  _annotations.sort(function (a, b) {
-    return a.categoryId > b.categoryId;
-  });
-
-  // get used categories' data
-  let currentCategoryId = undefined;
-  const categories = {};
-  for (let idx = 0; idx < _annotations.length; idx++) {
-    const annotation = _annotations[idx];
-    if (currentCategoryId !== annotation.categoryId) {
-      currentCategoryId = annotation.categoryId;
-      const category = getAnnotationCategoryById(currentCategoryId);
-      categories[currentCategoryId] = {
-        category,
-        annotations: [annotation],
-      };
-    } else categories[currentCategoryId].annotations.push(annotation);
-  }
+  console.log("cat anns", _annotations);
 
   const element = createElement("li", {
-    classes: ["annotation-list-group"],
+    classes: ["annotation-list-group", "annotation-list-group-category"],
   });
 
   const showEl = buildIcon(icons.chevronRight);
   showEl.classList.add("annotation-list-group-icon", "caret");
   element.appendChild(showEl);
 
+  const categoryColorTag = annotationCategory.color
+    ? renderColorTag(annotationCategory.color)
+    : renderColorTag();
+  categoryColorTag.title = annotationCategory.name;
+  categoryColorTag.textContent = annotationCategory.reference;
+  if (lightOrDark("#" + annotationCategory.color) == "dark")
+    categoryColorTag.style.color = "white";
+  element.appendChild(categoryColorTag);
+
   const textEl = createElement("span", {
     classes: ["annotation-list-group-text"],
-    textContent: savedView.note,
-    title: savedView.note,
+    textContent: annotationCategory.name,
+    title: annotationCategory.name,
   });
   element.appendChild(textEl);
 
@@ -63,10 +51,9 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   });
   element.appendChild(listEl);
 
-  console.log(categories);
-  for (const categoryId in categories) {
-    const categoryObject = categories[categoryId];
-    addAnnotationCategory(categoryObject.category, categoryObject.annotations);
+  for (let idx = 0; idx < _annotations.length; idx++) {
+    const annotation = _annotations[idx];
+    addAnnotation(annotationCategory, annotation);
   }
 
   handleEvents();
@@ -77,35 +64,35 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   //
   // Aux scoped functions
   //
-  function addAnnotationCategory(annotationCategory, annotations) {
-    const annotationEl = renderAnnotationCategory(
+  function addAnnotation(annotationCategory, annotation) {
+    const annotationEl = renderAnnotation(
       annotationCategory,
-      annotations,
+      annotation,
       listEl
     );
     listEl.appendChild(annotationEl);
   }
 
   function handleEvents() {
-    // Delete annotation group
-    document.addEventListener("removedSavedView", (e) => {
-      const id = e.detail.removedId;
-      if (savedView.id == id) element.remove();
-    });
-
     let isHighlighted = false;
     // Highlight annotations
     document.addEventListener("savedViewChanged", (e) => {
       handleChildrenRendering();
     });
 
-    document.addEventListener("enableAnnotations", () => {
+    parent.addEventListener("enableAnnotations", () => {
       handleChildrenRendering();
     });
 
-    document.addEventListener("disableAnnotations", () => {
+    parent.addEventListener("disableAnnotations", () => {
       isHighlighted = false;
       selectAllChildren();
+    });
+    parent.addEventListener("selectAnnotations", () => {
+      emitEventOnElement(listEl, "selectAnnotations");
+    });
+    parent.addEventListener("deselectAnnotations", () => {
+      emitEventOnElement(listEl, "deselectAnnotations");
     });
 
     let activeChildrenCounter = 0;
@@ -114,32 +101,29 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       activeChildrenCounter++;
       isHighlighted = true;
       changeVisibilityIcon();
+      emitEventOnElement(parent, "childEnabled");
     });
 
     listEl.addEventListener("childHidden", () => {
       activeChildrenCounter--;
       if (activeChildrenCounter == 0) isHighlighted = false;
       changeVisibilityIcon();
+      emitEventOnElement(parent, "childHidden");
     });
 
     // Add annotation
-    document.addEventListener("newAnnotation", (e) => {
+    parent.addEventListener("newAnnotation", (e) => {
       const annotation = e.detail.annotation;
-      if (annotation.viewId != savedView.id) return;
       _annotations.push(annotation);
-      emitCustomEventOnElement(listEl, "newAnnotation", e.detail);
+      addAnnotation(annotation);
       hasChildren();
       visibilityEl.classList.toggle("hidden", false);
     });
 
     // Delete annotation
     document.addEventListener("removeAnnotation", (e) => {
-      const id = e.detail.removedId;
-      const annotationsIds = _annotations.map((x) => x.id);
-      const idx = annotationsIds.indexOf(id);
-      if (idx == -1) return;
-      _annotations.splice(idx, 1);
-      emitCustomEventOnElement(listEl, "removeAnnotation", { idx });
+      const idx = e.detail.idx;
+      listEl.children[idx].remove();
       hasChildren();
     });
 
@@ -187,8 +171,8 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       const eventName = isHighlighted
         ? "selectAnnotations"
         : "deselectAnnotations";
-      emitEventOnElement(listEl, eventName);
-      console.log('parent emit')
+      const event = new Event(eventName);
+      listEl.dispatchEvent(event);
       changeVisibilityIcon();
     }
 
@@ -211,4 +195,4 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   }
 }
 
-export { renderAnnotationGroup };
+export { renderAnnotationCategory };

@@ -7,6 +7,7 @@ import {
 } from "../stores/annotations";
 import { renderAnnotationGroup } from "../components/annotation/annotationGroup";
 import { savedViews } from "../stores/savedViews";
+import { getAnnotationCategoryById } from "../stores/annotationCategories";
 
 let isRendered = false;
 let container = undefined;
@@ -56,8 +57,8 @@ function renderAnnotations() {
 
   function renderListItem(savedView) {
     const annotations = getAnnotationsFromSavedView(savedView.id)
-    const annotationEl = renderAnnotationGroup(savedView, annotations, list);
-    list.appendChild(annotationEl);
+    const annotationCategoryEl = renderAnnotationGroup(savedView, annotations, list);
+    list.appendChild(annotationCategoryEl);
   }
   
   // events
