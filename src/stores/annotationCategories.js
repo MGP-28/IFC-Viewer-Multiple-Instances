@@ -5,14 +5,6 @@ import { saveToLS } from "../services/localStorage";
 const annotationCategories = [];
 let id = 0;
 
-const globalCategory = new AnnotationCategory(
-  "Uncategorized",
-  undefined,
-  undefined
-);
-globalCategory.id = 0;
-annotationCategories.push(globalCategory);
-
 // Get saved annotationCategoryCategories
 const savedData = getAnnotationCategories();
 
@@ -23,6 +15,14 @@ if (savedData !== null) {
 
   const maxId = Math.max(...annotationCategories.map((x) => x.id));
   id = maxId;
+} else {
+  const globalCategory = new AnnotationCategory(
+    "Uncategorized",
+    undefined,
+    undefined
+  );
+  globalCategory.id = 0;
+  annotationCategories.push(globalCategory);
 }
 
 function addAnnotationCategory(newAnnotationCategory) {
