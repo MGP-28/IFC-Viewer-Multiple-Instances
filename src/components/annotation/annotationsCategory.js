@@ -20,13 +20,7 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
   showEl.classList.add("annotation-list-group-icon", "caret");
   element.appendChild(showEl);
 
-  const categoryColorTag = annotationCategory.color
-    ? renderColorTag(annotationCategory.color)
-    : renderColorTag();
-  categoryColorTag.title = annotationCategory.name;
-  categoryColorTag.textContent = annotationCategory.reference;
-  if (lightOrDark("#" + annotationCategory.color) == "dark")
-    categoryColorTag.style.color = "white";
+  const categoryColorTag = renderColorTag(annotationCategory)
   element.appendChild(categoryColorTag);
 
   const textEl = createElement("span", {

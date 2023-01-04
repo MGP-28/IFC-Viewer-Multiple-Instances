@@ -1,4 +1,5 @@
 import { icons } from "../../configs/icons";
+import { lightOrDark } from "../../helpers/generic/colors";
 import { createElement } from "../../helpers/generic/domElements";
 import Annotation from "../../models/Annotation";
 import { annotationCategories } from "../../stores/annotationCategories";
@@ -54,7 +55,7 @@ function render(position) {
       text: category.name,
     };
     items.push(item);
-    const colorTag = renderColorTag(category.color);
+    const colorTag = renderColorTag(category);
     colors.push(colorTag);
   }
   const select = renderFormSelect(items);
@@ -161,9 +162,10 @@ function render(position) {
 /**
  * Renders element based on given color. If color if undefined, renders a different styled element
  * @param {*} color Color code (hex) or undefined
- * @returns 
+ * @returns
  */
-function renderColorTag(color) {
+function renderColorTag(category) {
+  const color = category.color;
   const colorCode = color ? "#" + color : "#00000000";
   const classes = ["annotation-category-select-colortag"];
   if (!color) classes.push("undefined");
@@ -171,12 +173,14 @@ function renderColorTag(color) {
     classes: classes,
     style: "background-color: " + colorCode,
   });
+  element.title = category.name;
+  element.textContent = category.reference;
+  if (lightOrDark("#" + color) == "dark") element.style.color = "white";
   return element;
 }
 
 function saveAnnotation(content, categoryId, position) {
   let viewId = getActiveId();
-  if (!viewId) viewId = 0;
   const annotation = new Annotation(position, viewId, categoryId, content);
   addAnnotation(annotation);
 }
