@@ -124,22 +124,30 @@ function renderAnnotationGroup(savedView, annotations, parent) {
 
     // Add annotation
     document.addEventListener("newAnnotation", (e) => {
+      // check if annotation was added to its related saved view; if not, exits
       const annotation = e.detail.annotation;
       if (annotation.viewId != savedView.id) return;
+      // update local array
       _annotations.push(annotation);
+      // dispatchs events to children categories (the correct category category will be the one rendering the annotation)
       emitCustomEventOnElement(listEl, "newAnnotation", e.detail);
+      // checks for when saved view is empty
       hasChildren();
       visibilityEl.classList.toggle("hidden", false);
     });
 
     // Delete annotation
     document.addEventListener("removeAnnotation", (e) => {
+      // check if annotation was part of related saved view
       const id = e.detail.removedId;
       const annotationsIds = _annotations.map((x) => x.id);
       const idx = annotationsIds.indexOf(id);
       if (idx == -1) return;
+      // update local array
       _annotations.splice(idx, 1);
-      emitCustomEventOnElement(listEl, "removeAnnotation", { idx });
+      // dispatchs events to children categories (the correct category category will be the one rendering the changes)
+      emitCustomEventOnElement(listEl, "removeAnnotation", { id });
+      // checks for when saved view is empty
       hasChildren();
     });
 
@@ -188,7 +196,6 @@ function renderAnnotationGroup(savedView, annotations, parent) {
         ? "selectAnnotations"
         : "deselectAnnotations";
       emitEventOnElement(listEl, eventName);
-      console.log('parent emit')
       changeVisibilityIcon();
     }
 
