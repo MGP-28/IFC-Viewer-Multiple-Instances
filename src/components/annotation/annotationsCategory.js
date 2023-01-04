@@ -7,10 +7,10 @@ import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
 import { renderAnnotation } from "./annotation";
 import { renderColorTag } from "./form";
+import { consoleLogObject } from "../../helpers/generic/logging";
 
 function renderAnnotationCategory(annotationCategory, annotations, parent) {
   const _annotations = [...annotations];
-  console.log("cat anns", _annotations);
 
   const element = createElement("li", {
     classes: ["annotation-list-group", "annotation-list-group-category"],
@@ -53,7 +53,7 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
 
   for (let idx = 0; idx < _annotations.length; idx++) {
     const annotation = _annotations[idx];
-    addAnnotation(annotationCategory, annotation);
+    addAnnotation(annotation);
   }
 
   handleEvents();
@@ -64,24 +64,22 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
   //
   // Aux scoped functions
   //
-  function addAnnotation(annotationCategory, annotation) {
+  function addAnnotation(annotation) {
     const annotationEl = renderAnnotation(
       annotationCategory,
       annotation,
       listEl
     );
     listEl.appendChild(annotationEl);
+    return annotationEl;
   }
 
   function handleEvents() {
     let isHighlighted = false;
     // Highlight annotations
-    document.addEventListener("savedViewChanged", (e) => {
-      handleChildrenRendering();
-    });
-
     parent.addEventListener("enableAnnotations", () => {
-      handleChildrenRendering();
+      isHighlighted = true;
+      selectAllChildren();
     });
 
     parent.addEventListener("disableAnnotations", () => {
@@ -95,15 +93,16 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
       emitEventOnElement(listEl, "deselectAnnotations");
     });
 
+    // Child dispatches event on enabling / disabling, allowing parents to keep track of how many are active
     let activeChildrenCounter = 0;
-    // Enable parent on child highlight
+    // Enable parent on child rendering
     listEl.addEventListener("childEnabled", () => {
       activeChildrenCounter++;
       isHighlighted = true;
       changeVisibilityIcon();
       emitEventOnElement(parent, "childEnabled");
     });
-
+    // Disable parent on child hidding
     listEl.addEventListener("childHidden", () => {
       activeChildrenCounter--;
       if (activeChildrenCounter == 0) isHighlighted = false;
@@ -113,17 +112,31 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
 
     // Add annotation
     parent.addEventListener("newAnnotation", (e) => {
+      // check if annotation is part of category
       const annotation = e.detail.annotation;
+      if (annotation.categoryId != annotationCategory.id) return;
+      // update local annotation array
       _annotations.push(annotation);
-      addAnnotation(annotation);
+      // add annotation to UI, forces render
+      const annotationEl = addAnnotation(annotation);
+      emitEventOnElement(annotationEl, "forceRenderAnnotation");
+      // checks for when category is empty
       hasChildren();
       visibilityEl.classList.toggle("hidden", false);
     });
 
     // Delete annotation
     document.addEventListener("removeAnnotation", (e) => {
-      const idx = e.detail.idx;
+      // check if annotation was part of related category
+      const id = e.detail.removedId;
+      const annotationsIds = _annotations.map((x) => x.id);
+      const idx = annotationsIds.indexOf(id);
+      if (idx == -1) return;
+      // update local array
+      _annotations.splice(idx, 1);
+      // remove annotation from UI
       listEl.children[idx].remove();
+      // checks for when category is empty
       hasChildren();
     });
 
@@ -141,32 +154,6 @@ function renderAnnotationCategory(annotationCategory, annotations, parent) {
     //
     // Aux in scope
     //
-    function handleChildrenRendering() {
-      if (listEl.children.length == 0) return;
-
-      // Force hidding when annotations are disabled by user
-      if (!userInteractions.annotations && isHighlighted) {
-        isHighlighted = false;
-        selectAllChildren();
-        return;
-      }
-
-      const id = getActiveId();
-      if (savedView.id == id) {
-        isHighlighted = true;
-        openList();
-      } else {
-        if (!isHighlighted) return; // already disabled; increases performance
-        isHighlighted = false;
-      }
-      selectAllChildren();
-    }
-
-    function openList() {
-      showEl.classList.add("caret-down");
-      listEl.classList.remove("hidden");
-    }
-
     function selectAllChildren() {
       const eventName = isHighlighted
         ? "selectAnnotations"
