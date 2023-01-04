@@ -85,6 +85,11 @@ body {
   gap: 8px;
 }
 
+.styling-form-select-plus-add.annotation-category-selector li{
+  display: grid;
+  grid-template-columns: 74px 1fr;
+}
+
 .styling-form-icon {
   cursor: pointer;
   transition: all 0.3s;
@@ -190,8 +195,11 @@ body {
 }
 
 .annotation-category-select-colortag{
-  width: 8px;
   height: 100%;
+  width: calc(100% - 8px);
+  font-size: 12px;
+  display: grid;
+  place-items: center;
 }
 
 .annotation-category-select-colortag.undefined{
@@ -694,13 +702,6 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.annotation-list-group-category .annotation-category-select-colortag{
-  width: calc(100% - 8px);
-  font-size: 12px;
-  display: grid;
-  place-items: center;
 }
 
 .annotation-list-group-category li.active-annotation {

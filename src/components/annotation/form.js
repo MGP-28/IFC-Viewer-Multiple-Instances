@@ -40,16 +40,12 @@ function render(position) {
   const selectWrapperEl = container.getElementsByClassName(
     "styling-form-select-plus-add"
   )[0];
+  selectWrapperEl.classList.add("annotation-category-selector");
 
   // category renderization
   const items = [];
   const colors = [];
-  // Default value
-  items.push({
-    value: 0,
-    text: "No category",
-  });
-  colors.push(renderColorTag());
+
   // categories
   for (let idx = 0; idx < annotationCategories.length; idx++) {
     const category = annotationCategories[idx];
