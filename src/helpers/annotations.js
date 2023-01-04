@@ -56,11 +56,15 @@ function renderAnnotations() {
   }
 
   function renderListItem(savedView) {
-    const annotations = getAnnotationsFromSavedView(savedView.id)
-    const annotationCategoryEl = renderAnnotationGroup(savedView, annotations, list);
+    const annotations = getAnnotationsFromSavedView(savedView.id);
+    const annotationCategoryEl = renderAnnotationGroup(
+      savedView,
+      annotations,
+      list
+    );
     list.appendChild(annotationCategoryEl);
   }
-  
+
   // events
   handleEvents();
 
@@ -68,7 +72,7 @@ function renderAnnotations() {
   emitEventOnElement(wrapper, "featureReady");
   const icon = wrapper.getElementsByClassName("tools-side-feature-icon")[0];
   icon.click();
-  
+
   const containerEl = document.getElementsByClassName("tools-side-content")[0];
   containerEl.appendChild(wrapper);
 
@@ -76,8 +80,11 @@ function renderAnnotations() {
   container = containerEl;
   component = wrapper;
 
-  function handleEvents(){
-    //
+  function handleEvents() {
+    document.addEventListener("newSavedView", (e) => {
+      const savedView = e.detail.savedView;
+      renderListItem(savedView);
+    });
   }
 }
 
@@ -89,7 +96,7 @@ function hideAnnotations() {
   container.removeChild(component);
 }
 
-function createAnnotation(position){
+function createAnnotation(position) {
   // annotation form
 }
 
