@@ -8,11 +8,12 @@ function getAnnotations() {
     const results = [];
     LSData.forEach((element) => {
       const annotation = new Annotation();
-      annotation.position = convertJSONToVector(element.position).clone();
+      annotation.id = element.id;
       annotation.viewId = element.viewId;
       annotation.categoryId = element.categoryId;
       annotation.content = element.content;
       annotation.userId = element.userId;
+      annotation.position = convertJSONToVector(element.position).clone();
       results.push(annotation);
     });
     return results;
