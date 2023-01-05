@@ -7,6 +7,7 @@ import {
 } from "../stores/annotations";
 import { renderAnnotationGroup } from "../components/annotation/annotationGroup";
 import { savedViews } from "../stores/savedViews";
+import { getAnnotationCategoryById } from "../stores/annotationCategories";
 
 let isRendered = false;
 let container = undefined;
@@ -42,34 +43,30 @@ function renderAnnotations() {
   // list
   const list = contentEl.getElementsByClassName("annotations-list")[0];
   // add loaded views
+  //// global view
   const globalView = {
     id: 0,
     note: "Global",
   };
   renderListItem(globalView);
+  //// for each saved view
   for (let idx = 0; idx < savedViews.length; idx++) {
     const savedView = savedViews[idx];
     renderListItem(savedView);
   }
 
   function renderListItem(savedView) {
-    //
-    //
-    const tester = { note: "Tester" };
-    let times = Math.floor(Math.random() * 4);
-    const arr = [];
-    for (let index = 0; index < times; index++) {
-      arr.push(tester);
-    }
-    //
-    //
-    const annotations = arr; //getAnnotationsFromSavedView(savedView.id)
-    const annotationEl = renderAnnotationGroup(savedView, annotations, list);
-    list.appendChild(annotationEl);
+    const annotations = getAnnotationsFromSavedView(savedView.id);
+    const annotationCategoryEl = renderAnnotationGroup(
+      savedView,
+      annotations,
+      list
+    );
+    list.appendChild(annotationCategoryEl);
   }
 
   // events
-  // handleEvents();
+  handleEvents();
 
   // gets feature ready and opens it right away
   emitEventOnElement(wrapper, "featureReady");
@@ -82,6 +79,13 @@ function renderAnnotations() {
   isRendered = true;
   container = containerEl;
   component = wrapper;
+
+  function handleEvents() {
+    document.addEventListener("newSavedView", (e) => {
+      const savedView = e.detail.savedView;
+      renderListItem(savedView);
+    });
+  }
 }
 
 function showAnnotations() {
@@ -92,7 +96,7 @@ function hideAnnotations() {
   container.removeChild(component);
 }
 
-function createAnnotation(position){
+function createAnnotation(position) {
   // annotation form
 }
 

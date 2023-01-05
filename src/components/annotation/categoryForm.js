@@ -4,8 +4,14 @@ import {
   renderChangesAfterLoad,
   renderColorPicker,
 } from "../generic/colorPicker";
-import { addAnnotationCategory, annotationCategories } from "../../stores/annotationCategories";
+import {
+  addAnnotationCategory,
+  annotationCategories,
+} from "../../stores/annotationCategories";
 import AnnotationCategory from "../../models/AnnotationCategory";
+import { annotationCategoryValidator } from "../../validators/annotationCategory/annotationCategory";
+import { createElement } from "../../helpers/generic/domElements";
+import { consoleLogObject } from "../../helpers/generic/logging";
 
 function render() {
   const headerProps = {
@@ -24,10 +30,12 @@ function render() {
   container.innerHTML = `
     <form class="styling-form">
       <label for="note" class="styling-form-label">Name</label>
-      <input type="text" id="annotation-form-category-input" class="styling-form-input" name="note">
+      <input type="text" id="annotation-form-category-name" class="styling-form-input" name="note">
+      <label for="reference" class="styling-form-label">Reference</label>
+      <input type="text" id="annotation-form-category-reference" class="styling-form-input" name="reference" title="3 letters, underscore, 3 numbers" placeholder="AAA-000">
       <label for="color" class="styling-form-label">Color</label>
       <div class="styling-form-color-picker-wrapper"></div>
-      <span id="styling-form-warning" class="styling-form-warning hidden"></span>
+      <p id="styling-form-warning" class="styling-form-warning hidden"></p>
       <input type="submit" value="Create" class="styling-form-submit">
     </form>
   `;
@@ -45,7 +53,10 @@ function render() {
 
   function handleEvents() {
     const formEl = container.querySelector(".styling-form");
-    const nameInput = document.getElementById("annotation-form-category-input");
+    const nameInput = document.getElementById("annotation-form-category-name");
+    const referenceInput = document.getElementById(
+      "annotation-form-category-reference"
+    );
 
     popup.addEventListener("toggle", () => {
       popup.remove();
@@ -55,27 +66,22 @@ function render() {
       e.preventDefault();
 
       const name = nameInput.value;
-
-      // fields incorrectly filled
-      if (!name) {
-        errorName(true);
-        return;
-      }
-
-      // fields filled
-      const categoriesNamesUsed = annotationCategories.map((x) => x.name);
-      const isNameValid = categoriesNamesUsed.indexOf(name) == -1;
-
-      if (!isNameValid) {
-        errorName(false);
-        return;
-      }
-
       const color = colorPicker.hex.slice(1);
+      const reference = referenceInput.value.toUpperCase();
+      const obj = { name, color, reference };
 
-      saveAnnotationCategory(name, color);
+      const result = annotationCategoryValidator(obj);
 
-      popup.remove();
+      if (result == true) {
+        saveAnnotationCategory(obj);
+        popup.remove();
+      } else {
+        const references = [
+          { name: "Name", element: nameInput },
+          { name: "Reference", element: referenceInput },
+        ];
+        errors(references, result);
+      }
     });
 
     formEl.addEventListener("click", (e) => e.stopPropagation());
@@ -87,34 +93,46 @@ function render() {
     //
     // Aux functions in scope
     //
-  
-    function errorName(isEmpty) {
-      nameInput.classList.remove("error");
-      nameInput.classList.add("error");
-      nameInput.addEventListener("focus", classing);
-  
-      const message = isEmpty
-        ? "Please input a category name"
-        : "There's already a category with the same name";
-  
-      errorMessage(message);
-  
-      function classing() {
-        nameInput.classList.remove("error");
-        nameInput.removeEventListener("focus", classing);
+
+    function errors(references, errors) {
+      let errorElements = [];
+
+      for (let idx = 0; idx < errors.length; idx++) {
+        const message = errors[idx];
+        const element = references.find((x) =>
+          message.includes(x.name)
+        ).element;
+        element.classList.remove("error");
+        element.classList.add("error");
+        element.addEventListener("focus", classing);
+
+        function classing() {
+          element.classList.remove("error");
+          element.removeEventListener("focus", classing);
+        }
+
+        const errorElement = createElement("span", {
+          textContent: message,
+        });
+
+        errorElements.push(errorElement);
       }
+
+      errorMessage(errorElements);
     }
   }
-  
-  function errorMessage(message) {
+
+  function errorMessage(errorElements) {
     const errorEl = container.getElementsByClassName("styling-form-warning")[0];
+    errorEl.innerHTML = "";
     errorEl.classList.remove("hidden");
-    errorEl.textContent = message;
+    errorElements.forEach((element) => errorEl.appendChild(element));
   }
 
-  function saveAnnotationCategory(name, color){
-    const annotationCategory = new AnnotationCategory(name, color);
-    addAnnotationCategory(annotationCategory);
+  function saveAnnotationCategory(annotationCategory) {
+    const {name, color, reference} = annotationCategory;
+    const newAnnotationCategory = new AnnotationCategory(name, color, reference);
+    addAnnotationCategory(newAnnotationCategory);
   }
 }
 

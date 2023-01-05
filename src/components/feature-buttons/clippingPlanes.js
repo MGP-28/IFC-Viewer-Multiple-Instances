@@ -15,8 +15,15 @@ export default function renderClippingPlanesFeature() {
       userInteractions.clippingPlanes = isEnabled;
       clipping(isEnabled);
       element.classList.toggle("active");
+
+      if(!isEnabled) userInteractions.clippingPlanes = false;
     });
+
+    document.addEventListener("openClippingPlanes", (e) => {
+      if(!isEnabled) element.click();
+    })
   });
+
 
   return element;
 }

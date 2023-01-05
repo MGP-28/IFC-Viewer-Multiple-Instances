@@ -22,6 +22,8 @@ function addAnnotation(newAnnotation) {
   annotation.id = id;
   annotations.push(annotation);
 
+  saveToLS("annotations", annotations);
+
   // trigger event
   const customEvent = new CustomEvent("newAnnotation", {
     detail: {
@@ -29,8 +31,6 @@ function addAnnotation(newAnnotation) {
     },
   });
   document.dispatchEvent(customEvent);
-
-  saveToLS("annotations", annotations);
 
   return annotation.id;
 }
@@ -41,7 +41,7 @@ function removeAnnotation(id) {
   if (idx == -1) return;
   annotations.splice(idx, 1);
   // trigger event
-  const customEvent = new CustomEvent("updateAnnotationsList", {
+  const customEvent = new CustomEvent("removeAnnotation", {
     detail: {
       removedId: id,
     },
@@ -52,7 +52,7 @@ function removeAnnotation(id) {
 }
 
 function getAnnotationsFromSavedView(savedViewId) {
-  const arr = annotations.filter((x) => x.id == savedViewId);
+  const arr = annotations.filter((x) => x.viewId == savedViewId);
   return arr;
 }
 

@@ -5,6 +5,7 @@ import * as RaycastStore from "../stores/raycast.js";
 import * as Scene from "../stores/scene.js";
 import * as SelectedStore from "../stores/selection.js";
 import * as THREE from "three";
+import { userInteractions } from "../stores/userInteractions.js";
 
 /**
  * Gets users' mouse position, casts a ray to intercept objects on the render and returns their properties
@@ -73,34 +74,10 @@ async function pickClippingPlane(event) {
     for (let idx = 0; idx < results.length; idx++) {
       const object = results[idx];
       const point = object.point;
-      if (isPointInsideBox(point)) return object;
+      if (isPointInsideBox(boxDimensions, point)) return object;
     }
 
     return false;
-
-    /**
-     * Checks if intersection point found by raycasting in part of the active clipping box
-     *
-     * This check prevents a bug where user could select hidden parts of a plane to move it
-     *
-     * Due to raycasting error margins, a customizable buffer is used.
-     * This buffer prevents edge cases where a legitimate intersection point would be discarded, leading to unwanted behaviour
-     * @param {Intersection Point} point
-     * @returns true if point is inside the active planes' box, false otherwise
-     */
-    function isPointInsideBox(point) {
-      const buffer = 0.000000001;
-      for (const axle in point) {
-        const value = point[axle];
-        if (value > boxDimensions.max[axle]) {
-          if (Math.abs(value - boxDimensions.max[axle]) > buffer) return false;
-        }
-        if (value < boxDimensions.min[axle]) {
-          if (Math.abs(value - boxDimensions.min[axle]) > buffer) return false;
-        }
-      }
-      return true;
-    }
   }
 }
 
@@ -186,11 +163,36 @@ function setupCast(event, type = false) {
 async function castEachModel() {
   const results = [];
 
+  let boxDimensions = undefined;
+  if(userInteractions.clippingPlanes) {
+    boxDimensions = {
+      min: ClippingPlanesStore.edgePositions.currentMin,
+      max: ClippingPlanesStore.edgePositions.currentMax,
+    };
+  }
+
   // Get intercepted object closest to the user camera/mouse, if there is one
   // RaycastIntersectObject is used to tie the object to its model loader
   for (let idx = 0; idx < Models.models.length; idx++) {
     const arr = [RaycastStore.subsetRaycast[idx]];
-    const result = RaycastStore.raycaster.intersectObjects(arr)[0];
+    // account for hidden objects
+    const resultsPerModel = RaycastStore.raycaster.intersectObjects(arr);
+    if(resultsPerModel.length == 0) return false;
+
+    let result = undefined;
+    // if clipping is active, check if intersection occurs inside the clipping box
+    if(userInteractions.clippingPlanes) {
+      for (let idx = 0; idx < resultsPerModel.length; idx++) {
+        const _result = resultsPerModel[idx];
+        const intersectionPoint = _result.point
+        if(isPointInsideBox(boxDimensions, intersectionPoint)) {
+          result = _result;
+          break;
+        }
+      }
+    }
+    else result = resultsPerModel[0];
+
     const intersectiongObj = new RaycastIntersectObject(result, idx);
     if (result) results.push(intersectiongObj);
   }
@@ -198,7 +200,9 @@ async function castEachModel() {
   if (results.length > 0) {
     const found = getRaycastingResult(results);
     return found;
-  } else return false;
+  } 
+  
+  return false;
 }
 
 /**
@@ -234,6 +238,30 @@ async function storeFoundObjectProperties(isSelection) {
       true
     );
 
+  return true;
+}
+
+/**
+     * Checks if intersection point found by raycasting in part of the active clipping box
+     *
+     * This check prevents a bug where user could select hidden parts of a plane to move it
+     *
+     * Due to raycasting error margins, a customizable buffer is used.
+     * This buffer prevents edge cases where a legitimate intersection point would be discarded, leading to unwanted behaviour
+     * @param {Intersection Point} point
+     * @returns true if point is inside the active planes' box, false otherwise
+     */
+function isPointInsideBox(boxDimensions, point) {
+  const buffer = 0.000000001;
+  for (const axle in point) {
+    const value = point[axle];
+    if (value > boxDimensions.max[axle]) {
+      if (Math.abs(value - boxDimensions.max[axle]) > buffer) return false;
+    }
+    if (value < boxDimensions.min[axle]) {
+      if (Math.abs(value - boxDimensions.min[axle]) > buffer) return false;
+    }
+  }
   return true;
 }
 

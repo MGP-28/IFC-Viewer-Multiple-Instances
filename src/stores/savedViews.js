@@ -1,9 +1,10 @@
+import { emitCustomGlobalEvent } from "../helpers/emitEvent";
 import { getSavedViews } from "../services/getSavedViews";
 import { saveToLS } from "../services/localStorage";
 
 const savedViews = [];
 let id = 0;
-let activeId = undefined;
+let activeId = 0;
 
 const savedData = getSavedViews();
 
@@ -22,16 +23,13 @@ function addSavedView(newSavedView) {
   savedView.id = id;
   savedViews.push(savedView);
 
-  // trigger event
-  const customEvent = new CustomEvent("newSavedView", {
-    detail: {
-      savedView: savedView,
-    },
-  });
-  const element = document.getElementById("saved-views-list");
-  element.dispatchEvent(customEvent);
-
   saveToLS("savedViews", savedViews);
+  
+  // trigger event
+  emitCustomGlobalEvent("newSavedView", {
+    savedView: savedView,
+  })
+
 
   return savedView.id;
 }
@@ -42,7 +40,7 @@ function removeSavedView(id) {
   if (idx == -1) return;
   savedViews.splice(idx, 1);
   // trigger event
-  const customEvent = new CustomEvent("updateSavedViewsList", {
+  const customEvent = new CustomEvent("removedSavedView", {
     detail: {
       removedId: id,
     },
@@ -63,7 +61,7 @@ function setActiveId(id) {
 }
 
 function removeActiveId() {
-  activeId = undefined;
+  activeId = 0;
   // trigger event
   dispatchActiveIdChanges();
 }

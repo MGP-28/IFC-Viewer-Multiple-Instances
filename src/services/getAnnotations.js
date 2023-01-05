@@ -1,6 +1,6 @@
 import Annotation from "../models/Annotation";
 import { loadFromLS } from "./localStorage";
-import * as THREE from "three";
+import { convertJSONToVector } from "../helpers/generic/vectors";
 
 function getAnnotations() {
   const LSData = loadFromLS("annotations");
@@ -8,12 +8,12 @@ function getAnnotations() {
     const results = [];
     LSData.forEach((element) => {
       const annotation = new Annotation();
-      //    annotation.camera.position = convertJSONToVector(element.camera.position).clone();
-      //    annotation.camera.pointLookedAt = convertJSONToVector(element.camera.pointLookedAt).clone();
-      //    annotation.clipping.min = convertJSONToVector(element.clipping.min).clone();
-      //    annotation.clipping.max = convertJSONToVector(element.clipping.max).clone();
-      //    annotation.id = element.id;
-      //    annotation.note = element.note;
+      annotation.id = element.id;
+      annotation.viewId = element.viewId;
+      annotation.categoryId = element.categoryId;
+      annotation.content = element.content;
+      annotation.userId = element.userId;
+      annotation.position = convertJSONToVector(element.position).clone();
       results.push(annotation);
     });
     return results;
