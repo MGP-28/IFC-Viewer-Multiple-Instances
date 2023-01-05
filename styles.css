@@ -8,7 +8,7 @@
   --grayed: #9a9a9a;
   --lightgray: rgb(240, 240, 240);
   --scroll-bar-color: #c5c5c5;
-  --scroll-bar-bg-color: #f6f6f6;
+  --scroll-bar-bg-color: transparent;
   --border-radius-small: 4px;
   --border-radius-regular: 8px;
   --font-family: Montserrat;
@@ -24,7 +24,7 @@
 
 /* Works on Chrome, Edge, and Safari */
 *::-webkit-scrollbar {
-  width: 12px;
+  width: 6px;
 }
 
 *::-webkit-scrollbar-track {
