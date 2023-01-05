@@ -8,11 +8,13 @@ const icons = {
     close: "x",
     chevronRight: "chevron-right",
     visibility: "eye",
+    visibilityOff: "eye-off",
     target: "target-02",
     partof: "scale-01",
     trash: "trash-01",
     focus: "maximize-02",
-    plus: "plus"
+    plus: "plus",
+    dots: "dots-horizontal"
 }
 
 export { icons }

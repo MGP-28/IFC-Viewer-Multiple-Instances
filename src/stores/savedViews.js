@@ -1,3 +1,4 @@
+import { emitCustomGlobalEvent } from "../helpers/emitEvent";
 import { getSavedViews } from "../services/getSavedViews";
 import { saveToLS } from "../services/localStorage";
 
@@ -22,16 +23,13 @@ function addSavedView(newSavedView) {
   savedView.id = id;
   savedViews.push(savedView);
 
-  // trigger event
-  const customEvent = new CustomEvent("newSavedView", {
-    detail: {
-      savedView: savedView,
-    },
-  });
-  const element = document.getElementById("saved-views-list");
-  element.dispatchEvent(customEvent);
-
   saveToLS("savedViews", savedViews);
+  
+  // trigger event
+  emitCustomGlobalEvent("newSavedView", {
+    savedView: savedView,
+  })
+
 
   return savedView.id;
 }

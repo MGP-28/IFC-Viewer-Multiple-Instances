@@ -1,3 +1,4 @@
+import AnnotationCategory from "../models/AnnotationCategory";
 import { getAnnotationCategories } from "../services/getAnnotationCategories";
 import { saveToLS } from "../services/localStorage";
 
@@ -14,6 +15,14 @@ if (savedData !== null) {
 
   const maxId = Math.max(...annotationCategories.map((x) => x.id));
   id = maxId;
+} else {
+  const globalCategory = new AnnotationCategory(
+    "Uncategorized",
+    undefined,
+    undefined
+  );
+  globalCategory.id = 0;
+  annotationCategories.push(globalCategory);
 }
 
 function addAnnotationCategory(newAnnotationCategory) {
@@ -51,13 +60,13 @@ function removeAnnotationCategory(id) {
   saveToLS("annotationCategories", annotationCategories);
 }
 
-function getAnnotationCategoryById(categoryId){
-  return annotationCategories.find(x => x.id == categoryId)
+function getAnnotationCategoryById(categoryId) {
+  return annotationCategories.find((x) => x.id == categoryId);
 }
 
 export {
   annotationCategories,
   addAnnotationCategory,
   removeAnnotationCategory,
-  getAnnotationCategoryById
+  getAnnotationCategoryById,
 };

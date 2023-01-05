@@ -1,4 +1,5 @@
 import { icons } from "../../configs/icons";
+import { lightOrDark } from "../../helpers/generic/colors";
 import { createElement } from "../../helpers/generic/domElements";
 import Annotation from "../../models/Annotation";
 import { annotationCategories } from "../../stores/annotationCategories";
@@ -40,16 +41,12 @@ function render(position) {
   const selectWrapperEl = container.getElementsByClassName(
     "styling-form-select-plus-add"
   )[0];
+  selectWrapperEl.classList.add("annotation-category-selector");
 
   // category renderization
   const items = [];
   const colors = [];
-  // Default value
-  items.push({
-    value: 0,
-    text: "No category",
-  });
-  colors.push(renderColorTag());
+
   // categories
   for (let idx = 0; idx < annotationCategories.length; idx++) {
     const category = annotationCategories[idx];
@@ -58,7 +55,7 @@ function render(position) {
       text: category.name,
     };
     items.push(item);
-    const colorTag = renderColorTag(category.color);
+    const colorTag = renderColorTag(category);
     colors.push(colorTag);
   }
   const select = renderFormSelect(items);
@@ -85,7 +82,7 @@ function render(position) {
 
     const formEl = container.querySelector(".styling-form");
     const contentInput = container.querySelector("#annotation-form-name");
-    let selectedCategoryId = undefined;
+    let selectedCategoryId = 0;
     formEl.addEventListener("submit", (e) => {
       e.preventDefault();
 
@@ -97,9 +94,7 @@ function render(position) {
         return;
       }
 
-      const categoryId =
-        selectedCategoryId === undefined ? 0 : selectedCategoryId;
-      saveAnnotation(content, categoryId, position);
+      saveAnnotation(content, selectedCategoryId, position);
 
       popup.remove();
     });
@@ -165,9 +160,10 @@ function render(position) {
 /**
  * Renders element based on given color. If color if undefined, renders a different styled element
  * @param {*} color Color code (hex) or undefined
- * @returns 
+ * @returns
  */
-function renderColorTag(color) {
+function renderColorTag(category) {
+  const color = category.color;
   const colorCode = color ? "#" + color : "#00000000";
   const classes = ["annotation-category-select-colortag"];
   if (!color) classes.push("undefined");
@@ -175,12 +171,14 @@ function renderColorTag(color) {
     classes: classes,
     style: "background-color: " + colorCode,
   });
+  element.title = category.name;
+  element.textContent = category.reference;
+  if (lightOrDark("#" + color) == "dark") element.style.color = "white";
   return element;
 }
 
 function saveAnnotation(content, categoryId, position) {
   let viewId = getActiveId();
-  if (!viewId) viewId = 0;
   const annotation = new Annotation(position, viewId, categoryId, content);
   addAnnotation(annotation);
 }

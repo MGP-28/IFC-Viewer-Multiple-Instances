@@ -59,7 +59,7 @@ function renderSavedViews() {
     renderListItem(savedView);
   }
   // add new views created
-  list.addEventListener("newSavedView", (e) => {
+  document.addEventListener("newSavedView", (e) => {
     const savedView = e.detail.savedView;
     renderListItem(savedView);
   });
