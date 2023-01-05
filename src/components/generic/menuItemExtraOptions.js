@@ -9,7 +9,7 @@ import { buildIcon } from "./icon";
  * Call "addOptionToMenuExtras" to add an option to the menu
  * @returns HTML element
  */
-function render() {
+function render(eventsToPreventPropagation = []) {
   // render base UI
   const element = createElement("div", {
     classes: ["styling-menu-extras"],
@@ -27,11 +27,13 @@ function render() {
 
   function handleEvents() {
     let firstRender = true;
+    eventsToPreventPropagation.forEach((eventName) => {
+      element.addEventListener(eventName, preventActions);
+    });
+
     icon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      e.preventDefault();
       list.classList.toggle("hidden");
-      if(firstRender) {
+      if (firstRender) {
         firstRender = false;
         const menuBoundingData = element.getBoundingClientRect();
         const listBoundingData = list.getBoundingClientRect();
@@ -44,6 +46,15 @@ function render() {
       }
       element.classList.toggle("active");
     });
+
+    list.addEventListener("click", () => {
+      icon.click();
+    })
+
+    function preventActions(e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
   }
 
   return element;
@@ -62,15 +73,13 @@ function renderOption(element, text) {
   const li = createElement("li", {
     textContent,
   });
-  // Handle events
-  const idx = element.children.length;
-  li.addEventListener("click", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    emitCustomEventOnElement(element, "optionSelected", { idx });
-  });
   const list = element.getElementsByTagName("ul")[0];
   list.appendChild(li);
+  // Handle events
+  let idx = list.children.length;
+  li.addEventListener("click", (e) => {
+    emitCustomEventOnElement(element, "optionSelected", { idx });
+  });
   // Reference for parent
   return idx;
 }
