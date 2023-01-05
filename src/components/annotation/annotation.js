@@ -5,16 +5,17 @@ import {
   remove2DObjectFromScene,
 } from "../../helpers/2DRendering";
 import { emitEventOnElement } from "../../helpers/emitEvent";
-import { createElement } from "../../helpers/generic/domElements";
+import {
+  createElement,
+  preventPropagation,
+} from "../../helpers/generic/domElements";
 import { removeAnnotation } from "../../stores/annotations";
 import { userInteractions } from "../../stores/userInteractions";
 import { renderConfirmationPopup } from "../confirmationPopup";
-import { buildIcon } from "../generic/icon";
 import {
-  addOptionToMenuExtras,
+  addMultiplesOptionsToMenuExtras,
   renderMenuItemExtrasComponent,
 } from "../generic/menuItemExtraOptions";
-import { buildPopupWithHeader } from "../PopupWithHeader";
 
 function renderAnnotation(category, annotation, parent) {
   const element = createElement("li", {
@@ -31,24 +32,22 @@ function renderAnnotation(category, annotation, parent) {
   });
   element.appendChild(text);
 
-  const eventsToPreventPropagation = ["click"];
-  const menuExtras = renderMenuItemExtrasComponent(eventsToPreventPropagation);
+  // menu
   const options = {
     delete: {
       text: "Delete",
       idx: undefined,
     },
     dummy: {
-      text: "A very nice option indeed",
+      text: "Do things",
+      idx: undefined,
+    },
+    another: {
+      text: "Different thing being done",
       idx: undefined,
     },
   };
-  for (const key in options) {
-    if (Object.hasOwnProperty.call(options, key)) {
-      const option = options[key];
-      option.idx = addOptionToMenuExtras(menuExtras, option.text);
-    }
-  }
+  const menuExtras = createOptionsMenu(options);
   element.appendChild(menuExtras);
 
   handleEvents();
@@ -120,7 +119,7 @@ function renderAnnotation(category, annotation, parent) {
       const popupProps = {
         title: "Confirmation",
         subtitle: "",
-        message: "Are you sure you want to remove the annotation?",
+        message: `Are you sure you want to remove the annotation: "[${category.reference}] ${annotation.content}"?`,
         affirmativeText: "Remove",
         negativeText: "Cancel",
       };
@@ -131,9 +130,9 @@ function renderAnnotation(category, annotation, parent) {
 
       popup.addEventListener("confirmationResult", (e) => {
         const result = e.detail.result;
-        if(result) deleteAnnotation(annotation);
+        if (result) deleteAnnotation(annotation);
         popup.remove();
-      })
+      });
     }
 
     function deleteAnnotation() {
@@ -144,4 +143,14 @@ function renderAnnotation(category, annotation, parent) {
   }
 }
 
+function createOptionsMenu(options) {
+  const menuExtras = renderMenuItemExtrasComponent();
+
+  const eventsToPreventPropagation = ["click"];
+  preventPropagation(menuExtras, eventsToPreventPropagation);
+  
+  addMultiplesOptionsToMenuExtras(menuExtras, options);
+
+  return menuExtras;
+}
 export { renderAnnotation };
