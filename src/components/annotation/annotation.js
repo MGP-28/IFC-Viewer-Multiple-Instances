@@ -9,21 +9,44 @@ import { createElement } from "../../helpers/generic/domElements";
 import { removeAnnotation } from "../../stores/annotations";
 import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
+import {
+  addOptionToMenuExtras,
+  renderMenuItemExtrasComponent,
+} from "../generic/menuItemExtraOptions";
 
 function renderAnnotation(category, annotation, parent) {
   const element = createElement("li", {
     classes: ["annotation-list-item"],
   });
 
-  const deleteEl = buildIcon(icons.trash);
-  deleteEl.classList.add("annotation-list-item-icon");
-  element.appendChild(deleteEl);
+  // const deleteEl = buildIcon(icons.trash);
+  // deleteEl.classList.add("annotation-list-item-icon");
+  // element.appendChild(deleteEl);
 
   const text = createElement("span", {
     classes: ["annotation-list-item-text"],
     textContent: annotation.content,
   });
   element.appendChild(text);
+
+  const menuExtras = renderMenuItemExtrasComponent();
+  const options = {
+    delete: {
+      text: "Delete",
+      idx: undefined,
+    },
+    dummy: {
+      text: "A very nice option indeed",
+      idx: undefined,
+    },
+  };
+  for (const key in options) {
+    if (Object.hasOwnProperty.call(options, key)) {
+      const option = options[key];
+      option.idx = addOptionToMenuExtras(menuExtras, option.text);
+    }
+  }
+  element.appendChild(menuExtras);
 
   handleEvents();
 
@@ -34,11 +57,25 @@ function renderAnnotation(category, annotation, parent) {
   //
   function handleEvents() {
     // Delete annotation view
-    deleteEl.addEventListener("click", (e) => {
-      e.stopPropagation();
-      removeAnnotation(annotation.id);
-      hide();
-      element.remove();
+
+    // deleteEl.addEventListener("click", (e) => {
+    //   e.stopPropagation();
+    //   removeAnnotation(annotation.id);
+    //   hide();
+    //   element.remove();
+    // });
+
+    menuExtras.addEventListener("optionSelected", (e) => {
+      const idx = e.detail.idx;
+      switch (idx) {
+        case options.delete.idx:
+          deleteAnnotation();
+          break;
+
+        default:
+          console.error(`Event handler for index ${idx} is not defined!`)
+          break;
+      }
     });
 
     let isShowing = false;
@@ -73,6 +110,12 @@ function renderAnnotation(category, annotation, parent) {
       remove2DObjectFromScene(label2D);
       element.classList.remove("anim-gradient");
       if (isClick) emitEventOnElement(parent, "childHidden");
+    }
+
+    function deleteAnnotation() {
+      removeAnnotation(annotation.id);
+      hide();
+      element.remove();
     }
   }
 }
