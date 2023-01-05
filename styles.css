@@ -194,7 +194,66 @@ body {
   transition: background-color 0.3s;
 }
 
-.annotation-category-select-colortag{
+.styling-menu-extras {
+  width: 30px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: visible;
+}
+
+.styling-menu-extras > img {
+  transition: all 0.3s;
+}
+
+.styling-menu-extras > img:hover {
+  transition: all 0.3s;
+  transform: scale(1.1);
+}
+
+.styling-menu-extras.active {
+  border: solid 1px var(--grayed);
+  background-color: white;
+  border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+}
+
+.styling-menu-extras > ul.styling-menu-extras-list {
+  width: max-content;
+  position: fixed;
+  background-color: white;
+  padding: 8px;
+  border: 1px solid var(--grayed);
+  border-radius: var(--border-radius-small) 0 var(--border-radius-small)
+    var(--border-radius-small);
+  opacity: 0%;
+  left: 0;
+  top: 0;
+}
+
+.styling-menu-extras.active > ul.styling-menu-extras-list {
+  transform: translate(-100%, 0);
+  opacity: 100%;
+}
+
+.styling-menu-extras > ul.styling-menu-extras-list > li {
+  border: none;
+  box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);
+  border-bottom: solid 1px lightgray;
+}
+
+.styling-menu-extras > ul.styling-menu-extras-list > li:last-child {
+  border-bottom: none;
+}
+
+.styling-menu-extras > ul.styling-menu-extras-list > li:hover {
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
+  transition: all 0.5s;
+}
+
+.annotation-category-select-colortag {
   height: 100%;
   width: calc(100% - 8px);
   font-size: 12px;
