@@ -9,7 +9,7 @@ import { buildIcon } from "./icon";
  * Call "addOptionToMenuExtras" to add an option to the menu
  * @returns HTML element
  */
-function render(eventsToPreventPropagation = []) {
+function render() {
   // render base UI
   const element = createElement("div", {
     classes: ["styling-menu-extras"],
@@ -27,14 +27,13 @@ function render(eventsToPreventPropagation = []) {
 
   function handleEvents() {
     let firstRender = true;
-    eventsToPreventPropagation.forEach((eventName) => {
-      element.addEventListener(eventName, preventActions);
-    });
 
     icon.addEventListener("click", (e) => {
       list.classList.toggle("hidden");
       if (firstRender) {
         firstRender = false;
+        list.style.left = "0px";
+        list.style.top = "0px";
         const menuBoundingData = element.getBoundingClientRect();
         const listBoundingData = list.getBoundingClientRect();
         const newPosition = {
@@ -49,15 +48,24 @@ function render(eventsToPreventPropagation = []) {
 
     list.addEventListener("click", () => {
       icon.click();
-    })
-
-    function preventActions(e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
+    });
   }
 
   return element;
+}
+
+/**
+ *
+ * @param {*} element Menu element
+ * @param {*} options key: {text, idx} -> idx will be filled
+ */
+function renderMultipleOptions(element, options) {
+  for (const key in options) {
+    if (Object.hasOwnProperty.call(options, key)) {
+      const option = options[key];
+      option.idx = renderOption(element, option.text);
+    }
+  }
 }
 
 /**
@@ -87,4 +95,5 @@ function renderOption(element, text) {
 export {
   render as renderMenuItemExtrasComponent,
   renderOption as addOptionToMenuExtras,
+  renderMultipleOptions as addMultiplesOptionsToMenuExtras,
 };
