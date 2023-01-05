@@ -5,6 +5,7 @@ import {
 } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import { getAnnotationCategoryById } from "../../stores/annotationCategories";
+import { removeAnnotation } from "../../stores/annotations";
 import { getActiveId } from "../../stores/savedViews";
 import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
@@ -89,6 +90,9 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     // Delete annotation group
     document.addEventListener("removedSavedView", (e) => {
       const id = e.detail.removedId;
+      annotations.forEach(annotation => {
+        removeAnnotation(annotation);
+      });
       if (savedView.id == id) element.remove();
     });
 
