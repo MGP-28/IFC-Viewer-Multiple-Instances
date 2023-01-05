@@ -13,11 +13,10 @@ import * as Materials from "../../configs/materials";
 import * as SceneStore from "../../stores/scene";
 import * as THREE from "three";
 import { clippingConfigs } from "../../configs/clippingPlanes";
-import { render2DText } from "../../helpers/2DObject";
-import { found } from "../../stores/raycast";
 import { renderContextMenu } from "../contextMenu/contextMenu";
 import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
 import { renderAnnotationForm } from "../annotation/form";
+import { setCameraLookingPoint } from "../../helpers/camera";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -326,6 +325,17 @@ window.addEventListener("contextmenu", async (e) => {
       const position = object.object.point;
       const form = renderAnnotationForm(position);
       document.body.appendChild(form);
+
+      closeMenu();
+    });
+    seperatorElement(menuList);
+
+    const cameraPointEl = renderContextMenuItem("Focus camera here");
+    menuList.appendChild(cameraPointEl);
+    cameraPointEl.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      const position = object.object.point;
+      setCameraLookingPoint(position);
 
       closeMenu();
     });
