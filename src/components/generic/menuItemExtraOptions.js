@@ -3,8 +3,12 @@ import { emitCustomEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import { buildIcon } from "./icon";
 
-let list = undefined;
-
+/**
+ * Dimensions: 30 x 25 px
+ *
+ * Call "addOptionToMenuExtras" to add an option to the menu
+ * @returns HTML element
+ */
 function render() {
   // render base UI
   const element = createElement("div", {
@@ -12,37 +16,66 @@ function render() {
   });
 
   const icon = buildIcon(icons.dots);
+  icon.title = "More options";
   element.appendChild(icon);
 
-  list = createElement("ul");
+  const list = createElement("ul");
+  list.classList.add("hidden", "styling-menu-extras-list");
+  element.appendChild(list);
 
-  // function to render option
+  handleEvents();
 
+  function handleEvents() {
+    let firstRender = true;
+    icon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      list.classList.toggle("hidden");
+      if(firstRender) {
+        firstRender = false;
+        const menuBoundingData = element.getBoundingClientRect();
+        const listBoundingData = list.getBoundingClientRect();
+        const newPosition = {
+          x: menuBoundingData.right - listBoundingData.left,
+          y: menuBoundingData.bottom - listBoundingData.top,
+        };
+        list.style.left = newPosition.x + "px";
+        list.style.top = newPosition.y + "px";
+      }
+      element.classList.toggle("active");
+    });
+  }
 
-  // event handling on option click
+  return element;
 }
 
 /**
- * 
+ * On selection, a event "optionSelected" is dispatched on the element, where the detail has a idx corresponding to which item was selected
+ * @param {*} element Menu element
  * @param {*} text String to show user
  * @returns List item index (idx)
  */
-function renderOption(text){
-    // Capitalize first letter
-    const textContent = text.charAt(0).toUpperCase() + text.slice(1);
-    // Create list item
-    const li = createElement("li", {
-        textContent
-    });
-    // Handle events
-    const element = list.parentNode;
-    const idx = element.children.length;
-    li.addEventListener("click", () => {
-        emitCustomEventOnElement(element, "optionSelected", {idx})
-    })
-    list.appendChild(li);
-    // Reference for parent
-    return idx;
+function renderOption(element, text) {
+  // Capitalize first letter
+  const textContent = text.charAt(0).toUpperCase() + text.slice(1);
+  // Create list item
+  const li = createElement("li", {
+    textContent,
+  });
+  // Handle events
+  const idx = element.children.length;
+  li.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    emitCustomEventOnElement(element, "optionSelected", { idx });
+  });
+  const list = element.getElementsByTagName("ul")[0];
+  list.appendChild(li);
+  // Reference for parent
+  return idx;
 }
 
-export { render as renderMenuItemExtrasComponent, renderOption as addOptionToMenuExtras };
+export {
+  render as renderMenuItemExtrasComponent,
+  renderOption as addOptionToMenuExtras,
+};
