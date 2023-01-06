@@ -4,6 +4,10 @@ import Selected from "../models/Selected";
 // Currently visible object's properties
 let visibilityByIds = {};
 
+function getVisibilityByIds(){
+  return visibilityByIds
+}
+
 const isVisible = (modelIdx, expressID) => {
   return visibilityByIds[modelIdx][expressID];
 };
@@ -96,4 +100,5 @@ export {
   setHighlightedProperties,
   resetHighlightedProperties,
   isSelectionFromViewer,
+  getVisibilityByIds,
 };
