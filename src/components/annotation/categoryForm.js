@@ -68,6 +68,9 @@ function render() {
       const name = nameInput.value;
       const color = colorPicker.hex.slice(1);
       const reference = referenceInput.value.toUpperCase();
+      const colorPickerComponent = formEl.querySelector(
+        ".styling-form-color-picker-wrapper"
+      );
       const obj = { name, color, reference };
 
       const result = annotationCategoryValidator(obj);
@@ -79,6 +82,7 @@ function render() {
         const references = [
           { name: "Name", element: nameInput },
           { name: "Reference", element: referenceInput },
+          { name: "Color", element: colorPickerComponent },
         ];
         errors(references, result);
       }
@@ -130,8 +134,12 @@ function render() {
   }
 
   function saveAnnotationCategory(annotationCategory) {
-    const {name, color, reference} = annotationCategory;
-    const newAnnotationCategory = new AnnotationCategory(name, color, reference);
+    const { name, color, reference } = annotationCategory;
+    const newAnnotationCategory = new AnnotationCategory(
+      name,
+      color,
+      reference
+    );
     addAnnotationCategory(newAnnotationCategory);
   }
 }

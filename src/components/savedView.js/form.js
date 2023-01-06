@@ -85,7 +85,10 @@ function render() {
       }
 
       function errorMessage(message) {
-        const errorEl = document.getElementById("saved-view-form-warning");
+        const errorEl = container.getElementsByClassName(
+          "styling-form-warning"
+        )[0];
+        errorEl.innerHTML = "";
         errorEl.classList.remove("hidden");
         errorEl.textContent = message;
       }
@@ -93,25 +96,25 @@ function render() {
 
     popup.addEventListener("toggle", () => {
       popup.remove();
-    })
+    });
   }
 }
 
 function saveView(note) {
-    const cameraData = getCameraData();
-    if (ClippingPlanesStore.visualPlanes.length == 0) {
-      // build clipping planes
-      clipping(true);
-      // disable their render
-      clipping(false);
-    }
-    const clippingData = {
-      min: ClippingPlanesStore.edgePositions.currentMin.clone(),
-      max: ClippingPlanesStore.edgePositions.currentMax.clone(),
-    };
-    const savedView = new SavedView(cameraData, clippingData);
-    savedView.note = note;
-    addSavedView(savedView);
+  const cameraData = getCameraData();
+  if (ClippingPlanesStore.visualPlanes.length == 0) {
+    // build clipping planes
+    clipping(true);
+    // disable their render
+    clipping(false);
   }
+  const clippingData = {
+    min: ClippingPlanesStore.edgePositions.currentMin.clone(),
+    max: ClippingPlanesStore.edgePositions.currentMax.clone(),
+  };
+  const savedView = new SavedView(cameraData, clippingData);
+  savedView.note = note;
+  addSavedView(savedView);
+}
 
 export { render as renderNewViewForm };

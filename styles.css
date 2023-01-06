@@ -105,6 +105,7 @@ body {
   width: 100%;
   display: grid;
   place-items: center;
+  color: red;
 }
 
 .styling-form > .styling-form-warning > span {
@@ -130,9 +131,9 @@ body {
   transition: all var(--transition-main-timer);
 }
 
-.styling-form-color-picker-wrapper {
+/* .styling-form-color-picker-wrapper {
   height: 180px;
-}
+} */
 
 .styling-form-select {
   display: grid;
