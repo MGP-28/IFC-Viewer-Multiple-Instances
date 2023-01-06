@@ -8,8 +8,8 @@ import { boundingBox, models } from "../stores/models";
  */
 function getCombinedBoundingBox() {
   // cycles each model's min and max vectors and computes the lowest values for minVector and the highest values for maxVector
-  const minVector = new Vector3();
-  const maxVector = new Vector3();
+  const minVector = new THREE.Vector3();
+  const maxVector = new THREE.Vector3();
 
   const meshes = getMeshes();
 
