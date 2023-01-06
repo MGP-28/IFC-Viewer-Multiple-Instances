@@ -4,7 +4,7 @@
  * clipping: min, max
  */
 export default class SavedView {
-  constructor(camera = undefined, clipping = undefined) {
+  constructor(camera = undefined, clipping = undefined, hiddenIds = undefined) {
     this.note = undefined;
     this.id = undefined;
     this.camera = {
@@ -15,5 +15,6 @@ export default class SavedView {
       min: clipping ? clipping.min.clone() : undefined,
       max: clipping ? clipping.max.clone() : undefined,
     };
+    this.hiddenIds = hiddenIds ? JSON.parse(JSON.stringify(hiddenIds)) : undefined;
   }
 }
