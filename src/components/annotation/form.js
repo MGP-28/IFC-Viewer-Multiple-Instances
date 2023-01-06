@@ -152,6 +152,7 @@ function render(position) {
 
   function errorMessage(message) {
     const errorEl = container.getElementsByClassName("styling-form-warning")[0];
+    errorEl.innerHTML = "";
     errorEl.classList.remove("hidden");
     errorEl.textContent = message;
   }
