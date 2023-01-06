@@ -177,7 +177,7 @@ async function castEachModel() {
     const arr = [RaycastStore.subsetRaycast[idx]];
     // account for hidden objects
     const resultsPerModel = RaycastStore.raycaster.intersectObjects(arr);
-    if(resultsPerModel.length == 0) return false;
+    if(resultsPerModel.length == 0) continue;
 
     let result = undefined;
     // if clipping is active, check if intersection occurs inside the clipping box
@@ -193,8 +193,9 @@ async function castEachModel() {
     }
     else result = resultsPerModel[0];
 
+    if(!result) continue;
     const intersectiongObj = new RaycastIntersectObject(result, idx);
-    if (result) results.push(intersectiongObj);
+    results.push(intersectiongObj);
   }
 
   if (results.length > 0) {
