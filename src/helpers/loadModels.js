@@ -6,6 +6,7 @@ import { emitGlobalEvent } from "./emitEvent.js";
 import { setupLoader, setMatrix } from "./builders/loaderBuilder.js";
 import * as THREE from "three";
 import * as RaycastStore from "../stores/raycast.js";
+import { getCombinedBoundingBox } from "./models.js";
 
 export default async function loadModels(event) {
   const _ifcLoaders = [];
@@ -36,6 +37,10 @@ export default async function loadModels(event) {
 
     _ifcLoaders.push(ifcLoader);
   }
+
+  // set bounding box
+  const combinedBoundingBox = getCombinedBoundingBox();
+  Models.setBoundingBox(combinedBoundingBox);
 
   // Async function to check if models are loaded every second. Doesn't interrupt application flow
   await waitLoad();
