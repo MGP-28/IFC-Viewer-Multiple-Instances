@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { boundingBox, models } from "../stores/models";
 
 /**
  * Renders a bounding box for each model and calculates a container box that fits all bounding boxes inside.
@@ -67,6 +68,14 @@ function getMeshes() {
     const modelInstance = models[idx];
     meshes.push(modelInstance.model);
   }
+  return meshes;
 }
 
-export { getCombinedBoundingBox, getMeshes };
+function getModelsMiddlePoint(){
+  const containingBox = boundingBox;
+  const center = new THREE.Vector3();
+  containingBox.getCenter(center);
+  return center;
+}
+
+export { getCombinedBoundingBox, getMeshes, getModelsMiddlePoint };
