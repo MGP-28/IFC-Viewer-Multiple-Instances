@@ -14,6 +14,7 @@ function getSavedViews() {
        savedView.clipping.max = convertJSONToVector(element.clipping.max).clone();
        savedView.id = element.id;
        savedView.note = element.note;
+       savedView.hiddenIds = element.hiddenIds;
        results.push(savedView);
     });
     return results;
