@@ -17,6 +17,7 @@ import { renderContextMenu } from "../contextMenu/contextMenu";
 import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
 import { renderAnnotationForm } from "../annotation/form";
 import { setCameraLookingPoint } from "../../helpers/camera";
+import { getModelsMiddlePoint } from "../../helpers/models";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -100,6 +101,10 @@ export default function startUserInputs() {
         case "KeyC": {
           userInteractions.keyCActive = false;
           resetVisualPlanesColoring();
+          break;
+        }
+        case "KeyR": {
+          centerCamera();
           break;
         }
         default:
@@ -262,6 +267,12 @@ async function dragClippingPlane(event, isUserInteraction) {
   ClippingPlanesStore.crossPlane.points.start.copy(
     ClippingPlanesStore.crossPlane.points.end
   );
+}
+
+function centerCamera(){
+  const center = getModelsMiddlePoint();
+  const controls = SceneStore.controls;
+  controls.target = center;
 }
 
 //
