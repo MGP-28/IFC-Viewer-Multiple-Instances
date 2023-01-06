@@ -22,19 +22,6 @@ function getSavedViews() {
       ).clone();
       savedView.id = element.id;
       savedView.note = element.note;
-
-      // parse values to Int (issue with them being strings and not functioning correctly)
-      for (const modelIdx in element.hiddenIds) {
-        if (Object.hasOwnProperty.call(element.hiddenIds, modelIdx)) {
-          const _hiddenIds = element.hiddenIds[modelIdx];
-          const hiddenIds = _hiddenIds.reduce((pV, cV) => {
-            const num = parseInt(cV);
-            pV.push(num);
-            return pV;
-          }, []);
-          element.hiddenIds[modelIdx] = hiddenIds;
-        }
-      }
       savedView.hiddenIds = element.hiddenIds;
 
       results.push(savedView);
