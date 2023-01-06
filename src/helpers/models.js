@@ -1,4 +1,3 @@
-import { getMeshes } from "../stores/models";
 import * as THREE from "three";
 
 /**
