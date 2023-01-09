@@ -1,4 +1,6 @@
 import { emitEventOnElement } from "../../helpers/emitEvent";
+import NavbarItem from "../../models/navbar/NavbarItemData";
+import { renderNavbar } from "../navbar/navbar";
 import renderAnnotationsFeature from "./annotations";
 import { featureButton } from "./button";
 import renderClippingPlanesFeature from "./clippingPlanes";
@@ -6,6 +8,32 @@ import renderHelperFeature from "./help";
 import renderSavedViewsFeature from "./savedViews";
 
 export default function startFeatureButtons() {
+
+  const items = [
+    new NavbarItem("Spatial Tree", build),
+    new NavbarItem("Visibility", build),
+    new NavbarItem("Measure", build),
+    new NavbarItem("Clipping Plane", build),
+    new NavbarItem("Explode", build),
+  ]
+  const subitems = [
+    new NavbarItem("Subitem", build),
+    new NavbarItem("Another subitem", build),
+    new NavbarItem("Yet another subitem", build),
+  ]
+
+  items[1].subitems.push(subitems[0])
+  items[1].subitems.push(subitems[1])
+  items[1].subitems.push(subitems[2])
+
+  renderNavbar(items);
+
+  return;
+
+  function build(){
+    return document.createElement("span")
+  }
+
   const wrapper = document.createElement("div");
 
   // Add features
