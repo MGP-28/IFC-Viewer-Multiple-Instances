@@ -1,9 +1,26 @@
-import { createElement } from "../../helpers/generic/domElements"
+import { createElement } from "../../helpers/generic/domElements";
+import { renderNavbarItem } from "./navbarItem";
 
-function render(){
-    const navbar = createElement("ul", {
-        classes: "feature-navbar"
-    })
+/**
+ *
+ * @param {*} items item list -> item = {text, callFunction, subitems}. Each id has to be different
+ */
+function render(items) {
+  const navbar = createElement("ul", {
+    classes: ["feature-navbar"],
+  });
+
+  for (let idx = 0; idx < items.length; idx++) {
+    const item = items[idx];
+    renderNavbarItem(item);
+  }
+
+  document.body.appendChild(navbar);
+  loadCSS("./src/assets/css/navbar.css");
 }
 
-export { render as renderNavbar }
+// function handleItemEvents(item) {
+//   //
+// }
+
+export { render as renderNavbar };
