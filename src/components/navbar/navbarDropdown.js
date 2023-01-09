@@ -1,7 +1,4 @@
-import {
-  emitCustomEventOnElement,
-  emitEventOnElement,
-} from "../../helpers/emitEvent";
+import { emitCustomEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
 import NavbarItem from "../../models/navbar/NavbarItemData";
