@@ -1,4 +1,8 @@
 export default class NavbarItem{
+    #buildFunction
+    #loadFunction
+    #unloadFunction
+    
     constructor(title, buildFunction, loadFunction = undefined, unloadFunction = undefined){
         this.title = title;
         this.#buildFunction = buildFunction;
