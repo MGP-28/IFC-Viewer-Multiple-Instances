@@ -1,3 +1,4 @@
+import { loadCSS } from "../../helpers/generic/cssLoader";
 import { createElement } from "../../helpers/generic/domElements";
 import { renderNavbarItem } from "./navbarItem";
 
@@ -12,7 +13,8 @@ function render(items) {
 
   for (let idx = 0; idx < items.length; idx++) {
     const item = items[idx];
-    renderNavbarItem(item);
+    const itemEl = renderNavbarItem(item);
+    navbar.appendChild(itemEl);
   }
 
   document.body.appendChild(navbar);
