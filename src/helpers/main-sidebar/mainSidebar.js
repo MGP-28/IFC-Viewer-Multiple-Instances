@@ -4,10 +4,7 @@ let sidebarEl = undefined;
 let featuresWrapper = undefined;
 let tabsWrapper = undefined;
 
-let loaded = {
-    main: undefined,
-    split: undefined
-};
+let loaded = [];
 
 /**
  * Initialize references for sidebar logic
@@ -24,7 +21,8 @@ function getReferences() {
  */
 function loadFeatureIntoSidebar(navItem) {
   if (sidebarEl === undefined) getReferences();
-  if (loaded.main) unloadFeatureFromSidebar();
+  if (loaded.length > 0) unloadFeatureFromSidebar(0);
+  addElement(navItem);
 }
 
 /**
@@ -32,15 +30,31 @@ function loadFeatureIntoSidebar(navItem) {
  * @param {NavbarItem} navItem
  */
 function loadFeatureIntoSidebarAsSplit(navItem) {
-  //
+  if (sidebarEl === undefined) getReferences();
+  if (loaded.length > 1) unloadFeatureFromSidebar(1);
+  addElement(navItem);
 }
 
 /**
  *  Unloads all features showing on sidebar
  */
-function unloadFeatureFromSidebar() {
-    if(loaded.main !== undefined) featuresWrapper.removeChild(loaded.main.component);
-    if(loaded.split !== undefined) featuresWrapper.removeChild(loaded.split.component);
+function unloadFeatureFromSidebar(index = undefined) {
+  if (index) removeElement(index);
+  else {
+    for (let idx = 0; idx < loaded.length; idx++) {
+      removeElement(index);
+    }
+  }
+}
+
+function addElement(navItem) {
+  loaded.push(navItem.component);
+  featuresWrapper.appendChild(navItem.component);
+}
+
+function removeElement(index) {
+  featuresWrapper.removeChild(loaded[idx]);
+  loaded.splice(index, 1);
 }
 
 export {
