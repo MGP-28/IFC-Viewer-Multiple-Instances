@@ -1,0 +1,38 @@
+#main-sidebar{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 382px;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: repeat(2, 1fr);
+    background-color: white;
+}
+
+.main-sidebar-feature{
+
+}
+
+.main-sidebar-feature > span{
+
+}
+
+.main-sidebar-feature > img{
+
+}
+
+.main-sidebar-feature.solo{
+    grid-row: span 2;
+}
+
+.main-sidebar-feature-tabs-wrapper{
+
+}
+
+.main-sidebar-feature-tab{
+
+}
+
+.main-sidebar-feature-tab:hover{
+
+}
