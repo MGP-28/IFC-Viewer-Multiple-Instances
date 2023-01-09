@@ -1,7 +1,8 @@
-import { emitEventOnElement } from "../../helpers/emitEvent";
+import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
 import NavbarItem from "../../models/navbar/NavbarItemData";
+import { buildIcon } from "../generic/icon";
 import { renderNavbarItemDropdown } from "./navbarDropdown";
 
 /**
@@ -11,12 +12,12 @@ import { renderNavbarItemDropdown } from "./navbarDropdown";
  */
 function render(item) {
   const navbarItem = createElement("li", {
-    classes: "feature-navbar-item",
+    classes: ["feature-navbar-item"],
   });
 
   const title = createElement("span", {
-    textContent: item.title
-  })
+    textContent: item.title,
+  });
   navbarItem.appendChild(title);
 
   let isShowing = false;
@@ -25,6 +26,9 @@ function render(item) {
 
   if (!hasSubitems()) return navbarItem;
   // If doesn't have subitems, exists
+
+  const arrow = buildIcon(icons.chevronRight);
+  navbarItem.appendChild(arrow);
 
   const sublist = createElement("ul", {
     classes: ["feature-navbar-item-dropdown", "hidden"],
@@ -35,6 +39,7 @@ function render(item) {
     const subitmeEl = renderNavbarItemDropdown(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
   }
+  navbarItem.appendChild(sublist);
 
   handleSubitemEvents();
 
@@ -43,13 +48,20 @@ function render(item) {
   //// Aux functions in scope
 
   function handleItemEvents() {
-    navbarItem.addEventListener("click", (e) => {
-      isShowing = !isShowing;
+    navbarItem.addEventListener("mouseover", () => {
+      const width = navbarItem.getBoundingClientRect().width;
+      navbarItem.style.width = width + "px";
+      if (hasSubitems()) sublist.classList.toggle("hidden");
+    });
 
-      if (hasSubitems()) {
-        sublist.classList.toggle("hidden");
-        return;
-      }
+    navbarItem.addEventListener("mouseout", () => {
+      if (hasSubitems()) sublist.classList.toggle("hidden");
+    });
+
+    navbarItem.addEventListener("click", (e) => {
+      if (hasSubitems()) return;
+
+      isShowing = !isShowing;
 
       // only runs if there are no subitems
       featureRenderingHandler(item, isShowing, isRendered);
