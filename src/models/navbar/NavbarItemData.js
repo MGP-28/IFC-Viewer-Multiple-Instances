@@ -1,4 +1,5 @@
 import { renderSidebarFeature } from "../../components/sidebar/sidebarFeature";
+import { emitEventOnElement } from "../../helpers/emitEvent";
 import { loadFeatureIntoSidebar, unloadFeatureFromSidebar } from "../../helpers/main-sidebar/mainSidebar";
 
 export default class NavbarItem {
@@ -9,35 +10,52 @@ export default class NavbarItem {
   /**
    *
    * @param {string} title Text to show in UI
+   * @param {boolean} isRenderedInSidebar Will the feature have an UI component
    * @param {function} buildFunction handles feature creation
    * @param {function?} loadFunction optional - runs when feature loads to UI
    * @param {function?} unloadFunction optional - runs when feature unloads from UI
    */
-  constructor(title, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
+  constructor(title, isRenderedInSidebar, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
     this.title = title;
+    this.isRenderedInSidebar = isRenderedInSidebar;
     this.#buildFunction = buildFunction;
     this.#loadFunction = loadFunction;
     this.#unloadFunction = unloadFunction;
     this.subitems = [];
+    this.navbarItem = undefined;
     this.component = undefined;
   }
 
   build() {
+    if (this.isRenderedInSidebar) {
+      const element = renderSidebarFeature(this);
+      this.component = element;
+    }
     // build main component
-    const element = renderSidebarFeature(this);
-    this.component = element;
     // build specifics
-    this.#buildFunction(this.component);
+    this.#buildFunction(this);
   }
 
   load() {
-    if (this.#loadFunction !== undefined) this.#loadFunction(this.component);
+    if (this.#loadFunction !== undefined) this.#loadFunction(this);
+
+    emitEventOnElement(this.navbarItem, "loaded");
+
+    // checks if feature is to be rendered in sidebar
+    if (!this.isRenderedInSidebar) return;
+
     // add to sidebar
     loadFeatureIntoSidebar(this);
   }
 
   unload() {
-    if (this.#unloadFunction !== undefined) this.#unloadFunction(this.component);
+    if (this.#unloadFunction !== undefined) this.#unloadFunction(this);
+
+    emitEventOnElement(this.navbarItem, "unloaded");
+    
+    // checks if feature is to be rendered in sidebar
+    if (!this.isRenderedInSidebar) return;
+
     // remove from sidebar
     unloadFeatureFromSidebar(this);
   }

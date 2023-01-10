@@ -8,16 +8,15 @@ import renderHelperFeature from "./help";
 import renderSavedViewsFeature from "./savedViews";
 
 export default function startFeatureButtons() {
-
   //// For testing
   //
 
   const items = [
-    new NavbarItem("Spatial Tree", build),
-    new NavbarItem("Visibility", build),
-    new NavbarItem("Measure", build),
-    new NavbarItem("Clipping Plane", build),
-    new NavbarItem("Explode", build),
+    new NavbarItem("Spatial Tree", true, build),
+    new NavbarItem("Visibility", true, build),
+    new NavbarItem("Measure", true, build, load, unload),
+    new NavbarItem("Clipping Plane", true, build),
+    new NavbarItem("Explode", false, build, load, unload),
   ];
   const subitems = [
     new NavbarItem("Subitem", build),
@@ -40,6 +39,14 @@ export default function startFeatureButtons() {
     const el = document.createElement("span");
     el.textContent = navItem.title;
     return el;
+  }
+
+  function load(navItem) {
+    console.log('load', navItem.title);
+  }
+
+  function unload(navItem) {
+    console.log('unload', navItem.title);
   }
 
   const wrapper = document.createElement("div");
