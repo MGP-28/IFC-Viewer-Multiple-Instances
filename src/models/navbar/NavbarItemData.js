@@ -1,4 +1,4 @@
-import { renderSidebarFeature } from "../../components/sidebar/sidebarFeature";
+import { addContentToSidebarFeature, renderSidebarFeature } from "../../components/sidebar/sidebarFeature";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { loadFeatureIntoSidebar, unloadFeatureFromSidebar } from "../../helpers/main-sidebar/mainSidebar";
 
@@ -11,7 +11,7 @@ export default class NavbarItem {
    *
    * @param {string} title Text to show in UI
    * @param {boolean} isRenderedInSidebar Will the feature have an UI component
-   * @param {function} buildFunction handles feature creation
+   * @param {function} buildFunction handles feature creation. Should return html element, if isRenderedInSidebar is true
    * @param {function?} loadFunction optional - runs when feature loads to UI
    * @param {function?} unloadFunction optional - runs when feature unloads from UI
    * @param {boolean?} isExculsive default false - defines if a navbar subitem is exclusively selected
@@ -44,7 +44,9 @@ export default class NavbarItem {
       this.component = element;
     }
     // build specifics
-    this.#buildFunction(this);
+    const content = this.#buildFunction(this);
+
+    if (this.isRenderedInSidebar) addContentToSidebarFeature(this.component, content)
 
     this.isRendered = true;
   }
