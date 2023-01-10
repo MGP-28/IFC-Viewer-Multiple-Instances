@@ -4,6 +4,7 @@ import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandle
 import NavbarItem from "../../models/navbar/NavbarItemData";
 import { buildIcon } from "../generic/icon";
 import { renderNavbarItemDropdown } from "./navbarDropdown";
+import { renderSidebarTab } from "../sidebar/tab";
 
 /**
  *
@@ -39,6 +40,9 @@ function render(item) {
     const subitem = item.subitems[idx];
     const subitmeEl = renderNavbarItemDropdown(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
+    if (subitem.hasSidebarTab) {
+      subitem.tabElement = renderSidebarTab(subitem);
+    }
   }
   navbarItem.appendChild(sublist);
 
@@ -113,9 +117,17 @@ function render(item) {
     });
 
     navbarItem.addEventListener("subitemDeselected", (e) => {
+      checkStatus();
+    });
+
+    navbarItem.addEventListener("subitemDeselectedOutter", (e) => {
+      checkStatus();
+    });
+
+    function checkStatus() {
       const activeSubitems = navbarItem.getElementsByClassName("active");
       if (activeSubitems.length == 0) navbarItem.classList.toggle("active", false);
-    });
+    }
   }
 
   function hasSubitems() {

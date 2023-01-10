@@ -1,4 +1,4 @@
-import { emitCustomEventOnElement } from "../../helpers/emitEvent";
+import { emitCustomEventOnElement, emitEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
 import NavbarItem from "../../models/navbar/NavbarItemData";
@@ -57,13 +57,12 @@ function render(subitem, parent, idx) {
     navbarItemDropdown.addEventListener("loaded", (e) => {
       subitem.isActive = true;
       navbarItemDropdown.classList.toggle("active", true);
-      parent.classList.toggle("active", true);
     });
 
     navbarItemDropdown.addEventListener("unloaded", (e) => {
       subitem.isActive = false;
       navbarItemDropdown.classList.toggle("active", false);
-      parent.classList.toggle("active", false);
+      emitEventOnElement(parent, "subitemDeselectedOutter");
     });
   }
 }
