@@ -1,3 +1,4 @@
+import { emitGlobalEvent } from "../emitEvent";
 
 let sidebarEl = undefined;
 let featuresWrapper = undefined;
@@ -54,11 +55,13 @@ function unloadFeatureFromSidebar(navItem) {
 function addElement(navItem) {
   loaded.push(navItem);
   featuresWrapper.appendChild(navItem.component);
+  emitGlobalEvent("featureLoaded");
 }
 
 function removeElement(index) {
   featuresWrapper.removeChild(featuresWrapper.children[index]);
   loaded.splice(index, 1);
+  emitGlobalEvent("featureUnloaded");
 }
 
 export {
