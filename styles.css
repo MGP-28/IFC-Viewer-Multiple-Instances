@@ -49,7 +49,7 @@ body {
   top: 0;
   left: 0;
   outline: none;
-  background-image: linear-gradient(0deg, white 0%, var(--primary-color-light) 100%);
+  background-image: linear-gradient(0deg, rgb(250, 250, 250) 0%, var(--primary-color-light) 100%);
 }
 
 #file-input {
