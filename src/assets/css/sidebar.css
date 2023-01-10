@@ -2,7 +2,7 @@
     position: fixed;
     left: 0;
     top: 0;
-    width: 382px;
+    width: 350px;
     height: 100vh;
     display: grid;
     grid-template-rows: repeat(2, 1fr);
