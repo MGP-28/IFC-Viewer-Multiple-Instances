@@ -1,5 +1,6 @@
 import { emitCustomEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
+import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
 /**
  *
  * @param {NavbarItem} item

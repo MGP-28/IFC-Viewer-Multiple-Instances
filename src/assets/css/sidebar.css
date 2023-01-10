@@ -60,6 +60,7 @@
 }
 
 .main-sidebar-feature-tab {
+  user-select: none;
   cursor: pointer;
   color: gray;
   width: 100%;
