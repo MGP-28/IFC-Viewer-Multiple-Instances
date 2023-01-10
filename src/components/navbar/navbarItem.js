@@ -24,7 +24,10 @@ function render(item) {
   let isRendered = false;
   handleItemEvents(navbarItem);
 
-  if (!hasSubitems()) return navbarItem;
+  if (!hasSubitems()) {
+    item.navbarItem = navbarItem;
+    return navbarItem;
+  }
   // If doesn't have subitems, exists
 
   const arrow = buildIcon(icons.chevronRight);
@@ -65,8 +68,17 @@ function render(item) {
 
       // only runs if there are no subitems
       featureRenderingHandler(item, isShowing, isRendered);
-      navbarItem.classList.toggle("active");
+      
+      // navbarItem.classList.toggle("active"); -> is now handled by events
     });
+
+    navbarItem.addEventListener("loaded", (e) => {
+      navbarItem.classList.toggle("active", true);
+    })
+
+    navbarItem.addEventListener("unloaded", (e) => {
+      navbarItem.classList.toggle("active", false);
+    })
   }
 
   function handleSubitemEvents() {
