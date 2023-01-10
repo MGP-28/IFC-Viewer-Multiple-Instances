@@ -1,5 +1,6 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
+import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
 import { buildIcon } from "../generic/icon";
 
 /**
@@ -20,7 +21,16 @@ function render(item) {
   const closeIcon = buildIcon(icons.closeDark);
   mainSidebarFeature.insertBefore(closeIcon, contentEl);
 
+  handleEvents();
+
   return mainSidebarFeature;
+
+  function handleEvents(){
+    closeIcon.addEventListener("click", (e) => {
+      item.isActive = false;
+      featureRenderingHandler(item);
+    })
+  }
 }
 
 function addContent(mainSidebarFeature, content) {

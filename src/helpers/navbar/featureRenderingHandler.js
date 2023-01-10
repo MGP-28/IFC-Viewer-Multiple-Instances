@@ -1,5 +1,3 @@
-import NavbarItem from "../../models/navbar/NavbarItemData";
-
 /**
  *
  * @param {NavbarItem} item

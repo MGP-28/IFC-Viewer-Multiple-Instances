@@ -41,6 +41,7 @@
 }
 
 .main-sidebar-feature > img {
+    cursor: pointer;
 }
 
 .main-sidebar-feature > .main-sidebar-feature-content {
