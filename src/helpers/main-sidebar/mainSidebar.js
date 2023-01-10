@@ -1,4 +1,3 @@
-import NavbarItem from "../../models/navbar/NavbarItemData";
 
 let sidebarEl = undefined;
 let featuresWrapper = undefined;
@@ -21,27 +20,32 @@ function getReferences() {
  */
 function loadFeatureIntoSidebar(navItem) {
   if (sidebarEl === undefined) getReferences();
-  if (loaded.length > 0) unloadFeatureFromSidebar(0);
-  addElement(navItem);
-}
-
-/**
- *
- * @param {NavbarItem} navItem
- */
-function loadFeatureIntoSidebarAsSplit(navItem) {
-  if (sidebarEl === undefined) getReferences();
   if (loaded.length > 1) unloadFeatureFromSidebar(1);
   addElement(navItem);
 }
 
+// /**
+//  *
+//  * @param {NavbarItem} navItem
+//  */
+// function loadFeatureIntoSidebarAsSplit(navItem) {
+//   if (sidebarEl === undefined) getReferences();
+//   if (loaded.length > 1) unloadFeatureFromSidebar(1);
+//   addElement(navItem);
+// }
+
 /**
- *  Unloads all features showing on sidebar
+ * Unloads features from sidebar. If a component is specified, only removes the specific component
+ * @param {HTMLElement?} navItem Optional - HTML component to remove
  */
-function unloadFeatureFromSidebar(index = undefined) {
-  if (index) removeElement(index);
+function unloadFeatureFromSidebar(navItem) {
+  if (navItem.component) {
+    const index = loaded.findIndex(x => x.textContent == navItem.component.textContent);
+    if(index == -1) return;
+    removeElement(index);
+  }
   else {
-    for (let idx = 0; idx < loaded.length; idx++) {
+    for (let index = 0; index < loaded.length; index++) {
       removeElement(index);
     }
   }
@@ -53,12 +57,12 @@ function addElement(navItem) {
 }
 
 function removeElement(index) {
-  featuresWrapper.removeChild(loaded[idx]);
+  featuresWrapper.removeChild(loaded[index]);
   loaded.splice(index, 1);
 }
 
 export {
   loadFeatureIntoSidebar,
-  loadFeatureIntoSidebarAsSplit,
+  //loadFeatureIntoSidebarAsSplit,
   unloadFeatureFromSidebar,
 };
