@@ -17,7 +17,7 @@ function render(item) {
   `;
   const contentEl = mainSidebarFeature.getElementsByTagName("div")[0];
 
-  const closeIcon = buildIcon(icons.close);
+  const closeIcon = buildIcon(icons.closeDark);
   mainSidebarFeature.insertBefore(closeIcon, contentEl);
 
   return mainSidebarFeature;

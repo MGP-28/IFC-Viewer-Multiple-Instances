@@ -6,6 +6,7 @@ const icons = {
     annotations: "annotation-dots",
     helper: "help-circle",
     close: "x",
+    closeDark: "x-black",
     chevronRight: "chevron-right",
     visibility: "eye",
     visibilityOff: "eye-off",
