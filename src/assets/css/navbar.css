@@ -4,6 +4,7 @@
 }
 
 .feature-navbar {
+  user-select: none;
   font-weight: 400;
   position: fixed;
   z-index: 99;
