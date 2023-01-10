@@ -24,12 +24,15 @@ export default function startFeatureButtons() {
     new NavbarItem("Loose item", true, build),
   ];
   subitems[0].isExclusive = true;
+  subitems[0].hasSidebarTab = true;
   subitems[1].isExclusive = true;
   subitems[2].isExclusive = false;
 
+  items[0].hasSidebarTab = true;
   items[1].subitems.push(subitems[0]);
   items[1].subitems.push(subitems[1]);
   items[1].subitems.push(subitems[2]);
+  items[3].hasSidebarTab = true;
 
   //
   ////

@@ -1,4 +1,5 @@
 import { addContentToSidebarFeature, renderSidebarFeature } from "../../components/sidebar/sidebarFeature";
+import { renderSidebarTab } from "../../components/sidebar/tab";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { loadFeatureIntoSidebar, unloadFeatureFromSidebar } from "../../helpers/main-sidebar/mainSidebar";
 
@@ -14,16 +15,8 @@ export default class NavbarItem {
    * @param {function} buildFunction handles feature creation. Should return html element, if isRenderedInSidebar is true
    * @param {function?} loadFunction optional - runs when feature loads to UI
    * @param {function?} unloadFunction optional - runs when feature unloads from UI
-   * @param {boolean?} isExculsive default false - defines if a navbar subitem is exclusively selected
    */
-  constructor(
-    title,
-    isRenderedInSidebar,
-    buildFunction,
-    loadFunction = undefined,
-    unloadFunction = undefined,
-    isExculsive = false
-  ) {
+  constructor(title, isRenderedInSidebar, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
     this.title = title;
     this.isRenderedInSidebar = isRenderedInSidebar;
     this.#buildFunction = buildFunction;
@@ -31,10 +24,12 @@ export default class NavbarItem {
     this.#unloadFunction = unloadFunction;
     this.subitems = [];
     this.navbarItem = undefined;
+    this.tabElement = undefined;
     this.component = undefined;
-    this.isExclusive = isExculsive;
+    this.isExclusive = false;
     this.isRendered = false;
     this.isActive = false;
+    this.hasSidebarTab = false;
   }
 
   build() {
@@ -46,7 +41,7 @@ export default class NavbarItem {
     // build specifics
     const content = this.#buildFunction(this);
 
-    if (this.isRenderedInSidebar) addContentToSidebarFeature(this.component, content)
+    if (this.isRenderedInSidebar) addContentToSidebarFeature(this.component, content);
 
     this.isRendered = true;
   }
@@ -57,6 +52,7 @@ export default class NavbarItem {
     if (this.#loadFunction !== undefined) this.#loadFunction(this);
 
     emitEventOnElement(this.navbarItem, "loaded");
+    if(this.hasSidebarTab) emitEventOnElement(this.tabElement, "loaded");
 
     // checks if feature is to be rendered in sidebar
     if (!this.isRenderedInSidebar) return;
@@ -71,11 +67,16 @@ export default class NavbarItem {
     if (this.#unloadFunction !== undefined) this.#unloadFunction(this);
 
     emitEventOnElement(this.navbarItem, "unloaded");
+    if(this.hasSidebarTab) emitEventOnElement(this.tabElement, "unloaded");
 
     // checks if feature is to be rendered in sidebar
     if (!this.isRenderedInSidebar) return;
 
     // remove from sidebar
     unloadFeatureFromSidebar(this);
+  }
+
+  renderSidebarTab(){
+
   }
 }
