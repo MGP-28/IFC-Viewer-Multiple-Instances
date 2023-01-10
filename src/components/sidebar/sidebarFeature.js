@@ -1,6 +1,5 @@
 import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
-import NavbarItem from "../../models/navbar/NavbarItemData";
 import { buildIcon } from "../generic/icon";
 
 /**
@@ -20,6 +19,8 @@ function render(item) {
 
   const closeIcon = buildIcon(icons.close);
   mainSidebarFeature.insertBefore(closeIcon, contentEl);
+
+  return mainSidebarFeature;
 }
 
 export { render as renderSidebarFeature };
