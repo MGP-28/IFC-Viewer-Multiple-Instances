@@ -10,8 +10,8 @@ function render() {
   });
 
   mainSidebar.innerHTML = `
-    <div class="main-sidebar-features"><div>
-    <div class="main-sidebar-feature-tabs-wrapper"><div>
+    <div class="main-sidebar-features"></div>
+    <div class="main-sidebar-feature-tabs-wrapper"></div>
   `
 
   document.body.appendChild(mainSidebar);
