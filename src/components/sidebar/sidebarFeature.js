@@ -23,4 +23,9 @@ function render(item) {
   return mainSidebarFeature;
 }
 
-export { render as renderSidebarFeature };
+function addContent(mainSidebarFeature, content) {
+  const contentEl = mainSidebarFeature.getElementsByTagName("div")[0];
+  contentEl.appendChild(content);
+}
+
+export { render as renderSidebarFeature, addContent as addContentToSidebarFeature };
