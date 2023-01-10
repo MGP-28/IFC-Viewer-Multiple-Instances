@@ -6,6 +6,10 @@ import NavbarItem from "../../models/navbar/NavbarItemData";
 /**
  *
  * @param {NavbarItem} subitem
+ * @param {HTMLElement} parent
+ * @param {number} idx
+ * @param {boolean} isExclusive If true, disables all other items in the list also marked as exclusive
+ * @returns
  */
 function render(subitem, parent, idx) {
   const navbarItemDropdown = createElement("li", {
@@ -13,28 +17,53 @@ function render(subitem, parent, idx) {
     textContent: subitem.title,
   });
 
-  let isShowing = false;
-  let isRendered = false;
   handleSubitemEvents();
 
+  subitem.navbarItem = navbarItemDropdown;
   return navbarItemDropdown;
 
   //// Aux functions in scope
 
   function handleSubitemEvents() {
     navbarItemDropdown.addEventListener("click", (e) => {
-      const eventName = isShowing ? "subitem-selected" : "subitem-deselected";
-      emitCustomEventOnElement(parent, eventName, { idx });
+      subitem.isActive = !subitem.isActive;
+      const eventName = subitem.isActive ? "subitemSelected" : "subitemDeselected";
+      emitCustomEventOnElement(parent, eventName, {
+        idx,
+        hasExclusivity: subitem.isExclusive,
+      });
     });
 
-    parent.addEventListener("subitem-selected", (e) => {
+    parent.addEventListener("subitemSelected", (e) => {
+      // const eventIdx = e.detail.idx;
+      // const hasExclusivity = e.detail.hasExclusivity;
+      // if (eventIdx != idx) {
+      //   if (!hasExclusivity) return;
+      //   if (!subitem.isExclusive) return;
+      //   if (!subitem.isRendered) return;
+      //   if (!subitem.isActive) return;
+      //   subitem.isActive = false;
+      // } else subitem.isActive = true;
+      // featureRenderingHandler(subitem);
+    });
+
+    parent.addEventListener("subitemDeselected", (e) => {
       const eventIdx = e.detail.idx;
-      if (eventIdx !== idx) {
-        if (!isRendered || !isShowing) return;
-        isShowing = false;
-      } else isShowing = true;
-      featureRenderingHandler(subitem, isShowing, isRendered);
-      navbarItemDropdown.classList.toggle("active", isShowing);
+      if (eventIdx !== idx) return;
+      subitem.isActive = false;
+      featureRenderingHandler(subitem);
+    });
+
+    navbarItemDropdown.addEventListener("loaded", (e) => {
+      subitem.isActive = true;
+      navbarItemDropdown.classList.toggle("active", true);
+      parent.classList.toggle("active", true);
+    });
+
+    navbarItemDropdown.addEventListener("unloaded", (e) => {
+      subitem.isActive = false;
+      navbarItemDropdown.classList.toggle("active", false);
+      parent.classList.toggle("active", false);
     });
   }
 }

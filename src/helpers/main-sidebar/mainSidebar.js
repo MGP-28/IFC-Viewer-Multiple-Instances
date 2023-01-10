@@ -20,7 +20,7 @@ function getReferences() {
  */
 function loadFeatureIntoSidebar(navItem) {
   if (sidebarEl === undefined) getReferences();
-  if (loaded.length > 1) unloadFeatureFromSidebar(1);
+  if (loaded.length > 1) loaded[1].unload();
   addElement(navItem);
 }
 
@@ -40,7 +40,7 @@ function loadFeatureIntoSidebar(navItem) {
  */
 function unloadFeatureFromSidebar(navItem) {
   if (navItem.component) {
-    const index = loaded.findIndex(x => x.textContent == navItem.component.textContent);
+    const index = loaded.findIndex(x => x.title == navItem.title);
     if(index == -1) return;
     removeElement(index);
   }
@@ -52,12 +52,12 @@ function unloadFeatureFromSidebar(navItem) {
 }
 
 function addElement(navItem) {
-  loaded.push(navItem.component);
+  loaded.push(navItem);
   featuresWrapper.appendChild(navItem.component);
 }
 
 function removeElement(index) {
-  featuresWrapper.removeChild(loaded[index]);
+  featuresWrapper.removeChild(featuresWrapper.children[index]);
   loaded.splice(index, 1);
 }
 

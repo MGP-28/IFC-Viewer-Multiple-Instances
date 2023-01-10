@@ -19,10 +19,13 @@ export default function startFeatureButtons() {
     new NavbarItem("Explode", false, build, load, unload),
   ];
   const subitems = [
-    new NavbarItem("Subitem", build),
-    new NavbarItem("Another subitem", build),
-    new NavbarItem("Yet another subitem", build),
+    new NavbarItem("Exclusive item 1", true, build),
+    new NavbarItem("Exclusive item 2", true, build),
+    new NavbarItem("Loose item", true, build),
   ];
+  subitems[0].isExclusive = true;
+  subitems[1].isExclusive = true;
+  subitems[2].isExclusive = false;
 
   items[1].subitems.push(subitems[0]);
   items[1].subitems.push(subitems[1]);

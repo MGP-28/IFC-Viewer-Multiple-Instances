@@ -20,8 +20,6 @@ function render(item) {
   });
   navbarItem.appendChild(title);
 
-  let isShowing = false;
-  let isRendered = false;
   handleItemEvents(navbarItem);
 
   if (!hasSubitems()) {
@@ -64,30 +62,59 @@ function render(item) {
     navbarItem.addEventListener("click", (e) => {
       if (hasSubitems()) return;
 
-      isShowing = !isShowing;
+      item.isActive = !item.isActive;
 
       // only runs if there are no subitems
-      featureRenderingHandler(item, isShowing, isRendered);
-      
+      featureRenderingHandler(item);
+
       // navbarItem.classList.toggle("active"); -> is now handled by events
     });
 
     navbarItem.addEventListener("loaded", (e) => {
-      navbarItem.classList.toggle("active", true);
-    })
-
-    navbarItem.addEventListener("unloaded", (e) => {
-      navbarItem.classList.toggle("active", false);
-    })
-  }
-
-  function handleSubitemEvents() {
-    navbarItem.addEventListener("subitem-selected", (e) => {
+      item.isActive = true;
       navbarItem.classList.toggle("active", true);
     });
 
-    navbarItem.addEventListener("subitem-deselected", (e) => {
+    navbarItem.addEventListener("unloaded", (e) => {
+      item.isActive = false;
       navbarItem.classList.toggle("active", false);
+    });
+  }
+
+  function handleSubitemEvents() {
+    navbarItem.addEventListener("subitemSelected", (e) => {
+      const eventIdx = e.detail.idx;
+      const hasExclusivity = e.detail.hasExclusivity;
+      const subitems = item.subitems;
+      const changesArr = [];
+
+      for (let idx = 0; idx < subitems.length; idx++) {
+        const subitem = subitems[idx];
+        if (eventIdx != idx) {
+          if (!hasExclusivity) continue;
+          if (!subitem.isExclusive) continue;
+          if (!subitem.isRendered) continue;
+          if (!subitem.isActive) continue;
+          subitem.isActive = false;
+        } else subitem.isActive = true;
+        changesArr.push(subitem);
+      }
+
+      // Sort array to make sure to unload items before loading others
+      changesArr.sort((a, b) => {
+        return a.isActive == true && b.isActive == false;
+      });
+
+      changesArr.forEach((subitem) => {
+        featureRenderingHandler(subitem);
+      });
+
+      navbarItem.classList.toggle("active", true);
+    });
+
+    navbarItem.addEventListener("subitemDeselected", (e) => {
+      const activeSubitems = navbarItem.getElementsByClassName("active");
+      if (activeSubitems.length == 0) navbarItem.classList.toggle("active", false);
     });
   }
 
