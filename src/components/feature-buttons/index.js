@@ -9,29 +9,37 @@ import renderSavedViewsFeature from "./savedViews";
 
 export default function startFeatureButtons() {
 
+  //// For testing
+  //
+
   const items = [
     new NavbarItem("Spatial Tree", build),
     new NavbarItem("Visibility", build),
     new NavbarItem("Measure", build),
     new NavbarItem("Clipping Plane", build),
     new NavbarItem("Explode", build),
-  ]
+  ];
   const subitems = [
     new NavbarItem("Subitem", build),
     new NavbarItem("Another subitem", build),
     new NavbarItem("Yet another subitem", build),
-  ]
+  ];
 
-  items[1].subitems.push(subitems[0])
-  items[1].subitems.push(subitems[1])
-  items[1].subitems.push(subitems[2])
+  items[1].subitems.push(subitems[0]);
+  items[1].subitems.push(subitems[1]);
+  items[1].subitems.push(subitems[2]);
+
+  //
+  ////
 
   renderNavbar(items);
 
   return;
 
-  function build(){
-    return document.createElement("span")
+  function build(navItem) {
+    const el = document.createElement("span");
+    el.textContent = navItem.title;
+    return el;
   }
 
   const wrapper = document.createElement("div");
