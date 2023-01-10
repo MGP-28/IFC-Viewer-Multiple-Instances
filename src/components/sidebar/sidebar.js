@@ -1,6 +1,5 @@
 import { loadCSS } from "../../helpers/generic/cssLoader";
 import { createElement } from "../../helpers/generic/domElements";
-import { sidebarGetReferences } from "../../helpers/main-sidebar/mainSidebar";
 
 /**
  * Render sidebar to be filled with feature content
