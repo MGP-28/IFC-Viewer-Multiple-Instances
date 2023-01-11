@@ -1,4 +1,4 @@
-import { addContentToSidebarFeature, renderSidebarFeature } from "../../components/sidebar/sidebarFeature";
+import { addContentToSidebarFeature, renderSidebarFeature } from "../../components/features/sidebar/sidebarFeature";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { loadFeatureIntoSidebar, unloadFeatureFromSidebar } from "../../helpers/main-sidebar/mainSidebar";
 

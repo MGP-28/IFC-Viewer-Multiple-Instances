@@ -9,7 +9,7 @@ export default function render() {
   startLoadingPopup();
   startInput();
   startUserInputs();
-  startTimer();
+  // startTimer();
   startRenderingEvents();
   //startObjectDetail();
   startFeatures();

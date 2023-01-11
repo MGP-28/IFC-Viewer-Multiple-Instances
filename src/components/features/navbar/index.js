@@ -1,6 +1,6 @@
 import { createElement } from "../../../helpers/generic/domElements";
 import NavbarItem from "../../../models/navbar/NavbarItemData";
-import { renderNavbar } from "../../navbar/navbar";
+import { renderNavbar } from "./navbar";
 
 export default function initializeNavbar() {
   // Create each feature item for navbar

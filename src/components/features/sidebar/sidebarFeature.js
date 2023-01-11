@@ -1,7 +1,7 @@
-import { icons } from "../../configs/icons";
-import { createElement } from "../../helpers/generic/domElements";
-import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
-import { buildIcon } from "../generic/icon";
+import { icons } from "../../../configs/icons";
+import { createElement } from "../../../helpers/generic/domElements";
+import featureRenderingHandler from "../../../helpers/navbar/featureRenderingHandler";
+import { buildIcon } from "../../generic/icon";
 
 /**
  *
