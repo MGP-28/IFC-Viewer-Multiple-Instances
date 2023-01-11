@@ -1,95 +1,65 @@
-import { emitEventOnElement } from "../../../helpers/emitEvent";
+import { createElement } from "../../../helpers/generic/domElements";
 import NavbarItem from "../../../models/navbar/NavbarItemData";
-import { renderNavbar } from "../../navbar/navbar";
-import renderAnnotationsFeature from "./annotations";
-import { featureButton } from "../../feature-buttons/button";
-import renderClippingPlanesFeature from "./clippingPlanes";
-import renderHelperFeature from "./help";
-import renderSavedViewsFeature from "./savedViews";
+import { renderNavbar } from "./navbar";
 
-export default function startFeatureButtons() {
-  //// For testing
-  //
+export default function initializeNavbar() {
+  // Create each feature item for navbar
+  const navbarItems = [];
 
-  const items = [
-    new NavbarItem("Spatial Tree", true, build),
-    new NavbarItem("Visibility", true, build),
-    new NavbarItem("Measure", true, build, load, unload),
-    new NavbarItem("Clipping Plane", true, build),
-    new NavbarItem("Explode", false, build, load, unload),
-  ];
-  const subitems = [
-    new NavbarItem("Exclusive item 1", true, build),
-    new NavbarItem("Exclusive item 2", true, build),
-    new NavbarItem("Loose item", true, build),
-  ];
-  subitems[0].isExclusive = true;
-  subitems[0].hasSidebarTab = true;
-  subitems[1].isExclusive = true;
-  subitems[2].isExclusive = false;
+  //// Temporary, for testing
+  const build = (item) => createElement("span", { textContent: item.title });
 
-  items[0].hasSidebarTab = true;
-  items[1].subitems.push(subitems[0]);
-  items[1].subitems.push(subitems[1]);
-  items[1].subitems.push(subitems[2]);
-  items[3].hasSidebarTab = true;
+  // Window (Selection tree, Properties)
+  const window = new NavbarItem("Window", build);
+  //// subitems
+  const selectionTree = new NavbarItem("Selection Tree", build, "l1");
+  selectionTree.hasSidebarTab = true;
+  const properties = new NavbarItem("Properties", build, "l2");
+  properties.hasSidebarTab = true;
+  // append subitems
+  window.subitems.push(selectionTree, properties);
+  navbarItems.push(window);
 
-  //
-  ////
+  // Visibility
+  const visibility = new NavbarItem("Visibility", build);
+  //// subitems
+  const views = new NavbarItem("Views", build, "r1");
+  const annotations = new NavbarItem("Annotations", build, "r2");
+  // append subitems
+  visibility.subitems.push(views, annotations);
+  navbarItems.push(visibility);
 
-  renderNavbar(items);
+  // Clipping planes
+  const clippingPlanes = new NavbarItem("Clipping planes", build);
+  navbarItems.push(clippingPlanes);
+
+  // Measure
+  const measure = new NavbarItem("Measure", build);
+  navbarItems.push(measure);
+  //// subitems
+  const measurePoint2point = new NavbarItem("Point to point", build);
+  measurePoint2point.isExclusive = true;
+  const measureObject = new NavbarItem("Object", build);
+  measureObject.isExclusive = true;
+  // append subitems
+  measure.subitems.push(measurePoint2point, measureObject);
+
+  // Explode
+  const explode = new NavbarItem("Explode", build);
+  //// subitems
+  const explodeCategory = new NavbarItem("By category", build);
+  explodeCategory.isExclusive = true;
+  const explodeLevel = new NavbarItem("By level", build);
+  explodeLevel.isExclusive = true;
+  const explodeDiscipline = new NavbarItem("By discipline", build);
+  explodeDiscipline.isExclusive = true;
+  const explodeSystem = new NavbarItem("By system", build);
+  explodeSystem.isExclusive = true;
+  // append subitems
+  explode.subitems.push(explodeCategory, explodeLevel);
+  navbarItems.push(explode);
+
+  renderNavbar(navbarItems);
 
   return;
-
-  function build(navItem) {
-    const el = document.createElement("span");
-    el.textContent = navItem.title;
-    return el;
-  }
-
-  function load(navItem) {
-    console.log('load', navItem.title);
-  }
-
-  function unload(navItem) {
-    console.log('unload', navItem.title);
-  }
-
-  const wrapper = document.createElement("div");
-
-  // Add features
-
-  wrapper.appendChild(renderClippingPlanesFeature());
-  wrapper.appendChild(renderSavedViewsFeature());
-  wrapper.appendChild(renderAnnotationsFeature());
-
-  wrapper.appendChild(renderHelperFeature());
-
-  wrapper.classList.add("features-floating-buttons");
-
-  document.body.appendChild(wrapper);
-
-  // Enable buttons when ready
-  document.addEventListener("startFeatures", async (event) => {
-    for (let idx = 0; idx < wrapper.childNodes.length; idx++) {
-      const element = wrapper.children[idx];
-      element.classList.remove("not-ready");
-      emitEventOnElement(element, "startFeature");
-    }
-  });
-}
-
-function dummyFeature() {
-  const element = featureButton("x", "Tester");
-
-  element.addEventListener("startFeature", (e) => {
-    element.addEventListener("click", (e) => {
-      element.classList.toggle("active");
-    });
-    element.addEventListener("dblclick", () => {
-      element.classList.toggle("not-ready");
-    });
-  });
-
-  return element;
 }

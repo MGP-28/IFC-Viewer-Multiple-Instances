@@ -1,29 +1,30 @@
+import { loadCSS } from "../../../helpers/generic/cssLoader";
 import { createElement } from "../../../helpers/generic/domElements";
-import { renderMainSidebar } from "../../sidebar/sidebar";
-import startPropertiesFeature from "../properties";
-import startSpatialTree from "../spatialTree";
 
-export default async function startFeatureSidebar() {
-  // const result = await startSpatialTree();
-  // return result;
+export default async function initializeSidebar() {
+  loadCSS("./src/assets/css/sidebar.css");
 
-  renderMainSidebar();
-
-  return;
-
-  const featuresContainer = createElement("div", {
-    classes: ["tools-side-content"],
+  const leftSidebar = createElement("div", {
+    id: "left-sidebar",
+    classes: ["main-sidebar", "hidden"],
   });
 
-  const propertiesFeature = startPropertiesFeature();
-  featuresContainer.appendChild(propertiesFeature);
-  const spatialTreeFeature = await startSpatialTree();
-  featuresContainer.appendChild(spatialTreeFeature);
-
-  const toolsContainer = createElement("div", {
-    classes: ["tools-side-container"],
+  const rightSidebar = createElement("div", {
+    id: "right-sidebar",
+    classes: ["main-sidebar", "hidden"],
   });
-  toolsContainer.appendChild(featuresContainer);
 
-  document.body.appendChild(toolsContainer);
+  document.body.appendChild(leftSidebar);
+  document.body.appendChild(rightSidebar);
+
+  // handle sidebar visibility
+  document.addEventListener("featureLoaded", (e) => {
+    if (leftSidebar.children.length > 0) leftSidebar.classList.toggle("hidden", false);
+    if (rightSidebar.children.length > 0) rightSidebar.classList.toggle("hidden", false);
+  });
+
+  document.addEventListener("featureUnloaded", (e) => {
+    if (leftSidebar.children.length == 0) leftSidebar.classList.toggle("hidden", true);
+    if (rightSidebar.children.length == 0) rightSidebar.classList.toggle("hidden", true);
+  });
 }

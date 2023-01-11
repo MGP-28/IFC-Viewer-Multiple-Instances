@@ -87,3 +87,11 @@
   color: black;
   box-shadow: inset 0px -3px var(--primary-color);
 }
+
+.feature-navbar-item:first-child {
+  border-radius: var(--border-radius-regular) 0 0 var(--border-radius-regular);
+}
+
+.feature-navbar-item:last-child {
+  border-radius: 0 var(--border-radius-regular) var(--border-radius-regular) 0;
+}
