@@ -4,6 +4,7 @@
 }
 
 .feature-navbar {
+  user-select: none;
   font-weight: 400;
   position: fixed;
   z-index: 99;
@@ -52,12 +53,6 @@
   place-self: center;
 }
 
-.feature-navbar-item.active {
-  background-color: var(--primary-color-light-transparent);
-  color: black;
-  box-shadow: inset 0px -3px var(--primary-color);
-}
-
 .feature-navbar-item-dropdown {
   margin: 16px 0 0 -8px;
   grid-column: span 2;
@@ -79,4 +74,16 @@
 
 .feature-navbar li:hover {
   color: var(--primary-color-dark);
+}
+
+.feature-navbar-item.active {
+  background-color: var(--primary-color-light-transparent);
+  color: black;
+  box-shadow: inset 0px -3px var(--primary-color);
+}
+
+.feature-navbar-item-dropdown-item.active {
+  background-color: var(--primary-color-light-transparent);
+  color: black;
+  box-shadow: inset 0px -3px var(--primary-color);
 }

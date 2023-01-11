@@ -4,6 +4,7 @@ import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandle
 import NavbarItem from "../../models/navbar/NavbarItemData";
 import { buildIcon } from "../generic/icon";
 import { renderNavbarItemDropdown } from "./navbarDropdown";
+import { renderSidebarTab } from "../sidebar/tab";
 
 /**
  *
@@ -20,11 +21,12 @@ function render(item) {
   });
   navbarItem.appendChild(title);
 
-  let isShowing = false;
-  let isRendered = false;
   handleItemEvents(navbarItem);
 
-  if (!hasSubitems()) return navbarItem;
+  if (!hasSubitems()) {
+    item.navbarItem = navbarItem;
+    return navbarItem;
+  }
   // If doesn't have subitems, exists
 
   const arrow = buildIcon(icons.chevronRight);
@@ -38,6 +40,9 @@ function render(item) {
     const subitem = item.subitems[idx];
     const subitmeEl = renderNavbarItemDropdown(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
+    if (subitem.hasSidebarTab) {
+      subitem.tabElement = renderSidebarTab(subitem);
+    }
   }
   navbarItem.appendChild(sublist);
 
@@ -61,22 +66,68 @@ function render(item) {
     navbarItem.addEventListener("click", (e) => {
       if (hasSubitems()) return;
 
-      isShowing = !isShowing;
+      item.isActive = !item.isActive;
 
       // only runs if there are no subitems
-      featureRenderingHandler(item, isShowing, isRendered);
-      navbarItem.classList.toggle("active");
+      featureRenderingHandler(item);
+
+      // navbarItem.classList.toggle("active"); -> is now handled by events
+    });
+
+    navbarItem.addEventListener("loaded", (e) => {
+      item.isActive = true;
+      navbarItem.classList.toggle("active", true);
+    });
+
+    navbarItem.addEventListener("unloaded", (e) => {
+      item.isActive = false;
+      navbarItem.classList.toggle("active", false);
     });
   }
 
   function handleSubitemEvents() {
-    navbarItem.addEventListener("subitem-selected", (e) => {
+    navbarItem.addEventListener("subitemSelected", (e) => {
+      const eventIdx = e.detail.idx;
+      const hasExclusivity = e.detail.hasExclusivity;
+      const subitems = item.subitems;
+      const changesArr = [];
+
+      for (let idx = 0; idx < subitems.length; idx++) {
+        const subitem = subitems[idx];
+        if (eventIdx != idx) {
+          if (!hasExclusivity) continue;
+          if (!subitem.isExclusive) continue;
+          if (!subitem.isRendered) continue;
+          if (!subitem.isActive) continue;
+          subitem.isActive = false;
+        } else subitem.isActive = true;
+        changesArr.push(subitem);
+      }
+
+      // Sort array to make sure to unload items before loading others
+      changesArr.sort((a, b) => {
+        return a.isActive == true && b.isActive == false;
+      });
+
+      changesArr.forEach((subitem) => {
+        featureRenderingHandler(subitem);
+      });
+
       navbarItem.classList.toggle("active", true);
     });
 
-    navbarItem.addEventListener("subitem-deselected", (e) => {
-      navbarItem.classList.toggle("active", false);
+    navbarItem.addEventListener("subitemDeselected", (e) => {
+      checkStatus();
     });
+
+    navbarItem.addEventListener("subitemDeselectedOutter", (e) => {
+      checkStatus();
+    });
+
+    function checkStatus() {
+      const activeSubitems = navbarItem.getElementsByClassName("active");
+      if (activeSubitems.length == 0) navbarItem.classList.toggle("active", false);
+    }
   }
 
   function hasSubitems() {

@@ -1,10 +1,15 @@
 import { createElement } from "../../helpers/generic/domElements";
+import { renderMainSidebar } from "../sidebar/sidebar";
 import startPropertiesFeature from "./properties";
 import startSpatialTree from "./spatialTree";
 
 export default async function startFeatureSidebar() {
   // const result = await startSpatialTree();
   // return result;
+
+  renderMainSidebar();
+
+  return;
 
   const featuresContainer = createElement("div", {
     classes: ["tools-side-content"],

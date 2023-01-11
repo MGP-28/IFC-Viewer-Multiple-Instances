@@ -8,30 +8,51 @@ import renderHelperFeature from "./help";
 import renderSavedViewsFeature from "./savedViews";
 
 export default function startFeatureButtons() {
+  //// For testing
+  //
 
   const items = [
-    new NavbarItem("Spatial Tree", build),
-    new NavbarItem("Visibility", build),
-    new NavbarItem("Measure", build),
-    new NavbarItem("Clipping Plane", build),
-    new NavbarItem("Explode", build),
-  ]
+    new NavbarItem("Spatial Tree", true, build),
+    new NavbarItem("Visibility", true, build),
+    new NavbarItem("Measure", true, build, load, unload),
+    new NavbarItem("Clipping Plane", true, build),
+    new NavbarItem("Explode", false, build, load, unload),
+  ];
   const subitems = [
-    new NavbarItem("Subitem", build),
-    new NavbarItem("Another subitem", build),
-    new NavbarItem("Yet another subitem", build),
-  ]
+    new NavbarItem("Exclusive item 1", true, build),
+    new NavbarItem("Exclusive item 2", true, build),
+    new NavbarItem("Loose item", true, build),
+  ];
+  subitems[0].isExclusive = true;
+  subitems[0].hasSidebarTab = true;
+  subitems[1].isExclusive = true;
+  subitems[2].isExclusive = false;
 
-  items[1].subitems.push(subitems[0])
-  items[1].subitems.push(subitems[1])
-  items[1].subitems.push(subitems[2])
+  items[0].hasSidebarTab = true;
+  items[1].subitems.push(subitems[0]);
+  items[1].subitems.push(subitems[1]);
+  items[1].subitems.push(subitems[2]);
+  items[3].hasSidebarTab = true;
+
+  //
+  ////
 
   renderNavbar(items);
 
   return;
 
-  function build(){
-    return document.createElement("span")
+  function build(navItem) {
+    const el = document.createElement("span");
+    el.textContent = navItem.title;
+    return el;
+  }
+
+  function load(navItem) {
+    console.log('load', navItem.title);
+  }
+
+  function unload(navItem) {
+    console.log('unload', navItem.title);
   }
 
   const wrapper = document.createElement("div");

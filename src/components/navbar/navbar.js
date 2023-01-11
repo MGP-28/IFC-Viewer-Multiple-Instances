@@ -1,5 +1,6 @@
 import { loadCSS } from "../../helpers/generic/cssLoader";
 import { createElement } from "../../helpers/generic/domElements";
+import { renderSidebarTab } from "../sidebar/tab";
 import { renderNavbarItem } from "./navbarItem";
 
 /**
@@ -15,6 +16,10 @@ function render(items) {
     const item = items[idx];
     const itemEl = renderNavbarItem(item);
     navbar.appendChild(itemEl);
+
+    if(item.hasSidebarTab) {
+      item.tabElement = renderSidebarTab(item);
+    }
   }
 
   document.body.appendChild(navbar);

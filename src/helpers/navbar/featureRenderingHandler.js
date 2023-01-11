@@ -1,9 +1,13 @@
-export default function featureRenderingHandler(item, isShowing, isRendered) {
-  if (!isRendered) {
-    isRendered = true;
+/**
+ *
+ * @param {NavbarItem} item
+ */
+export default function featureRenderingHandler(item) {
+  if (!item.isRendered) {
+    item.isRendered = true;
     item.build();
   }
 
-  if (isShowing) item.load();
+  if (item.isActive) item.load();
   else item.unload();
 }
