@@ -1,29 +1,38 @@
-import { icons } from "../../configs/icons";
 import { clipping } from "../../helpers/clippingPlanes";
-import { models } from "../../stores/models";
+import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
+import NavbarItem from "../../models/navbar/NavbarItemData";
 import { userInteractions } from "../../stores/userInteractions";
-import { featureButton } from "../feature-buttons/button";
 
-export default function renderClippingPlanesFeature() {
-  const element = featureButton(icons.clipping, "Clipping planes");
-
-  let isEnabled = false;
-
-  element.addEventListener("startFeature", (e) => {
-    element.addEventListener("click", (e) => {
-      isEnabled = !isEnabled;
-      userInteractions.clippingPlanes = isEnabled;
-      clipping(isEnabled);
-      element.classList.toggle("active");
-
-      if(!isEnabled) userInteractions.clippingPlanes = false;
-    });
-
-    document.addEventListener("openClippingPlanes", (e) => {
-      if(!isEnabled) element.click();
-    })
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build(navItem) {
+  document.addEventListener("openClippingPlanes", (e) => {
+    navItem.isActive;
+    featureRenderingHandler(navItem);
   });
-
-
-  return element;
 }
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load(navItem) {
+  userInteractions.clippingPlanes = true;
+  clipping(true);
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function unload(navItem) {
+  userInteractions.clippingPlanes = false;
+  clipping(false);
+}
+
+export { build, load, unload };

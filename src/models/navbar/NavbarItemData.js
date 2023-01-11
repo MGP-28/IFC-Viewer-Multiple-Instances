@@ -11,22 +11,22 @@ export default class NavbarItem {
    *
    * @param {string} title Text to show in UI
    * @param {function} buildFunction handles feature initialization. Should return html element, if sidebarPosition has a value
-   * @param {string?} sidebarPosition optional - UI position for this feature. "l1", "l2", "r1", "r2". Default undefined
    * @param {function?} loadFunction optional - runs when feature loads to UI
    * @param {function?} unloadFunction optional - runs when feature unloads from UI
+   * @param {string?} sidebarPosition optional - UI position for this feature. "l1", "l2", "r1", "r2". Default undefined
    */
-  constructor(title, buildFunction, sidebarPosition = undefined, loadFunction = undefined, unloadFunction = undefined) {
+  constructor(title, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
     this.title = title;
-    this.sidebarPosition = sidebarPosition
     this.#buildFunction = buildFunction;
     this.#loadFunction = loadFunction;
     this.#unloadFunction = unloadFunction;
-    this.subitems = [];
-    this.navbarItem = undefined;
-    this.component = undefined;
-    this.isExclusive = false;
     this.isRendered = false;
     this.isActive = false;
+    this.navbarItem = undefined;
+    this.subitems = [];
+    this.component = undefined;
+    this.sidebarPosition = undefined;
+    this.isExclusive = false;
   }
 
   build() {
