@@ -2,7 +2,7 @@ import { icons } from "../../configs/icons";
 import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { toggleSavedViews } from "../../helpers/savedViews";
 import { userInteractions } from "../../stores/userInteractions";
-import { featureButton } from "./button";
+import { featureButton } from "../feature-buttons/button";
 
 export default function renderSavedViewsFeature() {
   const element = featureButton(icons.savedViews, "Saved Views");
