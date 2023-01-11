@@ -39,7 +39,9 @@ export default class NavbarItem {
       this.component = element;
     }
     // build specifics
-    const content = this.#buildFunction(this);
+    let content = undefined;
+    if (this.#buildFunction) content = this.#buildFunction(this);
+    console.log("content", content)
 
     if (this.isRenderedInSidebar) addContentToSidebarFeature(this.component, content);
 
