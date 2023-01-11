@@ -1,5 +1,4 @@
 import { addContentToSidebarFeature, renderSidebarFeature } from "../../components/sidebar/sidebarFeature";
-import { renderSidebarTab } from "../../components/sidebar/tab";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import { loadFeatureIntoSidebar, unloadFeatureFromSidebar } from "../../helpers/main-sidebar/mainSidebar";
 
@@ -11,39 +10,32 @@ export default class NavbarItem {
   /**
    *
    * @param {string} title Text to show in UI
-   * @param {boolean} isRenderedInSidebar Will the feature have an UI component
-   * @param {function} buildFunction handles feature creation. Should return html element, if isRenderedInSidebar is true
+   * @param {function} buildFunction handles feature initialization. Should return html element, if sidebarPosition has a value
+   * @param {string?} sidebarPosition optional - UI position for this feature. "l1", "l2", "r1", "r2". Default undefined
    * @param {function?} loadFunction optional - runs when feature loads to UI
    * @param {function?} unloadFunction optional - runs when feature unloads from UI
    */
-  constructor(title, isRenderedInSidebar, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
+  constructor(title, buildFunction, sidebarPosition = undefined, loadFunction = undefined, unloadFunction = undefined) {
     this.title = title;
-    this.isRenderedInSidebar = isRenderedInSidebar;
+    this.sidebarPosition = sidebarPosition
     this.#buildFunction = buildFunction;
     this.#loadFunction = loadFunction;
     this.#unloadFunction = unloadFunction;
     this.subitems = [];
     this.navbarItem = undefined;
-    this.tabElement = undefined;
     this.component = undefined;
     this.isExclusive = false;
     this.isRendered = false;
     this.isActive = false;
-    this.hasSidebarTab = false;
   }
 
   build() {
-    // build main component
-    if (this.isRenderedInSidebar) {
-      const element = renderSidebarFeature(this);
-      this.component = element;
+    if (this.sidebarPosition) {
+      this.component = renderSidebarFeature(this);
+      const content = this.#buildFunction(this);
+      addContentToSidebarFeature(this.component, content);
     }
-    // build specifics
-    let content = undefined;
-    if (this.#buildFunction) content = this.#buildFunction(this);
-    console.log("content", content)
-
-    if (this.isRenderedInSidebar) addContentToSidebarFeature(this.component, content);
+    else this.#buildFunction(this);
 
     this.isRendered = true;
   }
@@ -54,10 +46,9 @@ export default class NavbarItem {
     if (this.#loadFunction !== undefined) this.#loadFunction(this);
 
     emitEventOnElement(this.navbarItem, "loaded");
-    if(this.hasSidebarTab) emitEventOnElement(this.tabElement, "loaded");
 
     // checks if feature is to be rendered in sidebar
-    if (!this.isRenderedInSidebar) return;
+    if (!this.sidebarPosition) return;
 
     // add to sidebar
     loadFeatureIntoSidebar(this);
@@ -69,16 +60,11 @@ export default class NavbarItem {
     if (this.#unloadFunction !== undefined) this.#unloadFunction(this);
 
     emitEventOnElement(this.navbarItem, "unloaded");
-    if(this.hasSidebarTab) emitEventOnElement(this.tabElement, "unloaded");
 
     // checks if feature is to be rendered in sidebar
-    if (!this.isRenderedInSidebar) return;
+    if (!this.sidebarPosition) return;
 
     // remove from sidebar
     unloadFeatureFromSidebar(this);
-  }
-
-  renderSidebarTab(){
-
   }
 }

@@ -40,9 +40,9 @@ function render(item) {
     const subitem = item.subitems[idx];
     const subitmeEl = renderNavbarItemDropdown(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
-    if (subitem.hasSidebarTab) {
-      subitem.tabElement = renderSidebarTab(subitem);
-    }
+    // if (subitem.hasSidebarTab) {
+    //   subitem.tabElement = renderSidebarTab(subitem);
+    // }
   }
   navbarItem.appendChild(sublist);
 

@@ -55,8 +55,12 @@ body {
 #file-input {
   z-index: 1;
   position: absolute;
-  left: 100%;
-  transform: translateX(-100%);
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  border: var(--primary-color-light-transparent) solid 1px;
+  border-radius: 8px;
+  padding: 8px;
 }
 
 /* #region Form */

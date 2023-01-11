@@ -33,8 +33,8 @@ function render(item) {
   }
 }
 
-function addContent(mainSidebarFeature, content) {
-  const contentEl = mainSidebarFeature.getElementsByTagName("div")[0];
+function addContent(component, content) {
+  const contentEl = component.getElementsByTagName("div")[0];
   contentEl.appendChild(content);
 }
 

@@ -17,9 +17,9 @@ function render(items) {
     const itemEl = renderNavbarItem(item);
     navbar.appendChild(itemEl);
 
-    if(item.hasSidebarTab) {
-      item.tabElement = renderSidebarTab(item);
-    }
+    // if(item.hasSidebarTab) {
+    //   item.tabElement = renderSidebarTab(item);
+    // }
   }
 
   document.body.appendChild(navbar);
