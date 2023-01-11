@@ -2,7 +2,7 @@ import { icons } from "../../configs/icons";
 import { toggleAnnotations } from "../../helpers/annotations";
 import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { userInteractions } from "../../stores/userInteractions";
-import { featureButton } from "./button";
+import { featureButton } from "../feature-buttons/button";
 
 export default function renderAnnotationsFeature() {
   const element = featureButton(icons.annotations, "Annotations");

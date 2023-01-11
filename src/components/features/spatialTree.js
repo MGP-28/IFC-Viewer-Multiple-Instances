@@ -1,4 +1,4 @@
-import { buildIcon } from "../../components/generic/icon";
+import { buildIcon } from "../generic/icon";
 import { icons } from "../../configs/icons";
 import { emitEventOnElement } from "../../helpers/emitEvent";
 import getNodePropertyName from "../../helpers/getNodePropertyName";
@@ -6,7 +6,7 @@ import { getIfcRegex } from "../../helpers/repositories/regex";
 import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
 import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
-import { renderFeatureContainer } from "./containers";
+import { renderFeatureContainer } from "../feature-sidebar/containers";
 import { icons as iconsRep } from '../../configs/icons'
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
