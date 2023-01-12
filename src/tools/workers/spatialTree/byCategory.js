@@ -1,15 +1,28 @@
 onmessage = async (e) => {
-  const modelData = e.data;
-  const categories = [];
+  const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
+  const references = {
+    modelRef: undefined,
+    levelRef: undefined,
+    categoryRef: undefined,
+  };
 
-    // logic here
+  const leafNodes = e.data;
+  const categories = {};
 
-  postMessage(result);
+  // logic here
+  //
+
+
+
+  //
+  //////
+
+  postMessage("nice");
 };
 
-self.addEventListener('unhandledrejection', function (event) {
-    // the event object has two special properties:
-    // event.promise - the promise that generated the error
-    // event.reason  - the unhandled error object
-    throw event.reason;
+self.addEventListener("unhandledrejection", function (event) {
+  // the event object has two special properties:
+  // event.promise - the promise that generated the error
+  // event.reason  - the unhandled error object
+  throw event.reason;
 });
