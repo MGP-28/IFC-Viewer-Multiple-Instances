@@ -1,0 +1,3 @@
+const navbarItems = {};
+
+export { navbarItems }
