@@ -1,5 +1,5 @@
 import { renderNavbar } from "./navbar";
 
-export default function initializeNavbar(navbarItems) {
-  renderNavbar(navbarItems);
+export default function initializeNavbar() {
+  renderNavbar();
 }

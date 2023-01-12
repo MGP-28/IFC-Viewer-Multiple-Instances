@@ -377,7 +377,7 @@ body {
 }
 
 .tools-side-feature-content {
-  width: 340px;
+  /* width: 340px; */
   background-color: white;
   grid-column: span 3;
   border-radius: 0 0 var(--border-radius-regular) var(--border-radius-regular);
@@ -588,83 +588,7 @@ body {
 
 /* #region saved views */
 
-.saved-wrapper {
-  display: grid;
-  width: 100%;
-}
 
-.saved-toolbar {
-  padding-left: 5px;
-  padding-bottom: 5px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  font-size: 15px;
-  border-bottom: solid 1px lightgray;
-}
-
-.saved-add-text {
-  line-height: 25px;
-}
-
-.saved-add:hover {
-  animation: name duration timing-function delay iteration-count direction
-    fill-mode;
-}
-
-#saved-views-list {
-  width: 100%;
-}
-
-#saved-views-list li {
-  width: 100%;
-  height: auto;
-  padding: 5px;
-  display: grid;
-  align-items: center;
-  grid-template-columns: 1fr 30px;
-  gap: 5px;
-  align-items: center;
-  box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);
-  cursor: pointer;
-  border-top: 1px solid rgba(240, 240, 240);
-}
-#saved-views-list li:first-child {
-  border-top: none;
-}
-
-#saved-views-list li:hover {
-  background-color: var(--primary-color-light-transparent);
-  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
-  background-size: 200% 200%;
-  background-color: var(--primary-color-light-transparent);
-}
-
-#saved-views-list li > img {
-  height: 15px;
-  transition: all var(--transition-main-timer);
-}
-
-#saved-views-list li > img:hover {
-  /* cursor: ; */
-  transform: scale(1.1);
-  transition: all var(--transition-main-timer);
-}
-
-#saved-views-list li > span {
-  font-size: 13px;
-  line-height: 15px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-#saved-views-list li.active-saved-view {
-  background-color: var(--primary-color-light-transparent);
-  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
-  background-size: 200% 200%;
-  background-color: var(--primary-color-light-transparent);
-}
 
 /* #endregion saved views */
 

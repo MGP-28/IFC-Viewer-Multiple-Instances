@@ -1,5 +1,4 @@
 import { clipping } from "../../helpers/clippingPlanes";
-import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
 import NavbarItem from "../../models/navbar/NavbarItemData";
 import { userInteractions } from "../../stores/userInteractions";
 
@@ -10,8 +9,8 @@ import { userInteractions } from "../../stores/userInteractions";
  */
 function build(navItem) {
   document.addEventListener("openClippingPlanes", (e) => {
-    navItem.isActive;
-    featureRenderingHandler(navItem);
+    navItem.isActive = true;
+    navItem.load();
   });
 }
 
@@ -21,6 +20,7 @@ function build(navItem) {
  * @returns
  */
 function load(navItem) {
+  console.log('clipping load')
   userInteractions.clippingPlanes = true;
   clipping(true);
 }
