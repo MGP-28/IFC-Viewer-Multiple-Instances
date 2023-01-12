@@ -1,13 +1,12 @@
 import { buildIcon } from "../generic/icon";
 import { icons } from "../../configs/icons";
-import { emitEventOnElement } from "../../helpers/emitEvent";
 import getNodePropertyName from "../../helpers/getNodePropertyName";
 import { getIfcRegex } from "../../helpers/repositories/regex";
 import SpatialTreeReference from "../../models/SpatialTree/NodeReference";
 import * as Models from "../../stores/models";
 import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
-import { renderFeatureContainer } from "../feature-sidebar/containers";
-import { icons as iconsRep } from '../../configs/icons'
+import { icons as iconsRep } from "../../configs/icons";
+import { createElement } from "../../helpers/generic/domElements";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 
@@ -20,27 +19,33 @@ const references = {
   categoryRef: undefined,
 };
 
-export default async function startSpatialTree() {
-  const wrapper = renderFeatureContainer(
-    iconsRep.spatialTree,
-    "Spatial Tree",
-    "Model Name"
-  );
-  const contentEl = wrapper.getElementsByClassName("tools-side-feature-content")[0];
+const trees = {
+  byCategory: undefined,
+  byLevelCategory: undefined,
+  byDiscipline: undefined,
+  bySystem: undefined,
+};
 
-  document.addEventListener("startFeatures", async (event) => {
-    const trees = Models.models.map((x) => x.tree);
-    const treesEl = await buildTreesContainer(trees);
-    contentEl.appendChild(treesEl);
-
-    const featureName = wrapper.getElementsByClassName(
-      "tools-side-feature-name"
-    )[0];
-
-    emitEventOnElement(wrapper, "featureReady")
+async function build() {
+  const contentEl = createElement("div", {
+    classes: ["tree-container"],
   });
 
-  return wrapper;
+  // const trees = Models.models.map((x) => x.tree);
+  // const treesEl = await buildTreesContainer(trees);
+  // contentEl.appendChild(treesEl);
+
+  const worker = new Worker("/src/tools/workers/spatialTree/byCategory.js");
+  worker.postMessage("nice");
+  worker.onmessage = (e) => {
+    console.log(e.data)
+    worker.terminate();
+  };
+  worker.onerror = (event) => {
+    console.log('There is an error with your worker!');
+  }
+
+  return contentEl;
 }
 
 async function buildTreesContainer(trees) {
@@ -104,8 +109,8 @@ async function buildNode(node) {
 
     title.addEventListener("click", () => {
       childrenEl.classList.toggle("hidden");
-      const caret = title.getElementsByClassName("spatial-tree-caret")[0]
-      caret.classList.toggle("caret-down")
+      const caret = title.getElementsByClassName("spatial-tree-caret")[0];
+      caret.classList.toggle("caret-down");
     });
   }
   nodeEl.appendChild(title);
@@ -123,23 +128,20 @@ async function buildTitle(node) {
   const wrapper = document.createElement("div");
   wrapper.classList.add("tree-item");
 
-  const hasChildren = node.children.length > 0
+  const hasChildren = node.children.length > 0;
 
-  if(hasChildren) {
+  if (hasChildren) {
     const caretIcon = document.createElement("div");
     caretIcon.classList.add("spatial-tree-caret");
     caretIcon.appendChild(buildIcon(icons.chevronRight));
     wrapper.appendChild(caretIcon);
-    wrapper.classList.add("has-caret")
-  }
-  else wrapper.classList.add("tree-leaf");
+    wrapper.classList.add("has-caret");
+  } else wrapper.classList.add("tree-leaf");
 
   // create node title span
   const span = document.createElement("span");
   const _text =
-    !hasChildren || IFCCategoriesToFecthName.includes(node.type)
-      ? await getNodePropertyName(node, currentTreeIdx)
-      : node.type;
+    !hasChildren || IFCCategoriesToFecthName.includes(node.type) ? await getNodePropertyName(node, currentTreeIdx) : node.type;
   const text = removeIFCTagsFromName(_text);
   span.textContent = text;
   wrapper.appendChild(span);
@@ -152,7 +154,7 @@ async function buildTitle(node) {
     visibilityIcon.appendChild(buildIcon(iconsRep.visibility));
 
     let selectIcon = undefined;
-    if(hasChildren){
+    if (hasChildren) {
       selectIcon = document.createElement("div");
       selectIcon.appendChild(buildIcon(iconsRep.target));
     }
@@ -162,9 +164,9 @@ async function buildTitle(node) {
 
     const icons = {
       visibility: visibilityIcon,
-      isolation: isolateIcon
+      isolation: isolateIcon,
     };
-    if(hasChildren) icons["selection"] = selectIcon
+    if (hasChildren) icons["selection"] = selectIcon;
 
     await processIconEvents(wrapper, icons, node);
 
@@ -185,11 +187,7 @@ async function processIconEvents(span, icons, node) {
       // console.log("building");
       isFirstElementOfTree = false;
       useIconOnLabel = false;
-      await SpatialTreeInterelementEventHandling.processBuildingEvents(
-        span,
-        icons,
-        currentTreeIdx
-      );
+      await SpatialTreeInterelementEventHandling.processBuildingEvents(span, icons, currentTreeIdx);
       references.modelRef = new SpatialTreeReference(node.type, icons);
       break;
     }
@@ -197,12 +195,7 @@ async function processIconEvents(span, icons, node) {
     case "level": {
       // console.log("level");
       const levelName = await getNodePropertyName(node, currentTreeIdx);
-      await SpatialTreeInterelementEventHandling.processLevelEvents(
-        span,
-        icons,
-        currentTreeIdx,
-        levelName
-      );
+      await SpatialTreeInterelementEventHandling.processLevelEvents(span, icons, currentTreeIdx, levelName);
       references.levelRef = new SpatialTreeReference(levelName, icons);
       break;
     }
@@ -221,12 +214,7 @@ async function processIconEvents(span, icons, node) {
     }
     default: {
       // console.log("leaf");
-      await SpatialTreeInterelementEventHandling.processLeafNodeEvents(
-        span,
-        icons,
-        node.expressID,
-        currentTreeIdx
-      );
+      await SpatialTreeInterelementEventHandling.processLeafNodeEvents(span, icons, node.expressID, currentTreeIdx);
       break;
     }
   }
@@ -267,3 +255,5 @@ function removeIFCTagsFromName(text) {
   const regex = getIfcRegex();
   return text.replace(regex, "");
 }
+
+export { build };

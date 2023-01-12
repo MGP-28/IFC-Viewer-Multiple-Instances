@@ -6,6 +6,7 @@ import { navbarItems } from "../../stores/navbarItems";
 import * as ClippingPlanes from "./clippingPlanes";
 import * as SavedViews from "./savedViews";
 import * as Annotations from "./annotations";
+import * as SpatialTree from "./spatialTree";
 
 export default async function startFeatures() {
   //// Temporary, for testing
@@ -14,7 +15,7 @@ export default async function startFeatures() {
   // Window (Selection tree, Properties)
   const window = new NavbarItem("Window", buildTemp);
   //// subitems
-  const selectionTree = new NavbarItem("Selection Tree", buildTemp);
+  const selectionTree = new NavbarItem("Selection Tree", SpatialTree.build);
   selectionTree.sidebarPosition = "l1";
   const properties = new NavbarItem("Properties", buildTemp);
   properties.sidebarPosition = "l2";
@@ -62,6 +63,10 @@ export default async function startFeatures() {
   // append subitems
   explode.subitems.push(explodeCategory, explodeLevel);
   navbarItems["explode"] = explode;
+
+  document.addEventListener("wereReady", () => {
+    selectionTree.build();
+  })
   
   initializeSidebar();
   initializeNavbar();

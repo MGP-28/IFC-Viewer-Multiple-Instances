@@ -29,10 +29,10 @@ export default class NavbarItem {
     this.isExclusive = false;
   }
 
-  build() {
+  async build() {
     if (this.sidebarPosition) {
       this.component = renderSidebarFeature(this);
-      const content = this.#buildFunction(this);
+      const content = await this.#buildFunction(this);
       addContentToSidebarFeature(this.component, content);
     }
     else this.#buildFunction(this);
@@ -40,10 +40,10 @@ export default class NavbarItem {
     this.isRendered = true;
   }
 
-  load() {
+  async load() {
     this.isActive = true;
 
-    if (this.#loadFunction !== undefined) this.#loadFunction(this);
+    if (this.#loadFunction !== undefined) await this.#loadFunction(this);
 
     emitEventOnElement(this.navbarItem, "loaded");
 
@@ -54,10 +54,10 @@ export default class NavbarItem {
     loadFeatureIntoSidebar(this);
   }
 
-  unload() {
+  async unload() {
     this.isActive = false;
 
-    if (this.#unloadFunction !== undefined) this.#unloadFunction(this);
+    if (this.#unloadFunction !== undefined) await this.#unloadFunction(this);
 
     emitEventOnElement(this.navbarItem, "unloaded");
 
