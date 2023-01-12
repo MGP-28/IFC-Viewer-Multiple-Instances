@@ -1,23 +1,50 @@
-import { icons } from "../../configs/icons";
 import { emitGlobalEvent } from "../../helpers/emitEvent";
-import { toggleSavedViews } from "../../helpers/savedViews";
+import { loadCSS } from "../../helpers/generic/cssLoader";
+import { renderSavedViews } from "../../helpers/savedViews";
+import { navbarItems } from "../../stores/navbarItems";
 import { userInteractions } from "../../stores/userInteractions";
-import { featureButton } from "../feature-buttons/button";
 
-export default function renderSavedViewsFeature() {
-  const element = featureButton(icons.savedViews, "Saved Views");
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build(navItem) {
+  const element = renderSavedViews();
 
-  let isEnabled = false;
 
-  element.addEventListener("startFeature", (e) => {
-    element.addEventListener("click", (e) => {
-      isEnabled = !isEnabled;
-      userInteractions.savedViews = isEnabled;
-      if(!userInteractions.clippingPlanes) emitGlobalEvent("openClippingPlanes");
-      toggleSavedViews(isEnabled);
-      element.classList.toggle("active");
-    });
+  document.addEventListener("openSavedViews", (e) => {
+    navItem.isActive = true;
+    featureRenderingHandler(navItem);
   });
 
   return element;
 }
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load(navItem) {
+  userInteractions.savedViews = true;
+  if(!userInteractions.clippingPlanes) {
+    const clippingPlanesRef = navbarItems["clippingPlanes"];
+
+    if(clippingPlanesRef.isRendered) emitGlobalEvent("openClippingPlanes");
+    else clippingPlanesRef.navbarItem.click();
+  }
+  // toggleSavedViews(true);
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function unload(navItem) {
+  userInteractions.savedViews = false;
+  // toggleSavedViews(false);
+}
+
+export { build, load, unload };
