@@ -31,14 +31,13 @@ async function build() {
     classes: ["tree-container"],
   });
 
-  // const trees = Models.models.map((x) => x.tree);
-  // const treesEl = await buildTreesContainer(trees);
-  // contentEl.appendChild(treesEl);
+  const trees = Models.models.map((x) => x.tree);
+  let leafNodes = undefined;
 
-  const worker = new Worker("/src/tools/workers/spatialTree/byCategory.js");
-  worker.postMessage("nice");
+  const worker = new Worker("/src/tools/workers/spatialTree/getLeafNodes.js");
+  worker.postMessage(trees);
   worker.onmessage = (e) => {
-    console.log(e.data)
+    leafNodes = e.data;
     worker.terminate();
   };
   worker.onerror = (event) => {
