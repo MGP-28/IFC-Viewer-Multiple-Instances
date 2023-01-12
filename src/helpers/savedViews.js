@@ -1,42 +1,19 @@
-import { renderFeatureContainer } from "../components/feature-sidebar/containers";
 import { buildIcon } from "../components/generic/icon";
 import { renderNewViewForm } from "../components/savedView.js/form";
 import { renderSavedView } from "../components/savedView.js/savedView";
-import { emitEventOnElement } from "./emitEvent";
 import { createElement } from "./generic/domElements";
 import { icons } from "../configs/icons";
 import { savedViews } from "../stores/savedViews";
 
-let isRendered = false;
-let container = undefined;
-let component = undefined;
-
-function toggleSavedViews(isShowing) {
-  if (!isRendered) renderSavedViews();
-
-  if (isShowing) showSavedViews();
-  else hideSavedViews();
-}
-
 function renderSavedViews() {
-  // build wrapper and content
-  const wrapper = renderFeatureContainer(
-    icons.savedViews,
-    "Saved Views",
-    "Manage your saved views"
-  );
 
   // content
-  const contentEl = wrapper.getElementsByClassName(
-    "tools-side-feature-content"
-  )[0];
+  const contentEl = createElement("div", {
+    classes: ["saved-wrapper"],
+  });
   contentEl.innerHTML = `
-    <div class="tree-content-container">
-        <div class="saved-wrapper">
-            <div class="saved-toolbar"></div>
-            <ul class="saved-list" id="saved-views-list"></ul>
-        </div>
-    </div>
+    <div class="saved-toolbar"></div>
+    <ul class="saved-list" id="saved-views-list"></ul>
   `;
 
   // toolbar
@@ -72,17 +49,7 @@ function renderSavedViews() {
   // events
   handleEvents();
 
-  // gets feature ready and opens it right away
-  emitEventOnElement(wrapper, "featureReady");
-  const icon = wrapper.getElementsByClassName("tools-side-feature-icon")[0];
-  icon.click();
-
-  const containerEl = document.getElementsByClassName("tools-side-content")[0];
-  containerEl.appendChild(wrapper);
-
-  isRendered = true;
-  container = containerEl;
-  component = wrapper;
+  return contentEl;
 
   function handleEvents() {
     toolbarIcon.addEventListener("click", (e) => {
@@ -93,18 +60,10 @@ function renderSavedViews() {
   }
 }
 
-function showSavedViews() {
-  container.appendChild(component);
-}
-
-function hideSavedViews() {
-  container.removeChild(component);
-}
-
 function openSavedViewForm() {
   const form = renderNewViewForm();
   form.classList.remove("hidden");
   document.body.appendChild(form);
 }
 
-export { toggleSavedViews };
+export { renderSavedViews };

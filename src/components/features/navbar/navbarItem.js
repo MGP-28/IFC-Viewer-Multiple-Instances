@@ -1,10 +1,9 @@
-import { icons } from "../../configs/icons";
-import { createElement } from "../../helpers/generic/domElements";
-import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
-import NavbarItem from "../../models/navbar/NavbarItemData";
-import { buildIcon } from "../generic/icon";
+import { icons } from "../../../configs/icons";
+import { createElement } from "../../../helpers/generic/domElements";
+import featureRenderingHandler from "../../../helpers/navbar/featureRenderingHandler";
+import NavbarItem from "../../../models/navbar/NavbarItemData";
+import { buildIcon } from "../../generic/icon";
 import { renderNavbarItemDropdown } from "./navbarDropdown";
-import { renderSidebarTab } from "../sidebar/tab";
 
 /**
  *
@@ -40,9 +39,9 @@ function render(item) {
     const subitem = item.subitems[idx];
     const subitmeEl = renderNavbarItemDropdown(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
-    if (subitem.hasSidebarTab) {
-      subitem.tabElement = renderSidebarTab(subitem);
-    }
+    // if (subitem.hasSidebarTab) {
+    //   subitem.tabElement = renderSidebarTab(subitem);
+    // }
   }
   navbarItem.appendChild(sublist);
 

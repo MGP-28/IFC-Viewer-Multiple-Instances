@@ -32,7 +32,6 @@ async function processLevelEvents(titleEl, icons, modelIdx, levelName) {
 async function processBuildingEvents(titleEl, icons, modelIdx) {
   const model = Models.models[modelIdx];
   const objectIDs = model.getAllIDs();
-  SelectionStore.addNewModelReferenceToVisible(modelIdx);
   SelectionStore.addIdsToVisible(modelIdx, objectIDs);
 
   handleEvents(titleEl, icons, objectIDs, modelIdx);
