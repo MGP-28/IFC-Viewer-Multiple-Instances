@@ -1,7 +1,6 @@
 import { buildIcon } from "../components/generic/icon";
 import { renderNewViewForm } from "../components/savedView.js/form";
 import { renderSavedView } from "../components/savedView.js/savedView";
-import { emitEventOnElement } from "./emitEvent";
 import { createElement } from "./generic/domElements";
 import { icons } from "../configs/icons";
 import { savedViews } from "../stores/savedViews";
@@ -10,15 +9,11 @@ function renderSavedViews() {
 
   // content
   const contentEl = createElement("div", {
-    classes: ["tools-side-feature-content"],
+    classes: ["saved-wrapper"],
   });
   contentEl.innerHTML = `
-    <div class="tree-content-container">
-        <div class="saved-wrapper">
-            <div class="saved-toolbar"></div>
-            <ul class="saved-list" id="saved-views-list"></ul>
-        </div>
-    </div>
+    <div class="saved-toolbar"></div>
+    <ul class="saved-list" id="saved-views-list"></ul>
   `;
 
   // toolbar

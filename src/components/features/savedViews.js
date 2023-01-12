@@ -12,6 +12,7 @@ import { userInteractions } from "../../stores/userInteractions";
 function build(navItem) {
   const element = renderSavedViews();
 
+  loadCSS("./src/assets/css/savedViews.css");
 
   document.addEventListener("openSavedViews", (e) => {
     navItem.isActive = true;
