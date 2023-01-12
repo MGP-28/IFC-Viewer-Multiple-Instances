@@ -20,7 +20,6 @@ function build(navItem) {
  * @returns
  */
 function load(navItem) {
-  console.log('clipping load')
   userInteractions.clippingPlanes = true;
   clipping(true);
 }
