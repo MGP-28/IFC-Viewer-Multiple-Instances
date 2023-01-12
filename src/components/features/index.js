@@ -2,12 +2,11 @@ import initializeNavbar from "./navbar";
 import initializeSidebar from "./sidebar";
 import NavbarItem from "../../models/navbar/NavbarItemData";
 import * as ClippingPlanes from "./clippingPlanes";
+import * as SavedViews from "./savedViews";
 import { createElement } from "../../helpers/generic/domElements";
+import { navbarItems } from "../../stores/navbarItems";
 
 export default async function startFeatures() {
-  // Create each feature item for navbar
-  const navbarItems = [];
-
   //// Temporary, for testing
   const buildTemp = (item) => createElement("span", { textContent: item.title });
 
@@ -20,26 +19,25 @@ export default async function startFeatures() {
   properties.sidebarPosition = "l2";
   // append subitems
   window.subitems.push(selectionTree, properties);
-  navbarItems.push(window);
+  navbarItems["window"] = window;
 
   // Visibility
   const visibility = new NavbarItem("Visibility", buildTemp);
   //// subitems
-  const views = new NavbarItem("Views", buildTemp);
+  const views = new NavbarItem("Views", SavedViews.build, SavedViews.load, SavedViews.unload);
   views.sidebarPosition = "r1";
   const annotations = new NavbarItem("Annotations", buildTemp);
   annotations.sidebarPosition = "r2";
   // append subitems
   visibility.subitems.push(views, annotations);
-  navbarItems.push(visibility);
+  navbarItems["visibility"] = visibility;
 
   // Clipping planes
   const clippingPlanes = new NavbarItem("Clipping planes", ClippingPlanes.build, ClippingPlanes.load, ClippingPlanes.unload);
-  navbarItems.push(clippingPlanes);
+  navbarItems["clippingPlanes"] = clippingPlanes;
 
   // Measure
   const measure = new NavbarItem("Measure", buildTemp);
-  navbarItems.push(measure);
   //// subitems
   const measurePoint2point = new NavbarItem("Point to point", buildTemp);
   measurePoint2point.isExclusive = true;
@@ -47,6 +45,7 @@ export default async function startFeatures() {
   measureObject.isExclusive = true;
   // append subitems
   measure.subitems.push(measurePoint2point, measureObject);
+  navbarItems["measure"] = measure;
 
   // Explode
   const explode = new NavbarItem("Explode", buildTemp);
@@ -61,8 +60,8 @@ export default async function startFeatures() {
   explodeSystem.isExclusive = true;
   // append subitems
   explode.subitems.push(explodeCategory, explodeLevel);
-  navbarItems.push(explode);
-
+  navbarItems["explode"] = explode;
+  
   initializeSidebar();
-  initializeNavbar(navbarItems);
+  initializeNavbar();
 }
