@@ -1,10 +1,11 @@
 import initializeNavbar from "./navbar";
 import initializeSidebar from "./sidebar";
 import NavbarItem from "../../models/navbar/NavbarItemData";
-import * as ClippingPlanes from "./clippingPlanes";
-import * as SavedViews from "./savedViews";
 import { createElement } from "../../helpers/generic/domElements";
 import { navbarItems } from "../../stores/navbarItems";
+import * as ClippingPlanes from "./clippingPlanes";
+import * as SavedViews from "./savedViews";
+import * as Annotations from "./annotations";
 
 export default async function startFeatures() {
   //// Temporary, for testing
@@ -26,7 +27,7 @@ export default async function startFeatures() {
   //// subitems
   const views = new NavbarItem("Views", SavedViews.build, SavedViews.load, SavedViews.unload);
   views.sidebarPosition = "r1";
-  const annotations = new NavbarItem("Annotations", buildTemp);
+  const annotations = new NavbarItem("Annotations", Annotations.build, Annotations.load, Annotations.unload);
   annotations.sidebarPosition = "r2";
   // append subitems
   visibility.subitems.push(views, annotations);

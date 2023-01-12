@@ -1,26 +1,44 @@
-import { icons } from "../../configs/icons";
-import { toggleAnnotations } from "../../helpers/annotations";
+import { renderAnnotations } from "../../helpers/annotations";
 import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { userInteractions } from "../../stores/userInteractions";
-import { featureButton } from "../feature-buttons/button";
+import { loadCSS } from "../../helpers/generic/cssLoader";
 
-export default function renderAnnotationsFeature() {
-  const element = featureButton(icons.annotations, "Annotations");
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build(navItem) {
+  const element = renderAnnotations();
 
-  let isEnabled = false;
+  loadCSS("./src/assets/css/annotations.css");
 
-  element.addEventListener("startFeature", (e) => {
-    element.addEventListener("click", (e) => {
-      isEnabled = !isEnabled;
-      userInteractions.annotations = isEnabled;
-      const eventName = isEnabled ? "enableAnnotations" : "disableAnnotations"
-      emitGlobalEvent(eventName);
-      element.classList.toggle("active");
-
-      toggleAnnotations(isEnabled);
-
-    });
+  document.addEventListener("openAnnotations", (e) => {
+    navItem.isActive = true;
+    navItem.build();
   });
 
   return element;
 }
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load(navItem) {
+  userInteractions.annotations = true;
+  emitGlobalEvent("enableAnnotations");
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function unload(navItem) {
+  userInteractions.annotations = false;
+  emitGlobalEvent("disableAnnotations");
+}
+
+export { build, load, unload };
