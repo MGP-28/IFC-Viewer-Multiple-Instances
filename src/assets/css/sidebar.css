@@ -61,6 +61,7 @@
 
 .main-sidebar-feature > .main-sidebar-feature-content {
   grid-column: span 2;
+  padding-right: 8px;
   border-top: solid 1px lightgray;
   padding-top: var(--border-radius-regular);
   height: 100%;
