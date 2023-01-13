@@ -34,15 +34,37 @@ async function build() {
   const trees = Models.models.map((x) => x.tree);
   let leafNodes = undefined;
 
+  // Calls web worker to get all leaf nodes from all models
+  // An array of objects is returned. Each object contains:
+  // expressId, modelIdx, levelId, category
+  // Array comes naturally ordered by model -> level -> category
   const worker = new Worker("/src/tools/workers/spatialTree/getLeafNodes.js");
+
   worker.postMessage(trees);
+
+  worker.onerror = (event) => {
+    console.log("There is an error with your worker!");
+  };
+
   worker.onmessage = (e) => {
     leafNodes = e.data;
+    leafNodes.forEach((leaf) => {
+      //////
+      //
+
+      const element = createElement("p", {
+        attributes: {
+          style: "font-size: 10px",
+        },
+        textContent: `${leaf.expressId} - ${leaf.modelIdx} - ${leaf.levelId} - ${leaf.category}`,
+      });
+      contentEl.appendChild(element);
+
+      //
+      //////
+    });
     worker.terminate();
   };
-  worker.onerror = (event) => {
-    console.log('There is an error with your worker!');
-  }
 
   return contentEl;
 }
