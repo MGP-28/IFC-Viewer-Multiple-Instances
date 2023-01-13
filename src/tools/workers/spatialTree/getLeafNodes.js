@@ -1,13 +1,13 @@
 let modelIdx = -1;
 
-onmessage = async (e) => {
-  const trees = e.data;
+onmessage = (e) => {
+  const models = e.data;
   const leafNodes = [];
 
-  trees.forEach((tree) => {
-    console.log(tree);
-    modelIdx++;
-    const treeLeafNodes = findLeafNode(tree);
+  models.forEach((model, idx) => {
+    console.log(model.tree);
+    modelIdx = idx;
+    const treeLeafNodes = findLeafNode(model, model.tree);
     leafNodes.push(...treeLeafNodes);
   });
 
@@ -27,6 +27,7 @@ function findLeafNode(node) {
       modelIdx,
       category: node.type,
     };
+
     return [leafNode];
   }
 
@@ -41,7 +42,7 @@ function findLeafNode(node) {
 
   // if it's a level, set the level property of all child leaf nodes as its own expressID
   if (node.type == "IFCBUILDINGSTOREY") {
-    console.log('level', node)
+    console.log("level", node);
     foundNodes.forEach((leafNode) => {
       leafNode.levelId = node.expressID;
     });

@@ -40,7 +40,7 @@ async function build(item) {
   // An array of objects is returned. Each object contains:
   // expressId, modelIdx, levelId, category
   // Array comes naturally ordered by model -> level -> category
-  const worker = new Worker("/src/tools/workers/spatialTree/getLeafNodes.js");
+  const worker = new Worker("/src/tools/workers/spatialTree/getLeafNodes.js", { type: "module" });
 
   worker.postMessage(trees);
 
@@ -51,7 +51,7 @@ async function build(item) {
   worker.onmessage = (e) => {
     leafNodes = e.data;
 
-    leafNodes.forEach((leaf) => {
+    leafNodes.forEach(async (leaf) => {
       //////
       //
 
@@ -62,6 +62,22 @@ async function build(item) {
         textContent: `${leaf.expressId} - ${leaf.modelIdx} - ${leaf.levelId} - ${leaf.category}`,
       });
       contentEl.appendChild(element);
+
+      const model = Models.models[leaf.modelIdx];
+      const props = await model.loader.ifcManager.getItemProperties(0, leaf.expressId);
+      const psets = await model.loader.ifcManager.getPropertySets(0, leaf.expressId);
+      console.log("props", props);
+      console.log("psets", psets);
+      for (let index1 = 0; index1 < psets.length; index1++) {
+        const pset = psets[index1];
+        if (!pset.HasProperties) continue;
+        for (let index = 0; index < pset.HasProperties.length; index++) {
+          const prop = pset.HasProperties[index];
+          if (!prop.value) continue;
+          const cc = await model.loader.ifcManager.getItemProperties(0, prop.value);
+          console.log("related to", leaf.expressId, cc);
+        }
+      }
 
       //
       //////
