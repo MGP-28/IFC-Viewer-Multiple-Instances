@@ -7,6 +7,8 @@ import * as Models from "../../stores/models";
 import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
 import { icons as iconsRep } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
+import { renderSidebarTabs } from "./generic/tabs";
+import { addTabsToSidebarFeature } from "./sidebar/sidebarFeature";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 
@@ -26,7 +28,7 @@ const trees = {
   bySystem: undefined,
 };
 
-async function build() {
+async function build(item) {
   const contentEl = createElement("div", {
     classes: ["tree-container"],
   });
@@ -48,6 +50,7 @@ async function build() {
 
   worker.onmessage = (e) => {
     leafNodes = e.data;
+
     leafNodes.forEach((leaf) => {
       //////
       //
@@ -63,6 +66,16 @@ async function build() {
       //
       //////
     });
+
+    const tabControls = [
+      { title: "Tree", ref: 1, status: true },
+      { title: "Category", ref: 2, status: false },
+      { title: "System", ref: 3, status: false },
+      { title: "Discipline", ref: 4, status: false },
+    ];
+
+    addTabsToSidebarFeature(item.component, tabControls);
+
     worker.terminate();
   };
 
