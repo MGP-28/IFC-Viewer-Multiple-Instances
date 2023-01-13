@@ -26,6 +26,7 @@ export default class NavbarItem {
     this.subitems = [];
     this.component = undefined;
     this.sidebarPosition = undefined;
+    this.hasTabs = undefined;
     this.isExclusive = false;
   }
 
@@ -33,9 +34,8 @@ export default class NavbarItem {
     if (this.sidebarPosition) {
       this.component = renderSidebarFeature(this);
       const content = await this.#buildFunction(this);
-      addContentToSidebarFeature(this.component, content);
-    }
-    else this.#buildFunction(this);
+      addContentToSidebarFeature(this.component, await content);
+    } else this.#buildFunction(this);
 
     this.isRendered = true;
   }
@@ -66,5 +66,13 @@ export default class NavbarItem {
 
     // remove from sidebar
     unloadFeatureFromSidebar(this);
+  }
+
+  getContentElement() {
+    try {
+      return this.component.getElementsByClassName("content-container")[0];
+    } catch {
+      throw new Error("Feature has no DOM element");
+    }
   }
 }

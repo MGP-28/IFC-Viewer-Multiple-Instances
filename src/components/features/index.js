@@ -17,6 +17,7 @@ export default async function startFeatures() {
   //// subitems
   const selectionTree = new NavbarItem("Selection Tree", SpatialTree.build);
   selectionTree.sidebarPosition = "l1";
+  selectionTree.hasTabs = true;
   const properties = new NavbarItem("Properties", buildTemp);
   properties.sidebarPosition = "l2";
   // append subitems
