@@ -1,5 +1,4 @@
 onmessage = async (e) => {
-  const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
   const references = {
     modelRef: undefined,
     levelRef: undefined,
