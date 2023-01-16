@@ -25,13 +25,6 @@ const references = {
   categoryRef: undefined,
 };
 
-const trees = {
-  byCategory: undefined,
-  byLevelCategory: undefined,
-  byDiscipline: undefined,
-  bySystem: undefined,
-};
-
 const tabControls = [
   { title: "Tree", ref: 0, status: false, content: undefined, buildFunction: renderSpatialTreeByLevelCategory },
   { title: "Category", ref: 1, status: true, content: undefined, buildFunction: renderSpatialTreeByCategory },
@@ -83,25 +76,28 @@ async function build(item) {
   return contentEl;
 
   function handleEvents() {
-    setTimeout(() => {
-      updateContent(tabControls[1]);
-    }, 1000);
-
     item.component.addEventListener("tabSelected", (e) => {
       const index = e.detail.ref;
       const tabData = tabControls[index];
       updateContent(tabData);
     });
   }
+}
 
-  async function updateContent(tabData) {
-    const element = item.component.getElementsByClassName("tree-container")[0];
-    if (tabData.content === undefined) tabData.content = await tabData.buildFunction();
-    console.log("tab content", tabData.content);
-    element.innerHTML = "";
-    element.appendChild(tabData.content);
-    emitCustomEventOnElement(element, "selectTab", tabData.ref);
-  }
+let firstLoad = true;
+async function load(item) {
+  if (!firstLoad) return;
+  const activeTab = tabControls.find((x) => x.status);
+  emitCustomEventOnElement(item.component, "selectTab", activeTab.ref);
+  updateContent(item, activeTab);
+  firstLoad = false;
+}
+
+async function updateContent(item, tabData) {
+  const element = item.component.getElementsByClassName("tree-container")[0];
+  if (tabData.content === undefined) tabData.content = await tabData.buildFunction();
+  element.innerHTML = "";
+  element.appendChild(tabData.content);
 }
 
 async function getObjectData(leaf) {
@@ -336,4 +332,4 @@ function removeIFCTagsFromName(text) {
   return text.replace(regex, "");
 }
 
-export { build };
+export { build, load };
