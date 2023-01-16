@@ -7,8 +7,12 @@ import * as Models from "../../stores/models";
 import * as SpatialTreeInterelementEventHandling from "../events/spatialTreeElementEvents";
 import { icons as iconsRep } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
-import { renderSidebarTabs } from "./generic/tabs";
 import { addTabsToSidebarFeature } from "./sidebar/sidebarFeature";
+import { renderSpatialTreeByCategory } from "./spatialTreeFeatures/treeByCategory";
+import { renderSpatialTreeByLevelCategory } from "./spatialTreeFeatures/treeByLevelCategory";
+import { renderSpatialTreeBySystem } from "./spatialTreeFeatures/treeBySystem";
+import { renderSpatialTreeByDiscipline } from "./spatialTreeFeatures/treeByDiscipline";
+import { emitCustomEventOnElement } from "../../helpers/emitEvent";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 
@@ -27,6 +31,13 @@ const trees = {
   byDiscipline: undefined,
   bySystem: undefined,
 };
+
+const tabControls = [
+  { title: "Tree", ref: 0, status: false, content: undefined, buildFunction: renderSpatialTreeByLevelCategory },
+  { title: "Category", ref: 1, status: true, content: undefined, buildFunction: renderSpatialTreeByCategory },
+  { title: "System", ref: 2, status: false, content: undefined, buildFunction: renderSpatialTreeBySystem },
+  { title: "Discipline", ref: 3, status: false, content: undefined, buildFunction: renderSpatialTreeByDiscipline },
+];
 
 async function build(item) {
   const contentEl = createElement("div", {
@@ -55,47 +66,66 @@ async function build(item) {
       //////
       //
 
-      const element = createElement("p", {
-        attributes: {
-          style: "font-size: 10px",
-        },
-        textContent: `${leaf.expressId} - ${leaf.modelIdx} - ${leaf.levelId} - ${leaf.category}`,
-      });
-      contentEl.appendChild(element);
-
-      const model = Models.models[leaf.modelIdx];
-      const props = await model.loader.ifcManager.getItemProperties(0, leaf.expressId);
-      const psets = await model.loader.ifcManager.getPropertySets(0, leaf.expressId);
-      console.log("props", props);
-      console.log("psets", psets);
-      for (let index1 = 0; index1 < psets.length; index1++) {
-        const pset = psets[index1];
-        if (!pset.HasProperties) continue;
-        for (let index = 0; index < pset.HasProperties.length; index++) {
-          const prop = pset.HasProperties[index];
-          if (!prop.value) continue;
-          const cc = await model.loader.ifcManager.getItemProperties(0, prop.value);
-          console.log("related to", leaf.expressId, cc);
-        }
-      }
+      const objData = await getObjectData(leaf);
+      // console.log("obj data", objData);
 
       //
       //////
     });
-
-    const tabControls = [
-      { title: "Tree", ref: 1, status: true },
-      { title: "Category", ref: 2, status: false },
-      { title: "System", ref: 3, status: false },
-      { title: "Discipline", ref: 4, status: false },
-    ];
 
     addTabsToSidebarFeature(item.component, tabControls);
 
     worker.terminate();
   };
 
+  handleEvents();
+
   return contentEl;
+
+  function handleEvents() {
+    setTimeout(() => {
+      updateContent(tabControls[1]);
+    }, 1000);
+
+    item.component.addEventListener("tabSelected", (e) => {
+      const index = e.detail.ref;
+      const tabData = tabControls[index];
+      updateContent(tabData);
+    });
+  }
+
+  async function updateContent(tabData) {
+    const element = item.component.getElementsByClassName("tree-container")[0];
+    if (tabData.content === undefined) tabData.content = await tabData.buildFunction();
+    console.log("tab content", tabData.content);
+    element.innerHTML = "";
+    element.appendChild(tabData.content);
+    emitCustomEventOnElement(element, "selectTab", tabData.ref);
+  }
+}
+
+async function getObjectData(leaf) {
+  const model = Models.models[leaf.modelIdx];
+  const props = await model.loader.ifcManager.getItemProperties(0, leaf.expressId);
+  const psets = await model.loader.ifcManager.getPropertySets(0, leaf.expressId);
+
+  const result = {
+    baseProps: props,
+    psetProps: [],
+  };
+
+  for (let i = 0; i < psets.length; i++) {
+    const pset = psets[i];
+    if (!pset.HasProperties) continue;
+    for (let j = 0; j < pset.HasProperties.length; j++) {
+      const prop = pset.HasProperties[j];
+      if (!prop.value) continue;
+      const psetProp = await model.loader.ifcManager.getItemProperties(0, prop.value);
+      result.psetProps.push(psetProp);
+    }
+  }
+
+  return result;
 }
 
 async function buildTreesContainer(trees) {

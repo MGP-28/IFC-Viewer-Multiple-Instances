@@ -19,7 +19,6 @@ function render(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive
       classes: ["sidebar-feature-tabs-tab"],
       textContent: tab.title,
     });
-    if (tab.status) tabEl.classList.toggle("active", true);
     handleTabEvents(tab, tabEl);
     element.appendChild(tabEl);
   });
