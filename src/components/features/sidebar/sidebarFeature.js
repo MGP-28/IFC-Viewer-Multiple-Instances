@@ -36,10 +36,20 @@ function render(item) {
 
 function addContent(component, content) {
   const contentEl = component.getElementsByClassName("content-container")[0];
-  console.log("contentEl", contentEl);
   contentEl.appendChild(content);
 }
 
+/**
+ * Adds tabs to sidebar feature.
+ * 
+ * All events pass tab "ref" as detail
+ * 
+ * Emits: tabSelected, tabDeselected
+ * 
+ * Listens: selectTab, deselectTab
+ * @param {HTMLElement} component Feature base component
+ * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
+ */
 function addTabs(component, tabs) {
   const oldContentEl = component.getElementsByTagName("div")[0];
   const content = oldContentEl.innerHTML;
