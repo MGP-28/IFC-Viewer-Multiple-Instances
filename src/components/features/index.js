@@ -15,10 +15,9 @@ export default async function startFeatures() {
   // Window (Selection tree, Properties)
   const window = new NavbarItem("Window", buildTemp);
   //// subitems
-  const selectionTree = new NavbarItem("Selection Tree", SpatialTree.build, SpatialTree.load);
+  const selectionTree = new NavbarItem("Selection Tree", SpatialTree.build);
   selectionTree.sidebarPosition = "l1";
   selectionTree.hasTabs = true;
-  selectionTree.loadAfterDOMRender = true;
   const properties = new NavbarItem("Properties", buildTemp);
   properties.sidebarPosition = "l2";
   // append subitems

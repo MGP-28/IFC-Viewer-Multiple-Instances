@@ -1,17 +1,10 @@
-import { emitGlobalEvent } from "../../../helpers/emitEvent";
 import { createElement } from "../../../helpers/generic/domElements";
 import * as Models from "../../../stores/models";
 
 async function render() {
-  emitGlobalEvent("loading");
-
-  const element = createElement("span", {
+  return createElement("span", {
     textContent: "nice",
   });
-
-  emitGlobalEvent("loadingComplete");
-
-  return element;
 
   const model = Models.models[leaf.modelIdx];
   const props = await model.loader.ifcManager.getItemProperties(0, leaf.expressId);
