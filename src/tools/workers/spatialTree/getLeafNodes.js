@@ -1,13 +1,13 @@
 let modelIdx = -1;
 
 onmessage = (e) => {
-  const models = e.data;
+  const trees = e.data;
   const leafNodes = [];
 
-  models.forEach((model, idx) => {
-    console.log(model.tree);
+  trees.forEach((tree, idx) => {
+    console.log(tree);
     modelIdx = idx;
-    const treeLeafNodes = findLeafNode(model, model.tree);
+    const treeLeafNodes = findLeafNode(tree);
     leafNodes.push(...treeLeafNodes);
   });
 
