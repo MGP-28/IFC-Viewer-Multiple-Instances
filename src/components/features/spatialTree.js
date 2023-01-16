@@ -89,6 +89,7 @@ async function load(item) {
   if (!firstLoad) return;
   const activeTab = tabControls.find((x) => x.status);
   emitCustomEventOnElement(item.component, "selectTab", activeTab.ref);
+  emitCustomEventOnElement(item.component, "selectTab", { ref: activeTab.ref });
   updateContent(item, activeTab);
   firstLoad = false;
 }
