@@ -28,6 +28,7 @@ export default class NavbarItem {
     this.sidebarPosition = undefined;
     this.hasTabs = undefined;
     this.isExclusive = false;
+    this.loadAfterDOMRender = false;
   }
 
   async build() {
@@ -43,7 +44,7 @@ export default class NavbarItem {
   async load() {
     this.isActive = true;
 
-    if (this.#loadFunction !== undefined) await this.#loadFunction(this);
+    if (this.#loadFunction !== undefined && !this.loadAfterDOMRender) await this.#loadFunction(this);
 
     emitEventOnElement(this.navbarItem, "loaded");
 
@@ -52,6 +53,8 @@ export default class NavbarItem {
 
     // add to sidebar
     loadFeatureIntoSidebar(this);
+
+    if (this.#loadFunction !== undefined && this.loadAfterDOMRender) await this.#loadFunction(this);
   }
 
   async unload() {
