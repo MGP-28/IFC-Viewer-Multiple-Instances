@@ -1,27 +1,40 @@
 onmessage = async (e) => {
-  const references = {
-    modelRef: undefined,
-    levelRef: undefined,
-    categoryRef: undefined,
-  };
-
-  const leafNodes = e.data;
+  const objects = e.data;
   const categories = {};
 
-  // logic here
-  //
+  objects.sort(sortObjectsByCategory);
 
+  let currentCategory = undefined;
+  for (let index = 0; index < objects.length; index++) {
+    const object = objects[index];
+    // If a new category is found, create HTML element to append objects
+    if (object.category !== currentCategory) {
+      currentCategory = object.category;
+      categories[object.category] = [];
+    }
 
+    // Object data element
+    const model = Models.models[object.modelIdx];
+    const props = await model.loader.ifcManager.getItemProperties(0, object.expressId);
 
-  //
-  //////
+    const leafNode = {
+      node: object,
+      props,
+    };
 
-  postMessage("nice");
+    categories[object.category].push(leafNode);
+  }
+
+  postMessage(categories);
 };
 
 self.addEventListener("unhandledrejection", function (event) {
-  // the event object has two special properties:
-  // event.promise - the promise that generated the error
-  // event.reason  - the unhandled error object
   throw event.reason;
 });
+
+function sortObjectsByCategory(a, b) {
+  // Compare the 2 dates
+  if (a.category < b.category) return -1;
+  if (a.category > b.category) return 1;
+  return 0;
+}

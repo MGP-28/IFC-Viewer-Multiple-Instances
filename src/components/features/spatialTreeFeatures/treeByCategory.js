@@ -1,10 +1,36 @@
+import { icons } from "../../../configs/icons";
+import { emitGlobalEvent } from "../../../helpers/emitEvent";
 import { createElement } from "../../../helpers/generic/domElements";
 import * as Models from "../../../stores/models";
+import { objectsData } from "../../../stores/renderObjects";
+import { buildIcon } from "../../generic/icon";
 
 async function render() {
-  return createElement("span", {
-    textContent: "nice",
+  emitGlobalEvent("loading");
+
+  const element = createElement("div", {
+    classes: ["spatial-tree-byCategory"],
   });
+
+  const objects = Array.from(objectsData); //[...objectsData];
+
+  // Send data to be processed in web worker
+  const worker = new Worker("/src/tools/workers/spatialTree/byCategory.js", { type: "module" });
+  worker.postMessage(objects);
+  worker.onerror = (event) => {
+    console.log("There is an error with your worker!");
+  };
+  worker.onmessage = (e) => {
+    const objectsByCategory = e.data;
+
+    //
+
+    worker.terminate();
+  };
+
+  emitGlobalEvent("loadingComplete");
+
+  return element;
 
   const model = Models.models[leaf.modelIdx];
   const props = await model.loader.ifcManager.getItemProperties(0, leaf.expressId);
@@ -20,6 +46,13 @@ async function render() {
       console.log("related to", leaf.expressId, cc);
     }
   }
+}
+
+function sortObjectsByCategory(a, b) {
+  // Compare the 2 dates
+  if (a.category < b.category) return -1;
+  if (a.category > b.category) return 1;
+  return 0;
 }
 
 export { render as renderSpatialTreeByCategory };

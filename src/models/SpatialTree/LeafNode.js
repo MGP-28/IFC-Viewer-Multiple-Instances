@@ -1,11 +1,12 @@
 export default class LeafNode {
-  constructor(modelIdx, expressId, category, level) {
-    this.expressId = expressId;
-    this.modelIdx = modelIdx;
-    this.category = category;
-    this.level = level;
-
+  constructor(leafNode) {
+    this.expressId = leafNode.expressId;
+    this.modelIdx = leafNode.modelIdx;
+    this.category = leafNode.category;
+    this.level = leafNode.level;
+    
     // subject to change
+    this.props = undefined;
     this.discipline = undefined;
     this.system = undefined;
   }

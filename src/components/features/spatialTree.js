@@ -13,6 +13,9 @@ import { renderSpatialTreeByLevelCategory } from "./spatialTreeFeatures/treeByLe
 import { renderSpatialTreeBySystem } from "./spatialTreeFeatures/treeBySystem";
 import { renderSpatialTreeByDiscipline } from "./spatialTreeFeatures/treeByDiscipline";
 import { emitCustomEventOnElement } from "../../helpers/emitEvent";
+import LeafNode from "../../models/SpatialTree/LeafNode";
+import { addObjectData } from "../../stores/renderObjects";
+import { loadCSS } from "../../helpers/generic/cssLoader";
 
 const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
 
@@ -33,6 +36,8 @@ const tabControls = [
 ];
 
 async function build(item) {
+  loadCSS("src/assets/css/spatialTree.css");
+
   const contentEl = createElement("div", {
     classes: ["tree-container"],
   });
@@ -56,14 +61,11 @@ async function build(item) {
     leafNodes = e.data;
 
     leafNodes.forEach(async (leaf) => {
-      //////
-      //
+      // const objData = await getObjectData(leaf);
+      // console.log(objData);
 
-      const objData = await getObjectData(leaf);
-      // console.log("obj data", objData);
-
-      //
-      //////
+      const leafNodeInst = new LeafNode(leaf);
+      addObjectData(leafNodeInst);
     });
 
     addTabsToSidebarFeature(item.component, tabControls);
@@ -79,7 +81,7 @@ async function build(item) {
     item.component.addEventListener("tabSelected", (e) => {
       const index = e.detail.ref;
       const tabData = tabControls[index];
-      updateContent(tabData);
+      updateContent(item, tabData);
     });
   }
 }
@@ -88,7 +90,6 @@ let firstLoad = true;
 async function load(item) {
   if (!firstLoad) return;
   const activeTab = tabControls.find((x) => x.status);
-  emitCustomEventOnElement(item.component, "selectTab", activeTab.ref);
   emitCustomEventOnElement(item.component, "selectTab", { ref: activeTab.ref });
   updateContent(item, activeTab);
   firstLoad = false;

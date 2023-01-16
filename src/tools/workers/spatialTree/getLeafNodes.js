@@ -42,7 +42,6 @@ function findLeafNode(node) {
 
   // if it's a level, set the level property of all child leaf nodes as its own expressID
   if (node.type == "IFCBUILDINGSTOREY") {
-    console.log("level", node);
     foundNodes.forEach((leafNode) => {
       leafNode.levelId = node.expressID;
     });
