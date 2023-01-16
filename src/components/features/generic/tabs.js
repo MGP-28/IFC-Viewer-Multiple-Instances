@@ -9,7 +9,7 @@ import { createElement } from "../../../helpers/generic/domElements";
  * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
  * @param {boolean} isOnlyOneActiveTab Default true; Wether or not tabs disable automatically when another one is selected
  */
-function render(tabs, isOnlyOneActiveTab = true) {
+function render(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive = true) {
   const element = createElement("ul", {
     classes: ["sidebar-feature-tabs-wrapper"],
   });
@@ -30,12 +30,15 @@ function render(tabs, isOnlyOneActiveTab = true) {
     // Emits "tabSelected" to parent element on click and enables "active" class
     tabEl.addEventListener("click", (e) => {
       const isActive = tabEl.classList.contains("active");
-      if (isActive) emitCustomEventOnElement(element, "tabDeselected", { ref: tab.ref });
-      else emitCustomEventOnElement(element, "tabSelected", { ref: tab.ref });
+      if (isActive) {
+        const activeCounter = element.getElementsByClassName("active").length;
+        if(!isAlwaysOneTabActive || activeCounter > 1) emitCustomEventOnElement(component, "tabDeselected", { ref: tab.ref });
+      }
+      else emitCustomEventOnElement(component, "tabSelected", { ref: tab.ref });
     });
 
     // Listens "tabSelected" triggered by other tab or own tab
-    element.addEventListener("tabSelected", (e) => {
+    component.addEventListener("tabSelected", (e) => {
       const ref = e.detail.ref;
       let isActivedTab = false;
       if (tab.ref === ref) isActivedTab = true;
@@ -47,19 +50,19 @@ function render(tabs, isOnlyOneActiveTab = true) {
     });
 
     // Listens "tabDeselected" triggered by other tab or own tab
-    element.addEventListener("tabDeselected", (e) => {
+    component.addEventListener("tabDeselected", (e) => {
       disableActiveStatus(tabEl, tab, e);
     });
 
     // Listens "selectTab" coming from outside parent and enables "active" class
-    element.addEventListener("selectTab", (e) => {
+    component.addEventListener("selectTab", (e) => {
       const ref = e.detail.ref;
       if (tab.ref !== ref) return;
       tabEl.classList.toggle("active", true);
     });
 
     // Listens "deselectTab" coming from outside parent and disables "active" class
-    element.addEventListener("deselectTab", (e) => {
+    component.addEventListener("deselectTab", (e) => {
       disableActiveStatus(tabEl, tab, e);
     });
   }

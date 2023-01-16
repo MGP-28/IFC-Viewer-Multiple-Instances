@@ -54,7 +54,7 @@ function addTabs(component, tabs) {
   });
   wrapper.appendChild(contentEl);
 
-  const tabsEl = renderSidebarTabs(tabs);
+  const tabsEl = renderSidebarTabs(component, tabs);
   wrapper.appendChild(tabsEl);
   
   oldContentEl.innerHTML = "";
