@@ -3,7 +3,7 @@ export default class LeafNode {
     this.expressId = leafNode.expressId;
     this.modelIdx = leafNode.modelIdx;
     this.category = leafNode.category;
-    this.level = leafNode.level;
+    this.levelId = leafNode.levelId;
     
     // subject to change
     this.props = undefined;

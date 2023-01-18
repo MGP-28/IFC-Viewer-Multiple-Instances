@@ -1,9 +1,7 @@
-import { icons } from "../../../configs/icons";
 import { emitGlobalEvent } from "../../../helpers/emitEvent";
 import { createElement } from "../../../helpers/generic/domElements";
 import * as Models from "../../../stores/models";
 import { objectsData } from "../../../stores/renderObjects";
-import { buildIcon } from "../../generic/icon";
 
 async function render() {
   emitGlobalEvent("loading");
@@ -23,7 +21,7 @@ async function render() {
   worker.onmessage = (e) => {
     const objectsByCategory = e.data;
 
-    //
+    console.log("objectsByCategory", objectsByCategory);
 
     worker.terminate();
   };

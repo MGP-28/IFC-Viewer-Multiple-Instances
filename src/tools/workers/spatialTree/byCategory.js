@@ -1,4 +1,6 @@
 onmessage = async (e) => {
+  console.log("worker working");
+
   const objects = e.data;
   const categories = {};
 
@@ -7,22 +9,13 @@ onmessage = async (e) => {
   let currentCategory = undefined;
   for (let index = 0; index < objects.length; index++) {
     const object = objects[index];
-    // If a new category is found, create HTML element to append objects
+    // If a new category is found, add it to the categories object as key
     if (object.category !== currentCategory) {
       currentCategory = object.category;
       categories[object.category] = [];
     }
 
-    // Object data element
-    const model = Models.models[object.modelIdx];
-    const props = await model.loader.ifcManager.getItemProperties(0, object.expressId);
-
-    const leafNode = {
-      node: object,
-      props,
-    };
-
-    categories[object.category].push(leafNode);
+    categories[object.category].push(object);
   }
 
   postMessage(categories);
