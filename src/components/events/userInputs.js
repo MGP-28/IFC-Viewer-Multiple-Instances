@@ -17,6 +17,8 @@ import { renderContextMenu } from "../contextMenu/contextMenu";
 import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
 import { renderAnnotationForm } from "../annotation/form";
 import { setCameraLookingPoint } from "../../helpers/camera";
+import * as RaycastStore from "../../stores/raycast";
+import * as SelectedStore from "../../stores/selection.js";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -30,8 +32,9 @@ export default function startUserInputs() {
 
     canvas.onmousemove = async (event) => {
       // When user is present any special key
-      if (isUserPressingSpecialKeys()) {
+      if (isUserPressingSpecialKeys() || !userInteractions.keyCActive) {
         resetVisualPlanesColoring();
+        resetHighlighted();
         return;
       }
       // When mouse is dragging (drag clipping plane)
@@ -56,7 +59,7 @@ export default function startUserInputs() {
       if (
         !ClippingPlanesStore.foundPlane ||
         !userInteractions.clippingPlanes ||
-        userInteractions.keyCActive
+        !userInteractions.keyCActive
       )
         return;
 
@@ -120,6 +123,11 @@ function resetVisualPlanesColoring() {
     visualPlane.material.color = _color;
   }
   _uuid = undefined;
+}
+
+function resetHighlighted(){
+  RaycastStore.resetFound();
+  SelectedStore.resetHighlightedProperties();
 }
 
 function highlightVisualPlane() {

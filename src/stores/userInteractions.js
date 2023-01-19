@@ -10,7 +10,7 @@ const userInteractions = {
 }
 
 const isUserPressingSpecialKeys = () => {
-    return userInteractions.controlActive || userInteractions.shiftActive || userInteractions.keyCActive
+    return userInteractions.controlActive || userInteractions.shiftActive
 }
 
 export { userInteractions, isUserPressingSpecialKeys }
