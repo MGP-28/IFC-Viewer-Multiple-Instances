@@ -9,18 +9,6 @@ import { emitCustomEventOnElement } from "../../helpers/emitEvent";
 import LeafNode from "../../models/SpatialTree/LeafNode";
 import { addObjectData } from "../../stores/renderObjects";
 import { loadCSS } from "../../helpers/generic/cssLoader";
-import getNodePropertyName from "../../helpers/getNodePropertyName";
-
-const IFCCategoriesToFecthName = ["IFCBUILDINGSTOREY"];
-
-let isFirstElementOfTree = true;
-let useIconOnLabel = true;
-let currentTreeIdx = null;
-const references = {
-  modelRef: undefined,
-  levelRef: undefined,
-  categoryRef: undefined,
-};
 
 const tabControls = [
   { title: "Tree", ref: 0, status: false, content: undefined, buildFunction: renderSpatialTreeByLevelCategory },
