@@ -26,25 +26,33 @@ function render() {
     level.name = await getNodePropertyName({ expressID: level.levelId }, level.modelIdx);
   });
 
-  console.log("levels", levels);
+  let id = undefined;
+  id = setInterval(() => {
+    const levelNames = levels.map((x) => x.name);
+    if ([levelNames].includes(null)) return;
 
-  // PROBLEM HERE
+    // Send data to be processed in web worker
+    worker({ objects, levels });
 
-  // Send data to be processed in web worker
-  const worker = new Worker("/src/tools/workers/spatialTree/byLevelByCategory.js", { type: "module" });
-  worker.postMessage({ objects, levels });
-  worker.onerror = (event) => {
-    console.log("There is an error with your worker!");
-  };
-  worker.onmessage = (e) => {
-    const objectsByLevelByCategory = e.data;
+    clearInterval(id);
+  }, 100);
 
-    console.log("objectsByLevelByCategory", objectsByLevelByCategory);
+  function worker(data) {
+    const worker = new Worker("/src/tools/workers/spatialTree/byLevelByCategory.js", { type: "module" });
+    worker.postMessage(data);
+    worker.onerror = (event) => {
+      console.log("There is an error with your worker!");
+    };
+    worker.onmessage = (e) => {
+      const objectsByLevelByCategory = e.data;
 
-    emitGlobalEvent("loadingComplete");
+      //
 
-    worker.terminate();
-  };
+      emitGlobalEvent("loadingComplete");
+
+      worker.terminate();
+    };
+  }
 
   return element;
 }

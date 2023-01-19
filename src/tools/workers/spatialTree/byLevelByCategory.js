@@ -1,13 +1,9 @@
 onmessage = async (e) => {
-  console.log("worker working");
-
   const { objects, levels } = e.data;
 
   const tree = objects.reduce((acc, cv) => {
-    console.log("cv", cv);
     const levelData = levels.find(x => x.modelIdx == cv.modelIdx && x.levelId == cv.levelId);
-    console.log("levelData", levelData);
-    let level = acc.find((x) => x.name == levelName);
+    let level = acc.find((x) => x.name == levelData.name);
     if (level === undefined) {
       const levelObj = {
         name: levelData.name,
@@ -29,8 +25,6 @@ onmessage = async (e) => {
     category.objects.push(cv);
     return acc;
   }, []);
-
-  console.log("objects by level by category", tree);
 
   postMessage(tree);
 };
