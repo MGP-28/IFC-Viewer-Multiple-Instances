@@ -1,16 +1,18 @@
 import { emitGlobalEvent } from "../../../helpers/emitEvent";
 import { createElement } from "../../../helpers/generic/domElements";
+import BranchNode from "../../../models/SpatialTree/BranchNode";
 import * as Models from "../../../stores/models";
 import { objectsData } from "../../../stores/renderObjects";
+import { buildTree } from "./tree";
 
 async function render() {
   emitGlobalEvent("loading");
 
-  const element = createElement("div", {
-    classes: ["spatial-tree-byCategory"],
+  const element = createElement("ul", {
+    classes: ["tree-container"],
   });
 
-  const objects = Array.from(objectsData); //[...objectsData];
+  const objects = Array.from(objectsData);
 
   // Send data to be processed in web worker
   const worker = new Worker("/src/tools/workers/spatialTree/byCategory.js", { type: "module" });
@@ -18,10 +20,19 @@ async function render() {
   worker.onerror = (event) => {
     console.log("There is an error with your worker!");
   };
-  worker.onmessage = (e) => {
-    const objectsByCategory = e.data;
+  worker.onmessage = async (e) => {
+    const _objectsByCategory = e.data;
 
-    console.log("objectsByCategory", objectsByCategory);
+    const tree = _objectsByCategory.reduce((acc, cv) => {
+      const branch = new BranchNode(cv);
+      acc.push(branch);
+      return acc;
+    }, []);
+
+    console.log("tree", tree);
+
+    const content = await renderAtReceivedData(tree);
+    element.appendChild(content);
 
     worker.terminate();
   };
@@ -29,28 +40,10 @@ async function render() {
   emitGlobalEvent("loadingComplete");
 
   return element;
-
-  const model = Models.models[leaf.modelIdx];
-  const props = await model.loader.ifcManager.getItemProperties(0, leaf.expressId);
-  const psets = await model.loader.ifcManager.getPropertySets(0, leaf.expressId);
-
-  for (let index1 = 0; index1 < psets.length; index1++) {
-    const pset = psets[index1];
-    if (!pset.HasProperties) continue;
-    for (let index = 0; index < pset.HasProperties.length; index++) {
-      const prop = pset.HasProperties[index];
-      if (!prop.value) continue;
-      const cc = await model.loader.ifcManager.getItemProperties(0, prop.value);
-      console.log("related to", leaf.expressId, cc);
-    }
-  }
 }
 
-function sortObjectsByCategory(a, b) {
-  // Compare the 2 dates
-  if (a.category < b.category) return -1;
-  if (a.category > b.category) return 1;
-  return 0;
+async function renderAtReceivedData(tree) {
+  return await buildTree(tree);
 }
 
 export { render as renderSpatialTreeByCategory };
