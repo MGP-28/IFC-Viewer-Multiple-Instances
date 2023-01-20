@@ -43,9 +43,6 @@ async function build(item) {
     leafNodes = e.data;
 
     leafNodes.forEach(async (leaf) => {
-      // const objData = await getObjectData(leaf);
-      // console.log(objData);
-
       const leafNodeInst = new LeafNode(leaf);
       addObjectData(leafNodeInst);
     });
