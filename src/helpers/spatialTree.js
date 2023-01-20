@@ -2,7 +2,7 @@ import * as Models from "../stores/models";
 
 let modelInstanceIdx = undefined;
 
-async function getAllSpactialTrees() {
+async function getAllSpatialTrees() {
   for (let idx = 0; idx < Models.models.length; idx++) {
     modelInstanceIdx = idx;
     const newTree = await getSpatialTree(idx);
@@ -18,4 +18,4 @@ async function getSpatialTree(idx) {
   return ifcModelTree;
 }
 
-export { getAllSpactialTrees, getSpatialTree };
+export { getAllSpatialTrees, getSpatialTree };
