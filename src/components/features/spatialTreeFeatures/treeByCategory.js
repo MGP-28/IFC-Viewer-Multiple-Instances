@@ -9,7 +9,7 @@ async function render() {
   emitGlobalEvent("loading");
 
   const element = createElement("ul", {
-    classes: ["tree-container"],
+    classes: ["tree-wrapper"],
   });
 
   const objects = Array.from(objectsData);
@@ -29,10 +29,9 @@ async function render() {
       return acc;
     }, []);
 
-    console.log("tree", tree);
+    console.log('tree', tree);
 
-    const content = await renderAtReceivedData(tree);
-    element.appendChild(content);
+    await buildTree(element, tree);
 
     worker.terminate();
   };
@@ -40,10 +39,6 @@ async function render() {
   emitGlobalEvent("loadingComplete");
 
   return element;
-}
-
-async function renderAtReceivedData(tree) {
-  return await buildTree(tree);
 }
 
 export { render as renderSpatialTreeByCategory };

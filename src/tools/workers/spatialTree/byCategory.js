@@ -2,7 +2,7 @@ onmessage = async (e) => {
   console.log("worker working");
 
   const objects = e.data;
-  const categories = {};
+  const _categories = {};
 
   objects.sort(sortObjectsByCategory);
 
@@ -12,11 +12,16 @@ onmessage = async (e) => {
     // If a new category is found, add it to the categories object as key
     if (object.category !== currentCategory) {
       currentCategory = object.category;
-      categories[object.category] = [];
+      _categories[object.category] = {
+        title: object.category,
+        children: []
+      };
     }
 
-    categories[object.category].push(object);
+    _categories[object.category].children.push(object);
   }
+
+  const categories = Object.values(_categories);
 
   postMessage(categories);
 };
