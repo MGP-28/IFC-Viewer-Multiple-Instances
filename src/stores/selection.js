@@ -53,9 +53,14 @@ const vars = {
  * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
-const setSelectedProperties = (props, ids, modelIdx, isFromViewer) => {
+const setSelectedProperties = (props, objectsData, isFromViewer) => {
   vars.selected.reset();
-  vars.selected.addProps(props, ids, modelIdx);
+  for (const modelIdx in objectsData) {
+    if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
+      const objectDataByModel = objectsData[modelIdx];
+      vars.selected.addProps(props, objectDataByModel, modelIdx);
+    }
+  }
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("selectedChanged");
 };
@@ -75,9 +80,14 @@ let isSelectionFromViewer = true;
  * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
-const setHighlightedProperties = (props, ids, modelIdx, isFromViewer) => {
+const setHighlightedProperties = (props, objectsData, isFromViewer) => {
   vars.highlighted.reset();
-  vars.highlighted.addProps(props, ids, modelIdx);
+  for (const modelIdx in objectsData) {
+    if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
+      const expressIDsByModel = objectsData[modelIdx];
+      vars.highlighted.addProps(props, expressIDsByModel, modelIdx);
+    }
+  }
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("highlightedChanged");
 };

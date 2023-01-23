@@ -15,11 +15,6 @@ async function buildTree(container, branches) {
     const element = await buildNode(branch);
     container.appendChild(element);
   });
-
-  // nodes.forEach(async (node) => {
-  //   const nodeEl = await buildNode(node);
-  //   treeEl.appendChild(nodeEl);
-  // });
 }
 
 /**
@@ -92,7 +87,7 @@ async function buildTitle(node) {
 
   //
   //
-  // await processIconEvents(wrapper, nodeIcons, node);
+  await processIconEvents(wrapper, nodeIcons, node);
   //
   //
 
@@ -119,44 +114,9 @@ async function buildChildren(node) {
   return childrenEl;
 }
 
-// async function processIconEvents(span, icons, node) {
-//   const branchLevel = getElementLevel();
-//   switch (branchLevel) {
-//     case "building": {
-//       // console.log("building");
-//       isFirstElementOfTree = false;
-//       useIconOnLabel = false;
-//       await SpatialTreeInterelementEventHandling.processBuildingEvents(span, icons, currentTreeIdx);
-//       references.modelRef = new SpatialTreeReference(node.type, icons);
-//       break;
-//     }
-
-//     case "level": {
-//       // console.log("level");
-//       const levelName = await getNodePropertyName(node, currentTreeIdx);
-//       await SpatialTreeInterelementEventHandling.processLevelEvents(span, icons, currentTreeIdx, levelName);
-//       references.levelRef = new SpatialTreeReference(levelName, icons);
-//       break;
-//     }
-
-//     case "category": {
-//       // console.log("category");
-//       references.categoryRef = new SpatialTreeReference(node.type, icons);
-//       await SpatialTreeInterelementEventHandling.processCategoryNodeEvents(
-//         span,
-//         icons,
-//         currentTreeIdx,
-//         references.levelRef.name,
-//         node.type
-//       );
-//       break;
-//     }
-//     default: {
-//       await SpatialTreeInterelementEventHandling.processLeafNodeEvents(span, icons, node.expressID, currentTreeIdx);
-//       break;
-//     }
-//   }
-// }
+async function processIconEvents(span, icons, node) {
+  await SpatialTreeInterelementEventHandling.processNodeEvents(span, icons, node);
+}
 
 function removeIFCTagsFromName(text) {
   const regex = getIfcRegex();

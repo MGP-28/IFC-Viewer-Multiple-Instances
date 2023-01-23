@@ -7,7 +7,6 @@ import { clearString } from "../helpers/string";
  * @returns string
  */
 export default async function getNodePropertyName(node) {
-  console.log('node', node)
   const model = Models.models[node.modelIdx];
   const props = await model.loader.ifcManager.getItemProperties(0, node.expressId);
   let name = "No title";
