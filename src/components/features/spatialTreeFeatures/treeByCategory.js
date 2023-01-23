@@ -12,31 +12,33 @@ async function render() {
     classes: ["tree-wrapper"],
   });
 
-  const objects = Array.from(objectsData);
+  setTimeout(() => {
+    const objects = Array.from(objectsData);
 
-  // Send data to be processed in web worker
-  const worker = new Worker("/src/tools/workers/spatialTree/byCategory.js", { type: "module" });
-  worker.postMessage(objects);
-  worker.onerror = (event) => {
-    console.log("There is an error with your worker!");
-  };
-  worker.onmessage = async (e) => {
-    const _objectsByCategory = e.data;
+    // Send data to be processed in web worker
+    const worker = new Worker("/src/tools/workers/spatialTree/byCategory.js", { type: "module" });
+    worker.postMessage(objects);
+    worker.onerror = (event) => {
+      console.log("There is an error with your worker!");
+    };
+    worker.onmessage = async (e) => {
+      const _objectsByCategory = e.data;
 
-    const tree = _objectsByCategory.reduce((acc, cv) => {
-      const branch = new BranchNode(cv);
-      acc.push(branch);
-      return acc;
-    }, []);
+      const tree = _objectsByCategory.reduce((acc, cv) => {
+        const branch = new BranchNode(cv);
+        acc.push(branch);
+        return acc;
+      }, []);
 
-    console.log('tree', tree);
+      console.log("tree", tree);
 
-    await buildTree(element, tree);
+      await buildTree(element, tree);
 
-    worker.terminate();
-  };
+      worker.terminate();
 
-  emitGlobalEvent("loadingComplete");
+      emitGlobalEvent("loadingComplete");
+    };
+  }, 1);
 
   return element;
 }

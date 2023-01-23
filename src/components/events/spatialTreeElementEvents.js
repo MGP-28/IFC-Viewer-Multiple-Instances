@@ -10,14 +10,21 @@ async function processNodeEvents(titleEl, icons, node) {
 // #region aux functions
 
 function getAllObjectsDataByModel(node) {
-  const data = getAllObjectsData(node);
-  let objectsData = {};
+  const data = getAllObjectsData(node); // [ { expressId, modelIdx }, ... ]
+  let objectsData = [];
   for (let idx = 0; idx < data.length; idx++) {
     const singleObjectData = data[idx];
     const modelIdx = singleObjectData.modelIdx;
     // create array if it doesn't exist
-    if (!objectsData[modelIdx]) objectsData[modelIdx] = [];
-    objectsData[modelIdx].push(singleObjectData);
+    let _modelIdx = objectsData.findIndex((x) => x.modelIdx == modelIdx);
+    if (_modelIdx == -1) {
+      objectsData.push({
+        modelIdx: modelIdx,
+        expressIDs: [],
+      });
+      _modelIdx = objectsData.length - 1;
+    }
+    objectsData[_modelIdx].expressIDs.push(singleObjectData.expressId);
   }
   return objectsData;
 }
@@ -75,29 +82,18 @@ async function handleEvents(titleEl, icons, objectsData) {
 
       isEnabled = !isEnabled;
 
-      for (const modelIdx in objectsData) {
-        if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-          const objectDataByModel = objectsData[modelIdx];
-          handleMainSubset(objectDataByModel, isEnabled);
-        }
-      }
+      handleMainSubset(objectsData, isEnabled);
     });
 
     document.addEventListener("visibilityChanged", (e) => {
-      for (const modelIdx in objectsData) {
-        if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-          const objectDataByModel = objectsData[modelIdx];
-          coordinateVisibility(icons, objectDataByModel, isEnabled);
-        }
-      }
+      coordinateVisibility(icons, objectsData);
     });
   }
 
   async function handleSelection(selectionEl, objectsData, titleEl) {
-    const objectsArr = Object.keys(objectsData).reduce((acc, cv) => acc.concat(objectsData[cv]), []);
-    // console.log("objectsDataJoinValues", objectsArr);
-    const isLeaf = objectsArr.length == 1;
-    const props = isLeaf ? await getProps(objectsArr[0]) : "fake props";
+    const jointExpressIDs = Object.keys(objectsData).reduce((acc, cv) => acc.concat(objectsData[cv].expressIDs), []);
+    const isLeaf = jointExpressIDs.length == 1;
+    const props = isLeaf ? await getProps(objectsData[0]) : "fake props";
 
     const eventEls = isLeaf ? [titleEl, selectionEl] : [selectionEl];
 
@@ -114,29 +110,32 @@ async function handleEvents(titleEl, icons, objectsData) {
       const selected = SelectionStore.vars.selected;
 
       let isInSelection = false;
-      for (const modelIdx in objectsData) {
-        if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-          const expressIDsByModel = objectsData[modelIdx];
-          for (let idx = 0; idx < expressIDsByModel.length; idx++) {
-            const expressID = expressIDsByModel[idx];
-            if (selected.includesObjectByID(modelIdx, expressID)) {
-              isInSelection = true;
-              break;
-            }
+      for (let idx = 0; idx < objectsData.length; idx++) {
+        const objectsDataByModel = objectsData[idx];
+        for (let idx2 = 0; idx2 < objectsDataByModel.expressIDs.length; idx2++) {
+          const expressID = objectsDataByModel.expressIDs[idx2];
+          if (selected.includesObjectByID(objectsDataByModel.modelIdx, expressID)) {
+            isInSelection = true;
+            break;
           }
         }
-        if(isInSelection) break;
+        if (isInSelection) break;
       }
       isSelection = selected.isValid() && isInSelection;
       toggleActiveCSSClass(titleEl, isSelection);
     });
 
+    /**
+     *
+     * @param {Object} objectData {modelIdx, expressId}
+     * @returns
+     */
     async function getProps(objectData) {
-      const modelIdx = objectData.modelIdx;
+      const { modelIdx } = objectData;
+      const expressId = objectData.expressIDs[0];
       const model = Models.models[modelIdx];
       const loader = model.loader;
-      const expressID = objectData.expressId;
-      return await loader.ifcManager.getItemProperties(0, expressID, true);
+      return await loader.ifcManager.getItemProperties(0, expressId, true);
     }
   }
 
@@ -167,19 +166,19 @@ async function handleEvents(titleEl, icons, objectsData) {
 
   function coordinateVisibility(icons, objectsData) {
     isEnabled = false;
-    for (const modelIdx in objectsData) {
-      if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-        const expressIDsByModel = objectsData[modelIdx];
-        for (let idx = 0; idx < expressIDsByModel.length; idx++) {
-          const expressID = expressIDsByModel[modelIdx];
-          if (SelectionStore.isVisible(modelIdx, expressID)) {
-            isEnabled = true;
-            break;
-          }
+    for (let idx = 0; idx < objectsData.length; idx++) {
+      const modelIdx = objectsData[idx].modelIdx;
+      const expressIDs = objectsData[idx].expressIDs;
+      for (let idx2 = 0; idx2 < expressIDs.length; idx2++) {
+        const expressID = expressIDs[idx2];
+        if (SelectionStore.isVisible(modelIdx, expressID)) {
+          isEnabled = true;
+          break;
         }
-        toggleVisibilityIcon(icons.visibility, isEnabled);
       }
+      if (isEnabled) break;
     }
+    toggleVisibilityIcon(icons.visibility);
   }
 
   /**
@@ -188,16 +187,15 @@ async function handleEvents(titleEl, icons, objectsData) {
    * @param {Integer} modelIdx identifies which model to manipulate
    */
   function handleMainSubset(objectsData, isEnabled) {
-    for (const modelIdx in objectsData) {
-      if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-        const expressIDsByModel = objectsData[modelIdx];
-        if (isEnabled) {
-          SubsetBuilder.addToSubset(modelIdx, expressIDsByModel);
-          SelectionStore.addIdsToVisible(modelIdx, expressIDsByModel);
-        } else {
-          SubsetBuilder.removeFromSubset(modelIdx, expressIDsByModel);
-          SelectionStore.removeIdsFromVisible(modelIdx, expressIDsByModel);
-        }
+    for (let idx = 0; idx < objectsData.length; idx++) {
+      const modelIdx = objectsData[idx].modelIdx;
+      const expressIDs = objectsData[idx].expressIDs;
+      if (isEnabled) {
+        SubsetBuilder.addToSubset(modelIdx, expressIDs);
+        SelectionStore.addIdsToVisible(modelIdx, expressIDs);
+      } else {
+        SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
+        SelectionStore.removeIdsFromVisible(modelIdx, expressIDs);
       }
     }
   }

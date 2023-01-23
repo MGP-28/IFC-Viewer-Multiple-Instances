@@ -4,8 +4,8 @@ import Selected from "../models/Selected";
 // Currently visible object's properties
 let visibilityByIds = {};
 
-function getVisibilityByIds(){
-  return visibilityByIds
+function getVisibilityByIds() {
+  return visibilityByIds;
 }
 
 const isVisible = (modelIdx, expressID) => {
@@ -40,7 +40,7 @@ const resetVisible = () => {
     }
   }
   emitGlobalEvent("visibilityChanged");
-}
+};
 
 const vars = {
   selected: new Selected(),
@@ -55,11 +55,10 @@ const vars = {
  */
 const setSelectedProperties = (props, objectsData, isFromViewer) => {
   vars.selected.reset();
-  for (const modelIdx in objectsData) {
-    if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-      const objectDataByModel = objectsData[modelIdx];
-      vars.selected.addProps(props, objectDataByModel, modelIdx);
-    }
+  for (let idx = 0; idx < objectsData.length; idx++) {
+    const modelIdx = objectsData[idx].modelIdx;
+    const expressIDs = objectsData[idx].expressIDs;
+    vars.selected.addProps(props, expressIDs, modelIdx);
   }
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("selectedChanged");
@@ -82,11 +81,10 @@ let isSelectionFromViewer = true;
  */
 const setHighlightedProperties = (props, objectsData, isFromViewer) => {
   vars.highlighted.reset();
-  for (const modelIdx in objectsData) {
-    if (Object.hasOwnProperty.call(objectsData, modelIdx)) {
-      const expressIDsByModel = objectsData[modelIdx];
-      vars.highlighted.addProps(props, expressIDsByModel, modelIdx);
-    }
+  for (let idx = 0; idx < objectsData.length; idx++) {
+    const modelIdx = objectsData[idx].modelIdx;
+    const expressIDs = objectsData[idx].expressIDs;
+    vars.highlighted.addProps(props, expressIDs, modelIdx);
   }
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("highlightedChanged");
