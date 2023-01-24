@@ -69,8 +69,8 @@ export default function startUserInputs() {
       if (
         !ClippingPlanesStore.foundPlane ||
         !userInteractions.clippingPlanes ||
-        !userInteractions.keyCActive ||
-        !userInteractions.keyXActive
+        userInteractions.keyCActive || 
+        userInteractions.keyXActive
       )
         return;
 
