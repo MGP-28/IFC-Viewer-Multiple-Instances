@@ -26,24 +26,25 @@ export default class NavbarItem {
     this.subitems = [];
     this.component = undefined;
     this.sidebarPosition = undefined;
+    this.hasTabs = undefined;
     this.isExclusive = false;
+    this.loadAfterDOMRender = false;
   }
 
-  build() {
+  async build() {
     if (this.sidebarPosition) {
       this.component = renderSidebarFeature(this);
-      const content = this.#buildFunction(this);
-      addContentToSidebarFeature(this.component, content);
-    }
-    else this.#buildFunction(this);
+      const content = await this.#buildFunction(this);
+      addContentToSidebarFeature(this.component, await content);
+    } else this.#buildFunction(this);
 
     this.isRendered = true;
   }
 
-  load() {
+  async load() {
     this.isActive = true;
 
-    if (this.#loadFunction !== undefined) this.#loadFunction(this);
+    if (this.#loadFunction !== undefined && !this.loadAfterDOMRender) await this.#loadFunction(this);
 
     emitEventOnElement(this.navbarItem, "loaded");
 
@@ -52,12 +53,14 @@ export default class NavbarItem {
 
     // add to sidebar
     loadFeatureIntoSidebar(this);
+
+    if (this.#loadFunction !== undefined && this.loadAfterDOMRender) await this.#loadFunction(this);
   }
 
-  unload() {
+  async unload() {
     this.isActive = false;
 
-    if (this.#unloadFunction !== undefined) this.#unloadFunction(this);
+    if (this.#unloadFunction !== undefined) await this.#unloadFunction(this);
 
     emitEventOnElement(this.navbarItem, "unloaded");
 
@@ -66,5 +69,13 @@ export default class NavbarItem {
 
     // remove from sidebar
     unloadFeatureFromSidebar(this);
+  }
+
+  getContentElement() {
+    try {
+      return this.component.getElementsByClassName("content-container")[0];
+    } catch {
+      throw new Error("Feature has no DOM element");
+    }
   }
 }

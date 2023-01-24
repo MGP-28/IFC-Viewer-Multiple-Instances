@@ -465,18 +465,14 @@ body {
 
 /* #region Spatial tree */
 
-.tree-content-container {
-  padding: 5px 10px 10px;
-  border-radius: var(--border-radius-regular);
-}
-
 .tree-container {
   width: 100%;
   height: 100%;
   line-height: 20px;
+  padding-right: 8px;
 }
 
-.tree-content span {
+.tree-container span {
   user-select: none;
   display: block;
   width: 100%;
@@ -484,33 +480,33 @@ body {
   padding-left: 5px;
 }
 
-.tree-content > ul > li:first-child {
+.tree-container ul > li:first-child {
   margin: 0;
   border-top: none;
 }
 
-.tree-content > ul > li:first-child > span {
+.tree-container ul > li:first-child > span {
   font-weight: 500;
   font-size: 14px;
   display: flex;
   align-items: center;
 }
 
-.tree-content-container > ul:not(:first-child) {
+.tree-container > ul:not(:first-child) {
   margin-top: 5px;
 }
 
-.tree-content-container ul {
+.tree-container ul {
   list-style-type: none;
   margin: 0;
   padding: 0;
 }
 
-.tree-content-container ul > li {
+.tree-wrapper > li {
   border-top: solid 1px lightgray;
 }
 
-.tree-content-container li > ul {
+.tree-container li > ul {
   margin-left: 10px;
 }
 
@@ -541,9 +537,9 @@ body {
   text-overflow: ellipsis;
 }
 
-.tree-leaf {
+/* .tree-leaf {
   cursor: crosshair;
-}
+} */
 
 .tree-item.active-selection-leaf {
   background-color: var(--primary-color-light);
