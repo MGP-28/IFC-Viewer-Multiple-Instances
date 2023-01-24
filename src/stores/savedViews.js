@@ -1,6 +1,7 @@
 import { emitCustomGlobalEvent } from "../helpers/emitEvent";
 import { getSavedViews } from "../services/getSavedViews";
 import { saveToLS } from "../services/localStorage";
+import { removeAllAnnotationsOfASavedView } from "./annotations";
 
 const savedViews = [];
 let id = 0;
@@ -48,6 +49,8 @@ function removeSavedView(id) {
   document.dispatchEvent(customEvent);
 
   saveToLS("savedViews", savedViews);
+
+  removeAllAnnotationsOfASavedView(id);
 }
 
 function getActiveId() {
