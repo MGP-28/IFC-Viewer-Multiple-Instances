@@ -37,6 +37,7 @@ function render(item) {
 
   for (let idx = 0; idx < item.subitems.length; idx++) {
     const subitem = item.subitems[idx];
+    itemGlobalRenderCall(subitem);
     const subitmeEl = renderNavbarItemDropdown(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
     // if (subitem.hasSidebarTab) {
@@ -52,6 +53,7 @@ function render(item) {
   //// Aux functions in scope
 
   function handleItemEvents() {
+    itemGlobalRenderCall(item);
     navbarItem.addEventListener("mouseover", () => {
       const width = navbarItem.getBoundingClientRect().width;
       navbarItem.style.width = width + "px";
@@ -131,6 +133,16 @@ function render(item) {
 
   function hasSubitems() {
     return item.subitems !== undefined && item.subitems.length > 0;
+  }
+
+  function itemGlobalRenderCall(item) {
+    if (item.sidebarPosition) {
+      const globalRenderTrigger = ("openFeature" + item.title).replace(/\s/g, "");
+      document.addEventListener(globalRenderTrigger, async () => {
+        if (!item.isRendered) await item.build();
+        item.load();
+      });
+    }
   }
 }
 

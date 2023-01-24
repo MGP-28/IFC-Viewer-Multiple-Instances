@@ -123,10 +123,15 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       // check if annotation was added to its related saved view; if not, exits
       const annotation = e.detail.annotation;
       if (annotation.viewId != savedView.id) return;
+
+      // gets currently rendered categories
+      // NOTE: don't update local array before this
+      const categoryIdsPresent = _annotations.map((x) => x.categoryId);
+
       // update local array
       _annotations.push(annotation);
-      // checks if category already exists. IF not, creates UI for it
-      const categoryIdsPresent = annotations.map((x) => x.categoryId);
+
+      // checks if category already exists. If not, creates UI for it
       if (!categoryIdsPresent.includes(annotation.categoryId)) {
         const category = getAnnotationCategoryById(annotation.categoryId);
         addAnnotationCategory(category, []);

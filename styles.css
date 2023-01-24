@@ -241,6 +241,7 @@ body {
 }
 
 .styling-menu-extras > ul.styling-menu-extras-list {
+  list-style: none;
   width: max-content;
   position: fixed;
   background-color: white;

@@ -23,6 +23,8 @@ function loadFeatureIntoSidebar(navItem) {
   const sidebarCode = navItem.sidebarPosition.charAt(0);
   const position = navItem.sidebarPosition.charAt(1);
   const sidebar = sidebarEls[sidebarCode];
+
+  console.log('comp', navItem.component);
   
   if (position == 1 && sidebar.firstChild) sidebar.insertBefore(navItem.component, sidebar.firstChild);
   else sidebar.appendChild(navItem.component);

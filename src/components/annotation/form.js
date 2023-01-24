@@ -1,10 +1,11 @@
 import { icons } from "../../configs/icons";
+import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { lightOrDark } from "../../helpers/generic/colors";
 import { createElement } from "../../helpers/generic/domElements";
 import Annotation from "../../models/Annotation";
 import { annotationCategories } from "../../stores/annotationCategories";
 import { addAnnotation } from "../../stores/annotations";
-import { getActiveId } from "../../stores/savedViews";
+import * as SavedViewsStore from "../../stores/savedViews";
 import { addItemToFormSelect, renderFormSelect } from "../generic/formSelect";
 import { buildIcon } from "../generic/icon";
 import { buildPopupWithHeader } from "../PopupWithHeader";
@@ -27,8 +28,13 @@ function render(position) {
 
   const container = popup.getElementsByClassName("popup-header-content")[0];
 
+  const activeSavedView = SavedViewsStore.savedViews.find((x) => x.id == SavedViewsStore.getActiveId());
+  const activeViewText = activeSavedView ? activeSavedView.note : "Global";
+
   container.innerHTML = `
     <form class="styling-form">
+      <label class="styling-form-label">Selected view</label>
+      <input type="text" disabled class="styling-form-input annotation-form-input" value="${activeViewText}">
       <label for="category" class="styling-form-label">Category</label>
       <div class="styling-form-select-plus-add"></div>
       <label for="name" class="styling-form-label">Annotation</label>
@@ -38,9 +44,7 @@ function render(position) {
     </form>
   `;
 
-  const selectWrapperEl = container.getElementsByClassName(
-    "styling-form-select-plus-add"
-  )[0];
+  const selectWrapperEl = container.getElementsByClassName("styling-form-select-plus-add")[0];
   selectWrapperEl.classList.add("annotation-category-selector");
 
   // category renderization
@@ -96,6 +100,8 @@ function render(position) {
 
       saveAnnotation(content, selectedCategoryId, position);
 
+      emitGlobalEvent("openFeatureAnnotations");
+
       popup.remove();
     });
 
@@ -113,7 +119,7 @@ function render(position) {
         text: category.name,
       };
       items.push(item);
-      const colorTag = renderColorTag(category.color);
+      const colorTag = renderColorTag(category);
       colors.push(colorTag);
       addItemToFormSelect(select, item);
       const lastItem = list.lastChild;
@@ -179,7 +185,7 @@ function renderColorTag(category) {
 }
 
 function saveAnnotation(content, categoryId, position) {
-  let viewId = getActiveId();
+  let viewId = SavedViewsStore.getActiveId();
   const annotation = new Annotation(position, viewId, categoryId, content);
   addAnnotation(annotation);
 }
