@@ -1,0 +1,138 @@
+.annotation-list-group ul {
+  margin-left: 4px;
+}
+
+.annotation-list-group {
+  /* padding-left: 5px; */
+  padding-bottom: 4px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 25px 1fr 25px;
+  font-size: 15px;
+  row-gap: 4px;
+}
+.annotation-list-group {
+  padding-top: 4px;
+}
+
+.annotation-list-group-text {
+  line-height: 25px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.annotation-list-group:first-child.annotation-list-group:not(.annotation-list-group-category) {
+  border-top: none;
+}
+
+.annotation-list-group-disabled {
+  color: var(--grayed);
+}
+.annotation-list-group-disabled span {
+  grid-column: 2;
+}
+
+.annotation-list-group-disabled .caret {
+  display: none;
+}
+
+.annotation-list-group-icon-vis {
+  justify-self: center;
+  align-self: center;
+  cursor: pointer;
+  width: 20px;
+}
+
+.annotation-list-group-icon {
+  transition: all 0.4s;
+}
+
+.annotation-list-group-icon.caret-down {
+  transform: rotate(90deg);
+  transition: all 0.4s;
+}
+
+.annotation-list-group ul {
+  grid-column: span 3;
+  padding-right: 8px;
+  /* border-top: 1px solid rgba(240, 240, 240); */
+}
+
+.annotation-list-group-category {
+  grid-template-columns: 25px 74px 1fr 25px;
+  font-size: 13px;
+  /* border-bottom: 1px solid rgba(240, 240, 240); */
+}
+
+.annotation-list-group-list {
+  padding-right: 0;
+  grid-column: span 4;
+  padding-right: 8px;
+  margin-top: 4px;
+
+}
+
+.annotation-list-group .annotation-list-item {
+  width: 100%;
+  margin-left: 20px;
+  padding: 4px 0;
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  gap: 5px;
+  align-items: center;
+  box-shadow: inset 18px 0 20px 0px rgba(255, 255, 255, 1);
+  cursor: pointer;
+}
+
+.annotation-list-item:hover {
+  background-color: var(--primary-color-light-transparent);
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
+}
+
+.annotation-list-item > img {
+  height: 15px;
+  transition: all var(--transition-main-timer);
+}
+
+.annotation-list-item > img:hover {
+  /* cursor: ; */
+  transform: scale(1.1);
+  transition: all var(--transition-main-timer);
+}
+
+.annotation-list-item > span {
+  line-height: 15px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.annotation-list-group-category li.active-annotation {
+  background-color: var(--primary-color-light-transparent);
+  background: linear-gradient(-90deg, white, white, var(--primary-color-light));
+  background-size: 200% 200%;
+  background-color: var(--primary-color-light-transparent);
+}
+
+#annotation-form-category-name,
+#annotation-form-category-reference {
+  width: 100%;
+}
+
+/* Form */
+
+.annotation-form-input {
+  min-width: 280px;
+}
+
+.annotation-form-select-option-color {
+  position: absolute;
+  right: 20px;
+  top: 0;
+  width: 16px;
+  height: 100%;
+  transform: translateX(-100%);
+}

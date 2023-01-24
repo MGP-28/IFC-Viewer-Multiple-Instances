@@ -5,6 +5,7 @@ import { addSavedView, savedViews } from "../../stores/savedViews";
 import { getCameraData } from "../../helpers/camera";
 import * as ClippingPlanesStore from "../../stores/clippingPlanes";
 import { clipping } from "../../helpers/clippingPlanes";
+import { getVisibilityByIds } from "../../stores/selection";
 
 function render() {
   const headerProps = {
@@ -85,7 +86,10 @@ function render() {
       }
 
       function errorMessage(message) {
-        const errorEl = document.getElementById("saved-view-form-warning");
+        const errorEl = container.getElementsByClassName(
+          "styling-form-warning"
+        )[0];
+        errorEl.innerHTML = "";
         errorEl.classList.remove("hidden");
         errorEl.textContent = message;
       }
@@ -93,25 +97,42 @@ function render() {
 
     popup.addEventListener("toggle", () => {
       popup.remove();
-    })
+    });
   }
 }
 
 function saveView(note) {
-    const cameraData = getCameraData();
-    if (ClippingPlanesStore.visualPlanes.length == 0) {
-      // build clipping planes
-      clipping(true);
-      // disable their render
-      clipping(false);
-    }
-    const clippingData = {
-      min: ClippingPlanesStore.edgePositions.currentMin.clone(),
-      max: ClippingPlanesStore.edgePositions.currentMax.clone(),
-    };
-    const savedView = new SavedView(cameraData, clippingData);
-    savedView.note = note;
-    addSavedView(savedView);
+  const cameraData = getCameraData();
+  if (ClippingPlanesStore.visualPlanes.length == 0) {
+    // build clipping planes
+    clipping(true);
+    // disable their render
+    clipping(false);
   }
+  const clippingData = {
+    min: ClippingPlanesStore.edgePositions.currentMin.clone(),
+    max: ClippingPlanesStore.edgePositions.currentMax.clone(),
+  };
+  const renderVisibilityData = JSON.parse(JSON.stringify(getVisibilityByIds()));
+  const hiddenIds = {};
+  // Cycle models
+  for (const modelIdx in renderVisibilityData) {
+    if (Object.hasOwnProperty.call(renderVisibilityData, modelIdx)) {
+      const modelVisibilityData = renderVisibilityData[modelIdx];
+      hiddenIds[modelIdx] = [];
+      // Cycle objects in model
+      for (const expressId in modelVisibilityData) {
+        if (Object.hasOwnProperty.call(modelVisibilityData, expressId)) {
+          // If object is hidden, push its expressId to hiddensIds 
+          const status = modelVisibilityData[expressId];
+          if(!status) hiddenIds[modelIdx].push(expressId);
+        }
+      }
+    }
+  }
+  const savedView = new SavedView(cameraData, clippingData, hiddenIds);
+  savedView.note = note;
+  addSavedView(savedView);
+}
 
 export { render as renderNewViewForm };

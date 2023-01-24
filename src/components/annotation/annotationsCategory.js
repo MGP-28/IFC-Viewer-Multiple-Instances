@@ -1,13 +1,9 @@
 import { icons } from "../../configs/icons";
 import { emitEventOnElement } from "../../helpers/emitEvent";
-import { lightOrDark } from "../../helpers/generic/colors";
 import { createElement } from "../../helpers/generic/domElements";
-import { getActiveId } from "../../stores/savedViews";
-import { userInteractions } from "../../stores/userInteractions";
 import { buildIcon } from "../generic/icon";
 import { renderAnnotation } from "./annotation";
 import { renderColorTag } from "./form";
-import { consoleLogObject } from "../../helpers/generic/logging";
 
 function renderAnnotationCategory(annotationCategory, annotations, parent) {
   const _annotations = [...annotations];

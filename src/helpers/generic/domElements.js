@@ -1,7 +1,7 @@
 /**
- *
- * @param {*} tag
- * @param {*} details
+ * Creates a HTML Element with the tag provided, along with any
+ * @param {string} tag
+ * @param {object?} details - optional - classes[], attributes[], innerHTML, textContent, ...
  * @returns HTMLElement
  */
 function createElement(tag, details = undefined) {

@@ -2,6 +2,7 @@ const userInteractions = {
     controlActive: false,
     shiftActive: false,
     keyCActive: false,
+    keyXActive: false,
     clippingPlanes: false,
     draggingPlane: false,
     animationRunning: false,
@@ -10,7 +11,11 @@ const userInteractions = {
 }
 
 const isUserPressingSpecialKeys = () => {
-    return userInteractions.controlActive || userInteractions.shiftActive || userInteractions.keyCActive
+    return userInteractions.controlActive || userInteractions.shiftActive
 }
 
-export { userInteractions, isUserPressingSpecialKeys }
+const disableFeatureKeys = () => {
+    userInteractions.keyXActive = false;
+}
+
+export { userInteractions, isUserPressingSpecialKeys, disableFeatureKeys }

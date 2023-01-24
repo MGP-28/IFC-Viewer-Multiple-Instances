@@ -12,6 +12,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as SceneStore from "../../stores/scene";
 import Stats from "stats.js/src/Stats";
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer";
+import { Vector3 } from "three";
 
 export default function buildScene() {
   //Start scene in Three
@@ -88,6 +89,8 @@ export default function buildScene() {
   const animate = () => {
     stats.begin();
 
+    cameraFocalPoint();
+
     controls.update();
     renderer.render(SceneStore.scene, SceneStore.camera);
     labelRenderer.render(SceneStore.scene, SceneStore.camera);
@@ -96,6 +99,16 @@ export default function buildScene() {
 
     requestAnimationFrame(animate);
   };
+
+  /**
+   * 
+   */
+  function cameraFocalPoint() {
+    const cameraWorldDir = new Vector3();
+    controls.object.getWorldDirection(cameraWorldDir);
+    const distance = controls.getDistance();
+    if(distance < 2) controls.target.add(cameraWorldDir.multiplyScalar(0.4));
+  }
 
   animate();
 

@@ -3,7 +3,7 @@ import { icons } from "../../configs/icons";
 import { createElement } from "../../helpers/generic/domElements";
 import { buildIcon } from "../generic/icon";
 import { buildPopupWithHeader } from "../PopupWithHeader";
-import { featureButton } from "./button";
+import { featureButton } from "../feature-buttons/button";
 
 export default function renderHelperFeature() {
   //

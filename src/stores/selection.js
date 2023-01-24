@@ -4,6 +4,10 @@ import Selected from "../models/Selected";
 // Currently visible object's properties
 let visibilityByIds = {};
 
+function getVisibilityByIds() {
+  return visibilityByIds;
+}
+
 const isVisible = (modelIdx, expressID) => {
   return visibilityByIds[modelIdx][expressID];
 };
@@ -36,7 +40,7 @@ const resetVisible = () => {
     }
   }
   emitGlobalEvent("visibilityChanged");
-}
+};
 
 const vars = {
   selected: new Selected(),
@@ -49,9 +53,13 @@ const vars = {
  * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
-const setSelectedProperties = (props, ids, modelIdx, isFromViewer) => {
+const setSelectedProperties = (props, objectsData, isFromViewer) => {
   vars.selected.reset();
-  vars.selected.addProps(props, ids, modelIdx);
+  for (let idx = 0; idx < objectsData.length; idx++) {
+    const modelIdx = objectsData[idx].modelIdx;
+    const expressIDs = objectsData[idx].expressIDs;
+    vars.selected.addProps(props, expressIDs, modelIdx);
+  }
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("selectedChanged");
 };
@@ -71,9 +79,13 @@ let isSelectionFromViewer = true;
  * @param {int} modelIdx model instance index value
  * @param {boolean} isFromViewer is user interacting with the 3D model. If false, menus are being used to manipulate the model
  */
-const setHighlightedProperties = (props, ids, modelIdx, isFromViewer) => {
+const setHighlightedProperties = (props, objectsData, isFromViewer) => {
   vars.highlighted.reset();
-  vars.highlighted.addProps(props, ids, modelIdx);
+  for (let idx = 0; idx < objectsData.length; idx++) {
+    const modelIdx = objectsData[idx].modelIdx;
+    const expressIDs = objectsData[idx].expressIDs;
+    vars.highlighted.addProps(props, expressIDs, modelIdx);
+  }
   isSelectionFromViewer = isFromViewer;
   emitGlobalEvent("highlightedChanged");
 };
@@ -96,4 +108,5 @@ export {
   setHighlightedProperties,
   resetHighlightedProperties,
   isSelectionFromViewer,
+  getVisibilityByIds,
 };

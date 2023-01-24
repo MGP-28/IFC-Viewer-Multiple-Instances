@@ -2,6 +2,10 @@ import Annotation from "../models/Annotation";
 import { loadFromLS } from "./localStorage";
 import { convertJSONToVector } from "../helpers/generic/vectors";
 
+/**
+ * 
+ * @returns Annotation
+ */
 function getAnnotations() {
   const LSData = loadFromLS("annotations");
   if (LSData) {

@@ -6,6 +6,7 @@ import {
 } from "../../helpers/raytracing";
 import * as ClippingPlanesStore from "../../stores/clippingPlanes";
 import {
+  disableFeatureKeys,
   isUserPressingSpecialKeys,
   userInteractions,
 } from "../../stores/userInteractions";
@@ -13,11 +14,12 @@ import * as Materials from "../../configs/materials";
 import * as SceneStore from "../../stores/scene";
 import * as THREE from "three";
 import { clippingConfigs } from "../../configs/clippingPlanes";
-import { render2DText } from "../../helpers/2DObject";
-import { found } from "../../stores/raycast";
 import { renderContextMenu } from "../contextMenu/contextMenu";
 import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
 import { renderAnnotationForm } from "../annotation/form";
+import { setCameraLookingPoint } from "../../helpers/camera";
+import * as RaycastStore from "../../stores/raycast";
+import * as SelectedStore from "../../stores/selection.js";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -30,22 +32,32 @@ export default function startUserInputs() {
     canvas.ondblclick = (event) => pickObject(event, true, true);
 
     canvas.onmousemove = async (event) => {
-      // When user is present any special key
-      if (isUserPressingSpecialKeys()) {
-        resetVisualPlanesColoring();
-        return;
-      }
-      // When mouse is dragging (drag clipping plane)
+      // When mouse is dragging a clipping plane
       if (isMouseDragging) {
         if (userInteractions.draggingPlane) await dragClippingPlane(event);
         return;
       }
+      // When user is pressing any special key, do nothing
+      if (isUserPressingSpecialKeys() || userInteractions.keyCActive) {
+        resetVisualPlanesColoring();
+        resetHighlighted();
+        return;
+      }
       // When mouse is just hovering
-      if (userInteractions.clippingPlanes) {
+      //// and C is active
+      if (userInteractions.clippingPlanes && !userInteractions.keyXActive) {
+        console.log('catching planes')
+        resetHighlighted(); // prevent visual artifacts
         const isPlaneFound = await pickClippingPlane(event);
         if (!isPlaneFound) resetVisualPlanesColoring();
         else highlightVisualPlane();
-      } else pickObject(event, true, false);
+        return
+      } 
+      //// and C is inactiveccc
+      if (userInteractions.keyXActive) {
+        resetVisualPlanesColoring(); // prevent visual artifacts
+        pickObject(event, true, false);
+      }
     };
 
     let isMovingPlanes = false;
@@ -57,7 +69,8 @@ export default function startUserInputs() {
       if (
         !ClippingPlanesStore.foundPlane ||
         !userInteractions.clippingPlanes ||
-        userInteractions.keyCActive
+        userInteractions.keyCActive || 
+        userInteractions.keyXActive
       )
         return;
 
@@ -84,9 +97,9 @@ export default function startUserInputs() {
         case "ControlLeft":
           userInteractions.controlActive = true;
           break;
-        case "KeyC":
-          userInteractions.keyCActive = true;
-          break;
+        // case "KeyC":
+        //   userInteractions.keyCActive = true;
+        //   break;
         default:
           break;
       }
@@ -99,8 +112,15 @@ export default function startUserInputs() {
           userInteractions.controlActive = false;
           break;
         case "KeyC": {
-          userInteractions.keyCActive = false;
-          resetVisualPlanesColoring();
+          userInteractions.keyCActive = !userInteractions.keyCActive;
+          if(userInteractions.keyCActive) disableFeatureKeys();
+          resetVisuals();
+          break;
+        }
+        case "KeyX": {
+          if(userInteractions.keyCActive) return;
+          userInteractions.keyXActive = !userInteractions.keyXActive;
+          resetVisuals();
           break;
         }
         default:
@@ -108,6 +128,11 @@ export default function startUserInputs() {
       }
     });
   });
+}
+
+function resetVisuals(){
+  resetVisualPlanesColoring();
+  resetHighlighted();
 }
 
 let _opacity = undefined;
@@ -121,6 +146,11 @@ function resetVisualPlanesColoring() {
     visualPlane.material.color = _color;
   }
   _uuid = undefined;
+}
+
+function resetHighlighted(){
+  RaycastStore.resetFound();
+  SelectedStore.resetHighlightedProperties();
 }
 
 function highlightVisualPlane() {
@@ -326,6 +356,17 @@ window.addEventListener("contextmenu", async (e) => {
       const position = object.object.point;
       const form = renderAnnotationForm(position);
       document.body.appendChild(form);
+
+      closeMenu();
+    });
+    seperatorElement(menuList);
+
+    const cameraPointEl = renderContextMenuItem("Focus camera here");
+    menuList.appendChild(cameraPointEl);
+    cameraPointEl.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      const position = object.object.point;
+      setCameraLookingPoint(position);
 
       closeMenu();
     });
