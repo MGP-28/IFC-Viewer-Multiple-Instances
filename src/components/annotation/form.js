@@ -1,4 +1,5 @@
 import { icons } from "../../configs/icons";
+import { emitGlobalEvent } from "../../helpers/emitEvent";
 import { lightOrDark } from "../../helpers/generic/colors";
 import { createElement } from "../../helpers/generic/domElements";
 import Annotation from "../../models/Annotation";
@@ -99,6 +100,8 @@ function render(position) {
 
       saveAnnotation(content, selectedCategoryId, position);
 
+      emitGlobalEvent("openFeatureAnnotations");
+
       popup.remove();
     });
 
@@ -182,7 +185,7 @@ function renderColorTag(category) {
 }
 
 function saveAnnotation(content, categoryId, position) {
-  let viewId = getActiveId();
+  let viewId = SavedViewsStore.getActiveId();
   const annotation = new Annotation(position, viewId, categoryId, content);
   addAnnotation(annotation);
 }

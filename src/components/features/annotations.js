@@ -15,7 +15,7 @@ function build(navItem) {
 
   document.addEventListener("openAnnotations", (e) => {
     navItem.isActive = true;
-    navItem.build();
+    navItem.load();
   });
 
   return element;

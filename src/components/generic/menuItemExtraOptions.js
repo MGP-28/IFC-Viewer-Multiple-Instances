@@ -26,23 +26,20 @@ function render() {
   handleEvents();
 
   function handleEvents() {
-    let firstRender = true;
 
     icon.addEventListener("click", (e) => {
       list.classList.toggle("hidden");
-      if (firstRender) {
-        firstRender = false;
-        list.style.left = "0px";
-        list.style.top = "0px";
-        const menuBoundingData = element.getBoundingClientRect();
-        const listBoundingData = list.getBoundingClientRect();
-        const newPosition = {
-          x: menuBoundingData.right - listBoundingData.left,
-          y: menuBoundingData.bottom - listBoundingData.top,
-        };
-        list.style.left = newPosition.x + "px";
-        list.style.top = newPosition.y + "px";
-      }
+      list.style.left = "0px";
+      list.style.top = "0px";
+      const menuBoundingData = element.getBoundingClientRect();
+      const listBoundingData = list.getBoundingClientRect();
+      const newPosition = {
+        x: menuBoundingData.right - listBoundingData.left,
+        y: menuBoundingData.bottom - listBoundingData.top,
+      };
+      list.style.left = newPosition.x + "px";
+      list.style.top = newPosition.y + "px";
+
       element.classList.toggle("active");
     });
 
