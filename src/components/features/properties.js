@@ -4,7 +4,7 @@ import { emitEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import { capitalizeFirstLetter } from "../../helpers/generic/strings";
 import * as SelectionStore from "../../stores/selection";
-import { renderFeatureContainer } from "./containers";
+import { renderFeatureContainer } from "../feature-sidebar/containers";
 
 const mainProperties = [
   "expressID",

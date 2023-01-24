@@ -10,7 +10,7 @@ export default function startTimer() {
   });
 
   function timerStart() {
-    setInterval(tickTimer, 100);
+    setInterval(tickTimer, 1000);
   }
 
   function tickTimer(){

@@ -130,9 +130,7 @@ function pickAxlePlane() {
 
   const result = getRaycastingResultPoint();
   function getRaycastingResultPoint() {
-    const distances = results.map((pos) =>
-      pos.distanceTo(RaycastStore.raycaster.camera.position)
-    );
+    const distances = results.map((pos) => pos.distanceTo(RaycastStore.raycaster.camera.position));
     const minDistance = Math.min(...distances);
     const idx = distances.indexOf(minDistance);
     return results[idx];
@@ -164,7 +162,7 @@ async function castEachModel() {
   const results = [];
 
   let boxDimensions = undefined;
-  if(userInteractions.clippingPlanes) {
+  if (userInteractions.clippingPlanes) {
     boxDimensions = {
       min: ClippingPlanesStore.edgePositions.currentMin,
       max: ClippingPlanesStore.edgePositions.currentMax,
@@ -177,23 +175,22 @@ async function castEachModel() {
     const arr = [RaycastStore.subsetRaycast[idx]];
     // account for hidden objects
     const resultsPerModel = RaycastStore.raycaster.intersectObjects(arr);
-    if(resultsPerModel.length == 0) continue;
+    if (resultsPerModel.length == 0) continue;
 
     let result = undefined;
     // if clipping is active, check if intersection occurs inside the clipping box
-    if(userInteractions.clippingPlanes) {
+    if (userInteractions.clippingPlanes) {
       for (let idx = 0; idx < resultsPerModel.length; idx++) {
         const _result = resultsPerModel[idx];
-        const intersectionPoint = _result.point
-        if(isPointInsideBox(boxDimensions, intersectionPoint)) {
+        const intersectionPoint = _result.point;
+        if (isPointInsideBox(boxDimensions, intersectionPoint)) {
           result = _result;
           break;
         }
       }
-    }
-    else result = resultsPerModel[0];
+    } else result = resultsPerModel[0];
 
-    if(!result) continue;
+    if (!result) continue;
     const intersectiongObj = new RaycastIntersectObject(result, idx);
     results.push(intersectiongObj);
   }
@@ -201,8 +198,8 @@ async function castEachModel() {
   if (results.length > 0) {
     const found = getRaycastingResult(results);
     return found;
-  } 
-  
+  }
+
   return false;
 }
 
@@ -224,34 +221,28 @@ async function storeFoundObjectProperties(isSelection) {
   const ifcLoader = Models.models[modelIdx].loader;
   const id = ifcLoader.ifcManager.getExpressId(geometry, index);
   const props = await ifcLoader.ifcManager.getItemProperties(0, id);
-  if (isSelection)
-    SelectedStore.setSelectedProperties(
-      props,
-      [props.expressID],
-      modelIdx,
-      true
-    );
-  else
-    SelectedStore.setHighlightedProperties(
-      "fake props",
-      [props.expressID],
-      modelIdx,
-      true
-    );
+  const objectsData = [
+    {
+      modelIdx: modelIdx,
+      expressIDs: props.expressID,
+    },
+  ];
+  if (isSelection) SelectedStore.setSelectedProperties(props, objectsData, true);
+  else SelectedStore.setHighlightedProperties("fake props", objectsData, true);
 
   return true;
 }
 
 /**
-     * Checks if intersection point found by raycasting in part of the active clipping box
-     *
-     * This check prevents a bug where user could select hidden parts of a plane to move it
-     *
-     * Due to raycasting error margins, a customizable buffer is used.
-     * This buffer prevents edge cases where a legitimate intersection point would be discarded, leading to unwanted behaviour
-     * @param {Intersection Point} point
-     * @returns true if point is inside the active planes' box, false otherwise
-     */
+ * Checks if intersection point found by raycasting in part of the active clipping box
+ *
+ * This check prevents a bug where user could select hidden parts of a plane to move it
+ *
+ * Due to raycasting error margins, a customizable buffer is used.
+ * This buffer prevents edge cases where a legitimate intersection point would be discarded, leading to unwanted behaviour
+ * @param {Intersection Point} point
+ * @returns true if point is inside the active planes' box, false otherwise
+ */
 function isPointInsideBox(boxDimensions, point) {
   const buffer = 0.000000001;
   for (const axle in point) {
