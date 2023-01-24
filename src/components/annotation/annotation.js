@@ -1,4 +1,4 @@
-import { icons } from "../../configs/icons";
+  import { icons } from "../../configs/icons";
 import { render2DText } from "../../helpers/2DObject";
 import {
   add2DObjectToScene,

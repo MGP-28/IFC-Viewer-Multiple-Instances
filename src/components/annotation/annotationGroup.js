@@ -1,8 +1,5 @@
 import { icons } from "../../configs/icons";
-import {
-  emitCustomEventOnElement,
-  emitEventOnElement,
-} from "../../helpers/emitEvent";
+import { emitCustomEventOnElement, emitEventOnElement } from "../../helpers/emitEvent";
 import { createElement } from "../../helpers/generic/domElements";
 import { getAnnotationCategoryById } from "../../stores/annotationCategories";
 import { removeAnnotation } from "../../stores/annotations";
@@ -78,11 +75,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
   // Aux scoped functions
   //
   function addAnnotationCategory(annotationCategory, annotations) {
-    const annotationEl = renderAnnotationCategory(
-      annotationCategory,
-      annotations,
-      listEl
-    );
+    const annotationEl = renderAnnotationCategory(annotationCategory, annotations, listEl);
     listEl.appendChild(annotationEl);
   }
 
@@ -90,10 +83,10 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     // Delete annotation group
     document.addEventListener("removedSavedView", (e) => {
       const id = e.detail.removedId;
-      annotations.forEach(annotation => {
-        removeAnnotation(annotation);
-      });
-      if (savedView.id == id) element.remove();
+      if (savedView.id !== id) return;
+      isHighlighted = false;
+      selectAllChildren();
+      element.remove();
     });
 
     let isHighlighted = false;
@@ -136,10 +129,7 @@ function renderAnnotationGroup(savedView, annotations, parent) {
       const categoryIdsPresent = annotations.map((x) => x.categoryId);
       if (!categoryIdsPresent.includes(annotation.categoryId)) {
         const category = getAnnotationCategoryById(annotation.categoryId);
-        addAnnotationCategory(
-          category,
-          []
-        );
+        addAnnotationCategory(category, []);
       }
       // dispatchs events to children categories (the correct category category will be the one rendering the annotation)
       emitCustomEventOnElement(listEl, "newAnnotation", e.detail);
@@ -204,24 +194,14 @@ function renderAnnotationGroup(savedView, annotations, parent) {
     }
 
     function selectAllChildren() {
-      const eventName = isHighlighted
-        ? "selectAnnotations"
-        : "deselectAnnotations";
+      const eventName = isHighlighted ? "selectAnnotations" : "deselectAnnotations";
       emitEventOnElement(listEl, eventName);
       changeVisibilityIcon();
     }
 
     function changeVisibilityIcon() {
-      if (isHighlighted)
-        visibilityEl.src = visibilityEl.src.replace(
-          iconPaths.hidden + ".",
-          iconPaths.visible + "."
-        );
-      else
-        visibilityEl.src = visibilityEl.src.replace(
-          iconPaths.visible + ".",
-          iconPaths.hidden + "."
-        );
+      if (isHighlighted) visibilityEl.src = visibilityEl.src.replace(iconPaths.hidden + ".", iconPaths.visible + ".");
+      else visibilityEl.src = visibilityEl.src.replace(iconPaths.visible + ".", iconPaths.hidden + ".");
     }
   }
   function hasChildren() {
