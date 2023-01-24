@@ -56,9 +56,11 @@ function getAnnotationsFromSavedView(savedViewId) {
   return arr;
 }
 
-export {
-  annotations,
-  addAnnotation,
-  removeAnnotation,
-  getAnnotationsFromSavedView,
-};
+function removeAllAnnotationsOfASavedView(savedViewId) {
+  const idsToRemove = annotations.filter((x) => x.viewId == savedViewId).map((x) => x.id);
+  idsToRemove.forEach((id) => {
+    removeAnnotation(id);
+  });
+}
+
+export { annotations, addAnnotation, removeAnnotation, getAnnotationsFromSavedView, removeAllAnnotationsOfASavedView };
