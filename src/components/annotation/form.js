@@ -119,7 +119,7 @@ function render(position) {
         text: category.name,
       };
       items.push(item);
-      const colorTag = renderColorTag(category.color);
+      const colorTag = renderColorTag(category);
       colors.push(colorTag);
       addItemToFormSelect(select, item);
       const lastItem = list.lastChild;
