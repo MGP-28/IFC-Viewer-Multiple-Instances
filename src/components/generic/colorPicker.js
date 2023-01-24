@@ -16,7 +16,7 @@ function renderChangesAfterLoad(colorPicker) {
 
   setInterval(() => {
     if (colorPicker.opened == false) renderColorPicker();
-  }, 50);
+  }, 10);
 
   function renderColorPicker() {
     colorPicker.opened = true;
