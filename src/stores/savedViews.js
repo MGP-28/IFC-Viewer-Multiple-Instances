@@ -8,7 +8,7 @@ let activeId = 0;
 
 const savedData = getSavedViews();
 
-if (savedData !== null) {
+if (savedData !== null && savedData.length > 0) {
   savedData.forEach((savedView) => {
     savedViews.push(savedView);
   });
