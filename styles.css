@@ -135,9 +135,9 @@ body {
   transition: all var(--transition-main-timer);
 }
 
-/* .styling-form-color-picker-wrapper {
+.styling-form-color-picker-wrapper {
   height: 180px;
-} */
+}
 
 .styling-form-select {
   display: grid;
