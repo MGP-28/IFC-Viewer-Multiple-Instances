@@ -4,7 +4,7 @@ import { createElement } from "../../helpers/generic/domElements";
 import Annotation from "../../models/Annotation";
 import { annotationCategories } from "../../stores/annotationCategories";
 import { addAnnotation } from "../../stores/annotations";
-import { getActiveId } from "../../stores/savedViews";
+import * as SavedViewsStore from "../../stores/savedViews";
 import { addItemToFormSelect, renderFormSelect } from "../generic/formSelect";
 import { buildIcon } from "../generic/icon";
 import { buildPopupWithHeader } from "../PopupWithHeader";
@@ -27,8 +27,13 @@ function render(position) {
 
   const container = popup.getElementsByClassName("popup-header-content")[0];
 
+  const activeSavedView = SavedViewsStore.savedViews.find((x) => x.id == SavedViewsStore.getActiveId());
+  const activeViewText = activeSavedView ? activeSavedView.note : "Global";
+
   container.innerHTML = `
     <form class="styling-form">
+      <label class="styling-form-label">Selected view</label>
+      <input type="text" disabled class="styling-form-input annotation-form-input" value="${activeViewText}">
       <label for="category" class="styling-form-label">Category</label>
       <div class="styling-form-select-plus-add"></div>
       <label for="name" class="styling-form-label">Annotation</label>
@@ -38,9 +43,7 @@ function render(position) {
     </form>
   `;
 
-  const selectWrapperEl = container.getElementsByClassName(
-    "styling-form-select-plus-add"
-  )[0];
+  const selectWrapperEl = container.getElementsByClassName("styling-form-select-plus-add")[0];
   selectWrapperEl.classList.add("annotation-category-selector");
 
   // category renderization
