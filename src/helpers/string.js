@@ -4,7 +4,6 @@
  * @returns String correctly displayed
  */
 function clearString(string) {
-  if(string.includes("Muro")) console.log(string)
   const split = string.split(":");
   string = split[0] == "" ? split[1] : split[0];
   // \x\e1 -> \n00e1
