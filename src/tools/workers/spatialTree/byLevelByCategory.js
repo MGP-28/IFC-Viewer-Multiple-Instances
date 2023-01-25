@@ -43,14 +43,12 @@ self.addEventListener("unhandledrejection", function (event) {
 });
 
 function sortObjectsByLevel(a, b) {
-  // Compare the 2 dates
-  if (a.levelId < b.levelId) return -1;
-  if (a.levelId > b.levelId) return 1; 
-  return 0;
+  // Compare the 2 level ids
+  return a.levelId - b.levelId
 }
 
 function sortObjectsByCategory(a, b) {
-  // Compare the 2 dates
+  // Compare the 2 categories
   if (a.category < b.category) return -1;
   if (a.category > b.category) return 1;
   return 0;
