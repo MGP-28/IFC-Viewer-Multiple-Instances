@@ -68,10 +68,11 @@ async function build(item) {
 let firstLoad = true;
 async function load(item) {
   if (!firstLoad) return;
+  firstLoad = false;
   const activeTab = tabControls.find((x) => x.status);
+  if(!activeTab) return;
   emitCustomEventOnElement(item.component, "selectTab", { ref: activeTab.ref });
   updateContent(item, activeTab);
-  firstLoad = false;
 }
 
 async function updateContent(item, tabData) {
