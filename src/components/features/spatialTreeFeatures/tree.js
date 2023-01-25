@@ -11,10 +11,10 @@ import { createElement } from "../../../helpers/generic/domElements";
  * @param {Object[]} branches Array of tree branches as it will be displayed
  */
 async function buildTree(container, branches) {
-  branches.forEach(async (branch) => {
-    const element = await buildNode(branch);
-    container.appendChild(element);
-  });
+  // Builds promise array
+  const branchEls = branches.map(async (branch) => await buildNode(branch));
+  // Resolves all promises, in order, and appends returned elements
+  Promise.all(branchEls).then((elements) => container.append(...elements));
 }
 
 /**
