@@ -5,6 +5,7 @@ import { getIfcRegex } from "../../../helpers/repositories/regex";
 import * as SpatialTreeInterelementEventHandling from "../../events/spatialTreeElementEvents";
 import * as Models from "../../../stores/models";
 import { createElement } from "../../../helpers/generic/domElements";
+import { emitEventOnElement } from "../../../helpers/emitEvent";
 
 /**
  * Builds tree
@@ -22,9 +23,9 @@ async function buildTree(container, branches) {
  * @param {Object} node
  * @returns DOM Element 'li'
  */
-async function buildNode(node) {
+async function buildNode(node, parentList) {
   const nodeEl = document.createElement("li");
-  const title = await buildTitle(node);
+  const title = await buildTitle(node, parentList);
   nodeEl.appendChild(title);
 
   if (node.children && node.children.length > 0) {
@@ -48,13 +49,11 @@ async function buildNode(node) {
  * @param {Object} node
  * @returns DOM Element 'span'
  */
-async function buildTitle(node) {
+async function buildTitle(node, parentList) {
   const wrapper = document.createElement("div");
   wrapper.classList.add("tree-item");
 
-  const hasChildren = node.children && node.children.length > 0;
-
-  if (hasChildren) {
+  if (hasChildren(node)) {
     const caretIcon = document.createElement("div");
     caretIcon.classList.add("spatial-tree-caret");
     caretIcon.appendChild(buildIcon(icons.chevronRight));
@@ -63,11 +62,10 @@ async function buildTitle(node) {
   } else wrapper.classList.add("tree-leaf");
 
   // create node title span
-  const _text = !hasChildren ? await getNodePropertyName(node) : node.title;
-  const text = removeIFCTagsFromName(_text);
-  const span = createElement("span", {
-    textContent: text.charAt(0).toUpperCase() + text.slice(1).toLowerCase(),
-  });
+  const span = createElement("span");
+  if (node.title) span.textContent = node.title;
+  else handleTitleLazyLoading(parentList, span, node);
+  // Content will be added later, as lazy load
   wrapper.appendChild(span);
 
   const visibilityIcon = document.createElement("div");
@@ -103,10 +101,17 @@ async function buildTitle(node) {
  */
 async function buildChildren(node) {
   const childrenEl = createElement("ul");
+  let childrenAreLeaves = false;
   for (const childNode of node.children) {
-    const node = await buildNode(childNode);
+    if (!childNode.title) childrenAreLeaves = true;
+    const node = await buildNode(childNode, childrenEl);
     childrenEl.appendChild(node);
   }
+
+  if (childrenAreLeaves) {
+    lazyLoadTitles(childrenEl);
+  }
+
   return childrenEl;
 }
 
@@ -117,6 +122,33 @@ async function processIconEvents(span, icons, node) {
 function removeIFCTagsFromName(text) {
   const regex = getIfcRegex();
   return text.replace(regex, "");
+}
+
+function hasChildren(node) {
+  return node.children && node.children.length > 0;
+}
+
+function lazyLoadTitles(parent) {
+  // Create observer for lazy loading
+  const callback = async (mutationList, observer) => {
+    const mutation = mutationList[0];
+    // It it renders hidden, do nothing
+    if (mutation.target.classList.contains("hidden")) return;
+    // Emit event for children to load in
+    emitEventOnElement(parent, "lazyLoad");
+    // put observer asleep
+    observer.disconnect();
+  };
+  const observer = new MutationObserver(callback);
+  observer.observe(parent, { attributes: true });
+}
+
+function handleTitleLazyLoading(parent, span, node) {
+  parent.addEventListener("lazyLoad", async () => {
+    const baseName = await getNodePropertyName(node);
+    const cleanName = removeIFCTagsFromName(baseName);
+    span.textContent = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+  });
 }
 
 export { buildTree };
