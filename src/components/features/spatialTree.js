@@ -12,7 +12,7 @@ import { loadCSS } from "../../helpers/generic/cssLoader";
 
 const tabControls = [
   { title: "Tree", ref: 0, status: false, content: undefined, buildFunction: renderSpatialTreeByLevelCategory },
-  { title: "Category", ref: 1, status: true, content: undefined, buildFunction: renderSpatialTreeByCategory },
+  { title: "Category", ref: 1, status: false, content: undefined, buildFunction: renderSpatialTreeByCategory },
   { title: "System", ref: 2, status: false, content: undefined, buildFunction: renderSpatialTreeBySystem },
   { title: "Discipline", ref: 3, status: false, content: undefined, buildFunction: renderSpatialTreeByDiscipline },
 ];
