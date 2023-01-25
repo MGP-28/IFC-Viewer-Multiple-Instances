@@ -85,11 +85,7 @@ async function buildTitle(node) {
     isolation: isolateIcon,
   };
 
-  //
-  //
   await processIconEvents(wrapper, nodeIcons, node);
-  //
-  //
 
   for (const key in nodeIcons) {
     const iconEl = nodeIcons[key];
