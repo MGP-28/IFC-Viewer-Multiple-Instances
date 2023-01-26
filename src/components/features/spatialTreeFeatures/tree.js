@@ -28,11 +28,12 @@ async function buildNode(node, parentList) {
   const title = await buildTitle(node, parentList);
   nodeEl.appendChild(title);
 
-  if (node.children && node.children.length > 0) {
+  if (hasChildren(node)) {
     const childrenEl = await buildChildren(node);
     childrenEl.classList.add("hidden");
 
     title.addEventListener("click", () => {
+      emitEventOnElement(childrenEl, "renderChildren");
       childrenEl.classList.toggle("hidden");
       const caret = title.getElementsByClassName("spatial-tree-caret")[0];
       caret.classList.toggle("caret-down");
@@ -64,7 +65,11 @@ async function buildTitle(node, parentList) {
   // create node title span
   const span = createElement("span");
   if (node.title) span.textContent = node.title;
-  else handleTitleLazyLoading(parentList, span, node);
+  else {
+    const baseName = await getNodePropertyName(node);
+    const cleanName = removeIFCTagsFromName(baseName);
+    span.textContent = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+  }
   // Content will be added later, as lazy load
   wrapper.appendChild(span);
 
@@ -101,16 +106,21 @@ async function buildTitle(node, parentList) {
  */
 async function buildChildren(node) {
   const childrenEl = createElement("ul");
-  let childrenAreLeaves = false;
-  for (const childNode of node.children) {
-    if (!childNode.title) childrenAreLeaves = true;
-    const node = await buildNode(childNode, childrenEl);
-    childrenEl.appendChild(node);
-  }
+  // let childrenAreLeaves = false;
+  let isFirstRender = true;
+  childrenEl.addEventListener("renderChildren", async () => {
+    if(!isFirstRender) return;
+    isFirstRender = false;
+    for (const childNode of node.children) {
+      if (!childNode.title) childrenAreLeaves = true;
+      const node = await buildNode(childNode, childrenEl);
+      childrenEl.appendChild(node);
+    }
+  });
 
-  if (childrenAreLeaves) {
-    lazyLoadTitles(childrenEl);
-  }
+  // if (childrenAreLeaves) {
+  //   lazyLoadTitles(childrenEl);
+  // }
 
   return childrenEl;
 }
