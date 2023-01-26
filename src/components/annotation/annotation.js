@@ -137,7 +137,7 @@ function renderAnnotation(category, annotation, parent) {
 
     function deleteAnnotation() {
       removeAnnotation(annotation.id);
-      hide();
+      hide(true);
       element.remove();
     }
   }

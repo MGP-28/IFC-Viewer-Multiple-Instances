@@ -98381,27 +98381,53 @@ function render$5() {
 
   handleEvents();
 
+  let status = false;
+
   function handleEvents() {
+    window.addEventListener("click", (e) => {
+      if (!status) return;
 
-    icon.addEventListener("click", (e) => {
-      list.classList.toggle("hidden");
-      list.style.left = "0px";
-      list.style.top = "0px";
-      const menuBoundingData = element.getBoundingClientRect();
-      const listBoundingData = list.getBoundingClientRect();
-      const newPosition = {
-        x: menuBoundingData.right - listBoundingData.left,
-        y: menuBoundingData.bottom - listBoundingData.top,
-      };
-      list.style.left = newPosition.x + "px";
-      list.style.top = newPosition.y + "px";
+      const elements = [icon, list];
+      if (elements.includes(e.target)) return;
 
-      element.classList.toggle("active");
-    });
-
-    list.addEventListener("click", () => {
       icon.click();
     });
+
+    icon.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      status = !status;
+      toggleStatus(status);
+
+      if (status) updatePosition();
+    });
+
+    list.addEventListener("click", (e) => {
+      e.stopPropagation();
+      icon.click();
+    });
+
+    function updatePosition() {
+      const id = setInterval(() => {
+        if (!status) clearInterval(id);
+
+        list.style.left = "0px";
+        list.style.top = "0px";
+        const menuBoundingData = element.getBoundingClientRect();
+        const listBoundingData = list.getBoundingClientRect();
+        const newPosition = {
+          x: menuBoundingData.right - listBoundingData.left - listBoundingData.width,
+          y: menuBoundingData.bottom - listBoundingData.top,
+        };
+        list.style.left = newPosition.x + "px";
+        list.style.top = newPosition.y + "px";
+      }, 20);
+    }
+  }
+
+  function toggleStatus(status) {
+    list.classList.toggle("hidden", !status);
+    element.classList.toggle("active", status);
   }
 
   return element;
@@ -99018,7 +99044,7 @@ function renderAnnotation(category, annotation, parent) {
 
     function deleteAnnotation() {
       removeAnnotation(annotation.id);
-      hide();
+      hide(true);
       element.remove();
     }
   }
