@@ -12,6 +12,7 @@ import { emitEventOnElement } from "../../../helpers/emitEvent";
  * @param {Object[]} branches Array of tree branches as it will be displayed
  */
 async function buildTree(container, branches) {
+  container.appendChild(buildToolbar());
   // Builds promise array
   const branchEls = branches.map(async (branch) => await buildNode(branch));
   // Resolves all promises, in order, and appends returned elements
@@ -109,7 +110,7 @@ async function buildChildren(node) {
   let isFirstRender = true;
   // Lazy loading of children
   childrenEl.addEventListener("renderChildren", async () => {
-    if(!isFirstRender) return;
+    if (!isFirstRender) return;
     isFirstRender = false;
     for (const childNode of node.children) {
       if (!childNode.title) childrenAreLeaves = true;
@@ -119,6 +120,28 @@ async function buildChildren(node) {
   });
 
   return childrenEl;
+}
+
+function buildToolbar() {
+  const toolbarEl = createElement("li", {
+    classes: ["spatial-tree-toolbar"],
+  });
+
+  const iconEl = createElement("div", {
+    classes: ["spatial-tree-icon"],
+    innerHTML: buildIcon(icons.visibility).outerHTML,
+  });
+  toolbarEl.appendChild(iconEl);
+
+  let isEnabled = true;
+  
+  const objectsData = Models.models.map((model, modelIdx) => {
+    return { modelIdx, expressIDs: model.getAllIDs() };
+  });
+
+  SpatialTreeInterelementEventHandling.handleVisibility({visibility: iconEl}, objectsData, isEnabled)
+
+  return toolbarEl;
 }
 
 async function processIconEvents(span, icons, node) {

@@ -4,6 +4,7 @@ import * as SelectionStore from "../../stores/selection";
 
 async function processNodeEvents(titleEl, icons, node) {
   const objectsData = getAllObjectsDataByModel(node);
+  console.log("objectsData", objectsData);
   handleEvents(titleEl, icons, objectsData, node);
 }
 
@@ -56,7 +57,7 @@ function toggleActiveCSSClass(title, isActive) {
  */
 async function handleEvents(titleEl, icons, objectsData, node) {
   let isEnabled = true;
-  handleVisibility(icons, objectsData);
+  handleVisibility(icons, objectsData, isEnabled);
 
   let isSelection = false;
   await handleSelection(icons.selection, objectsData, titleEl, node);
@@ -75,23 +76,7 @@ async function handleEvents(titleEl, icons, objectsData, node) {
     });
   }
 
-  function handleVisibility(icons, objectsData) {
-    // (listener, self) click => show/hide self
-    icons.visibility.addEventListener("click", (e) => {
-      e.stopPropagation();
-
-      isEnabled = !isEnabled;
-
-      handleMainSubset(objectsData, isEnabled);
-    });
-
-    document.addEventListener("visibilityChanged", (e) => {
-      coordinateVisibility(icons, objectsData);
-    });
-
-    // Runs coordination at creation -> Necessary after implementing lazy loading
-    coordinateVisibility(icons, objectsData);
-  }
+  
 
   async function handleSelection(selectionEl, objectsData, titleEl, node) {
     const isLeaf = !node.children;
@@ -160,50 +145,68 @@ async function handleEvents(titleEl, icons, objectsData, node) {
       handleMainSubset(objectsData, isEnabled);
     });
   }
+}
 
-  function toggleVisibilityIcon(visibilityEl) {
-    const icon = visibilityEl.childNodes[0];
-    if (isEnabled) icon.src = icon.src.replace("eye-off.svg", "eye.svg");
-    else icon.src = icon.src.replace("eye.svg", "eye-off.svg");
-  }
-
-  function coordinateVisibility(icons, objectsData) {
-    isEnabled = false;
-    for (let idx = 0; idx < objectsData.length; idx++) {
-      const modelIdx = objectsData[idx].modelIdx;
-      const expressIDs = objectsData[idx].expressIDs;
-      for (let idx2 = 0; idx2 < expressIDs.length; idx2++) {
-        const expressID = expressIDs[idx2];
-        if (SelectionStore.isVisible(modelIdx, expressID)) {
-          isEnabled = true;
-          break;
-        }
-      }
-      if (isEnabled) break;
-    }
-    toggleVisibilityIcon(icons.visibility);
-  }
-
-  /**
-   * Enables/disables subset on the scene, depending on "isEnabled"
-   * @param {Array.<Integer>} expressIDs object expressID
-   * @param {Integer} modelIdx identifies which model to manipulate
-   */
-  function handleMainSubset(objectsData, isEnabled) {
-    for (let idx = 0; idx < objectsData.length; idx++) {
-      const modelIdx = objectsData[idx].modelIdx;
-      const expressIDs = objectsData[idx].expressIDs;
-      if (isEnabled) {
-        SubsetBuilder.addToSubset(modelIdx, expressIDs);
-        SelectionStore.addIdsToVisible(modelIdx, expressIDs);
-      } else {
-        SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
-        SelectionStore.removeIdsFromVisible(modelIdx, expressIDs);
-      }
+/**
+ * Enables/disables subset on the scene, depending on "isEnabled"
+ * @param {Array.<Integer>} expressIDs object expressID
+ * @param {Integer} modelIdx identifies which model to manipulate
+ */
+function handleMainSubset(objectsData, isEnabled) {
+  for (let idx = 0; idx < objectsData.length; idx++) {
+    const modelIdx = objectsData[idx].modelIdx;
+    const expressIDs = objectsData[idx].expressIDs;
+    if (isEnabled) {
+      SubsetBuilder.addToSubset(modelIdx, expressIDs);
+      SelectionStore.addIdsToVisible(modelIdx, expressIDs);
+    } else {
+      SubsetBuilder.removeFromSubset(modelIdx, expressIDs);
+      SelectionStore.removeIdsFromVisible(modelIdx, expressIDs);
     }
   }
 }
 
+function handleVisibility(icons, objectsData, isEnabled) {
+  // (listener, self) click => show/hide self
+  icons.visibility.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    isEnabled = !isEnabled;
+
+    handleMainSubset(objectsData, isEnabled);
+  });
+
+  document.addEventListener("visibilityChanged", (e) => {
+    coordinateVisibility(icons, objectsData);
+  });
+
+  // Runs coordination at creation -> Necessary after implementing lazy loading
+  coordinateVisibility(icons, objectsData, isEnabled);
+}
+
+function coordinateVisibility(icons, objectsData, isEnabled) {
+  isEnabled = false;
+  for (let idx = 0; idx < objectsData.length; idx++) {
+    const modelIdx = objectsData[idx].modelIdx;
+    const expressIDs = objectsData[idx].expressIDs;
+    for (let idx2 = 0; idx2 < expressIDs.length; idx2++) {
+      const expressID = expressIDs[idx2];
+      if (SelectionStore.isVisible(modelIdx, expressID)) {
+        isEnabled = true;
+        break;
+      }
+    }
+    if (isEnabled) break;
+  }
+  toggleVisibilityIcon(icons.visibility, isEnabled);
+}
+
+function toggleVisibilityIcon(visibilityEl, isEnabled) {
+  const icon = visibilityEl.childNodes[0];
+  if (isEnabled) icon.src = icon.src.replace("eye-off.svg", "eye.svg");
+  else icon.src = icon.src.replace("eye.svg", "eye-off.svg");
+}
+
 // #endregion aux functions
 
-export { processNodeEvents };
+export { processNodeEvents, handleVisibility };
