@@ -31,14 +31,20 @@ function addSavedView(newSavedView) {
     savedView: savedView,
   })
 
+  setActiveId(id);
 
   return savedView.id;
 }
 
 function removeSavedView(id) {
+
+  
   const ids = savedViews.map((sv) => sv.id);
   const idx = ids.indexOf(id);
   if (idx == -1) return;
+
+  if(id === activeId) removeActiveId();
+
   savedViews.splice(idx, 1);
   // trigger event
   const customEvent = new CustomEvent("removedSavedView", {

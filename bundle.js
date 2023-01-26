@@ -95744,6 +95744,7 @@ function addSavedView(newSavedView) {
     savedView: savedView,
   });
 
+  setActiveId(id);
 
   return savedView.id;
 }
