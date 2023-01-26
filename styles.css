@@ -255,7 +255,6 @@ body {
 }
 
 .styling-menu-extras.active > ul.styling-menu-extras-list {
-  transform: translate(-100%, 0);
   opacity: 100%;
   z-index: 1;
 }
