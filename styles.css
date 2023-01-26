@@ -473,6 +473,12 @@ body {
   padding-right: 8px;
 }
 
+.spatial-tree-toolbar{
+  display: flex;
+  justify-content: end;
+  padding-bottom: 2px;
+}
+
 .tree-container span {
   user-select: none;
   display: block;
