@@ -16,3 +16,4 @@ CTRL + mouse drag - Drag plane slowly
 
 # QoL Features
 Infinite scroll wheel zoom
+Focus camera at aimed point
