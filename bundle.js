@@ -95387,10 +95387,11 @@ function renderContextMenu(){
     return element;
 }
 
-function renderContextMenuItem(text) {
-  const classCSS = text != "" ? "context-menu-item" : "context-menu-seperator";
+function renderContextMenuItem(text, hasSeperator) {
+  const classes = ["context-menu-item"];
+  if(hasSeperator) classes.push("context-menu-seperator");
   const element = createElement("li", {
-    classes: [classCSS],
+    classes,
     textContent: text,
   });
 
@@ -95750,9 +95751,14 @@ function addSavedView(newSavedView) {
 }
 
 function removeSavedView(id) {
+
+  
   const ids = savedViews.map((sv) => sv.id);
   const idx = ids.indexOf(id);
   if (idx == -1) return;
+
+  if(id === activeId) removeActiveId();
+
   savedViews.splice(idx, 1);
   // trigger event
   const customEvent = new CustomEvent("removedSavedView", {
@@ -96517,1256 +96523,6 @@ function getFrameVector(movementVector, frames) {
   return frameVector;
 }
 
-let isMouseDragging = false;
-const canvas = document.getElementById("three-canvas");
-
-function startUserInputs() {
-  document.addEventListener("wereReady", () => {
-    emitGlobalEvent("loadingComplete");
-
-    // Double-click => highlights and shows details of pointed object
-    canvas.ondblclick = (event) => pickObject(event, true, true);
-
-    canvas.onmousemove = async (event) => {
-      // When mouse is dragging a clipping plane
-      if (isMouseDragging) {
-        if (userInteractions.draggingPlane) await dragClippingPlane(event);
-        return;
-      }
-      // When user is pressing any special key, do nothing
-      if (isUserPressingSpecialKeys() || userInteractions.keyCActive) {
-        resetVisualPlanesColoring();
-        resetHighlighted();
-        return;
-      }
-      // When mouse is just hovering
-      //// and C is active
-      if (userInteractions.clippingPlanes && !userInteractions.keyXActive) {
-        console.log('catching planes');
-        resetHighlighted(); // prevent visual artifacts
-        const isPlaneFound = await pickClippingPlane(event);
-        if (!isPlaneFound) resetVisualPlanesColoring();
-        else highlightVisualPlane();
-        return
-      } 
-      //// and C is inactiveccc
-      if (userInteractions.keyXActive) {
-        resetVisualPlanesColoring(); // prevent visual artifacts
-        pickObject(event, true, false);
-      }
-    };
-
-    let isMovingPlanes = false;
-    // Prevents highlighting when moving camera (more fluid movement)
-    canvas.onmousedown = async (event) => {
-      isMouseDragging = true;
-
-      // clipping plane
-      if (
-        !foundPlane ||
-        !userInteractions.clippingPlanes ||
-        userInteractions.keyCActive || 
-        userInteractions.keyXActive
-      )
-        return;
-
-      isMovingPlanes = true;
-
-      // plane moving logic
-      await moveClippingPlane(event);
-    };
-    canvas.onmouseup = (event) => {
-      isMouseDragging = false;
-
-      // clipping plane
-      if (!isMovingPlanes) return;
-
-      isMovingPlanes = false;
-
-      // plane end movement logic
-      stopMovingClippingPlane();
-    };
-
-    window.addEventListener("keydown", (event) => {
-      const keyPressed = event.code;
-      switch (keyPressed) {
-        case "ControlLeft":
-          userInteractions.controlActive = true;
-          break;
-      }
-    });
-
-    window.addEventListener("keyup", (event) => {
-      const keyPressed = event.code;
-      switch (keyPressed) {
-        case "ControlLeft":
-          userInteractions.controlActive = false;
-          break;
-        case "KeyC": {
-          userInteractions.keyCActive = !userInteractions.keyCActive;
-          if(userInteractions.keyCActive) disableFeatureKeys();
-          resetVisuals();
-          break;
-        }
-        case "KeyX": {
-          if(userInteractions.keyCActive) return;
-          userInteractions.keyXActive = !userInteractions.keyXActive;
-          resetVisuals();
-          break;
-        }
-      }
-    });
-  });
-}
-
-function resetVisuals(){
-  resetVisualPlanesColoring();
-  resetHighlighted();
-}
-
-let _opacity = undefined;
-let _color = undefined;
-let _uuid = undefined;
-function resetVisualPlanesColoring() {
-  if (!_uuid) return;
-  for (let idx = 0; idx < visualPlanes.length; idx++) {
-    const visualPlane = visualPlanes[idx];
-    visualPlane.material.opacity = _opacity;
-    visualPlane.material.color = _color;
-  }
-  _uuid = undefined;
-}
-
-function resetHighlighted(){
-  resetFound();
-  resetHighlightedProperties();
-}
-
-function highlightVisualPlane() {
-  const visualPlane = foundPlane.object;
-
-  if (visualPlane.uuid == _uuid) return;
-
-  resetVisualPlanesColoring();
-
-  const noRef = { ...visualPlane };
-  _uuid = noRef.uuid;
-  if (!_opacity) _opacity = noRef.material.opacity;
-  if (!_color) _color = noRef.material.color;
-
-  visualPlane.material.opacity = 0.28;
-  visualPlane.material.color = materials.highlighted.color;
-}
-
-async function moveClippingPlane(event) {
-  // disable camera
-  toggleCameraControls(false);
-  // drag plane
-  userInteractions.draggingPlane = true;
-
-  const vNormal =
-    normals[selectedPlaneIdx];
-  const key = vNormal.y !== 0 ? "y" : "x";
-  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
-
-  const normals$1 = {
-    x: new Vector3(1, 0, 0),
-    y: new Vector3(0, 1, 0),
-    z: new Vector3(0, 0, 1),
-  };
-
-  for (const axle in normals$1) {
-    if (axle == axleOfMovement) continue;
-
-    const normal = normals$1[axle];
-    const crossPlane$1 = new Plane(
-      normal,
-      center[axle]
-    );
-    crossPlane.planes.push(crossPlane$1);
-
-    // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
-    // scene.add(helper);
-  }
-
-  crossPlane.points.start = await pickCrossPlane(event);
-}
-
-function stopMovingClippingPlane(event) {
-  // enable camera
-  toggleCameraControls(true);
-  // stop plane
-  userInteractions.draggingPlane = false;
-  resetCrossPlane();
-}
-
-async function dragClippingPlane(event, isUserInteraction) {
-  const visualPlane = foundPlane.object;
-  const vNormal =
-    normals[selectedPlaneIdx];
-
-  const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
-
-  const multiplier = userInteractions.controlActive
-    ? clippingConfigs.multiplier.precision
-    : clippingConfigs.multiplier.normal;
-  const maximum = clippingConfigs.maxJump;
-
-  const endPoint = await pickCrossPlane(event);
-
-  if (!endPoint) return;
-
-  crossPlane.points.end.copy(endPoint);
-
-  const initialPosition = crossPlane.points.start;
-  const finalPosition = crossPlane.points.end;
-
-  let value =
-    (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) *
-    multiplier;
-  if (value > maximum) value = maximum;
-  else if (value < maximum * -1) value = maximum * -1;
-
-  const vectorAxles = {
-    x: axleOfMovement == "x" ? value : 0,
-    y: axleOfMovement == "y" ? value : 0,
-    z: axleOfMovement == "z" ? value : 0,
-  };
-  const moveVector = new Vector3(
-    vectorAxles.x,
-    vectorAxles.y,
-    vectorAxles.z
-  );
-
-  visualPlane.position.add(moveVector);
-
-  // Checks for plane positioning reaching the minimum or maximum
-  const buffer = clippingConfigs.buffer;
-  const absoluteMinPosition =
-    edgePositions.min[axleOfMovement];
-  const absoluteMaxPosition =
-    edgePositions.max[axleOfMovement];
-  if (absoluteMinPosition > visualPlane.position[axleOfMovement])
-    visualPlane.position[axleOfMovement] = absoluteMinPosition;
-  else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
-    visualPlane.position[axleOfMovement] = absoluteMaxPosition;
-
-  const edgeVectorChanged =
-    vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
-  const edgeVectorOther =
-    edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
-
-  const relativeEdgePosition =
-    edgePositions[edgeVectorOther][axleOfMovement];
-
-  if (edgeVectorChanged == "currentMax") {
-    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]) {
-      visualPlane.position[axleOfMovement] = relativeEdgePosition + buffer;
-    }
-  } else {
-    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]) {
-      visualPlane.position[axleOfMovement] = relativeEdgePosition - buffer;
-    }
-  }
-
-  edgePositions[edgeVectorChanged][axleOfMovement] =
-    visualPlane.position[axleOfMovement];
-
-  const cuttingPlane =
-    clippingPlanes[selectedPlaneIdx];
-
-  const newConstant =
-    visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
-  cuttingPlane.constant = newConstant;
-
-  crossPlane.points.start.copy(
-    crossPlane.points.end
-  );
-}
-
-//
-// TESTING
-//
-// window.addEventListener("keydown", (event) => {
-//   const keyPressed = event.code;
-//   switch (keyPressed) {
-//     case "KeyT": {
-//       console.log("lets go!");
-//       renderText();
-//       break;
-//     }
-//     default:
-//       break;
-//   }
-// });
-//
-//
-
-window.addEventListener("contextmenu", async (e) => {
-  e.preventDefault();
-
-  if (!userInteractions.controlActive) return;
-
-  toggleCameraControls(false);
-
-  const object = await pickObject(e, false);
-  // render menu
-  const contextMenu = renderContextMenu();
-  document.body.appendChild(contextMenu);
-  // position menu
-  contextMenu.style.left = `${e.clientX}px`;
-  contextMenu.style.top = `${e.clientY}px`;
-
-  // Closing event handling
-  document.body.addEventListener("mousedown", closeMenu);
-  function closeMenu() {
-    contextMenu.remove();
-    document.body.removeEventListener("mousedown", closeMenu);
-    toggleCameraControls(true);
-  }
-
-  const menuList = document.getElementById("context-menu-list");
-
-  // Menu content
-  if (object) {
-    objectContextMenu(object);
-    return;
-  } else freeContextMenu();
-
-  //
-  // Aux functions in scope
-  //
-  function objectContextMenu(object) {
-    // create annotation
-    const annotationEl = renderContextMenuItem("Create annotation");
-    menuList.appendChild(annotationEl);
-    annotationEl.addEventListener("mousedown", (e) => {
-      e.stopPropagation();
-      const position = object.object.point;
-      const form = render$d(position);
-      document.body.appendChild(form);
-
-      closeMenu();
-    });
-    seperatorElement(menuList);
-
-    const cameraPointEl = renderContextMenuItem("Focus camera here");
-    menuList.appendChild(cameraPointEl);
-    cameraPointEl.addEventListener("mousedown", (e) => {
-      e.stopPropagation();
-      const position = object.object.point;
-      setCameraLookingPoint(position);
-
-      closeMenu();
-    });
-    seperatorElement(menuList);
-
-    // testing
-    testerElement(menuList);
-    seperatorElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    seperatorElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    ////
-  }
-
-  function freeContextMenu() {
-    console.log("outside object");
-  }
-
-  function seperatorElement(menuList) {
-    const seperator = renderContextMenuItem("");
-    menuList.appendChild(seperator);
-  }
-});
-
-function toggleCameraControls(isOn) {
-  controls.enabled = isOn;
-}
-
-let idx = 0;
-function testerElement(menuList) {
-  const arr = [
-    "Tester",
-    "I'm real",
-    "Dummy",
-    "I'm stuck here!",
-    "Super important tester for sure",
-    "A wizard did this!",
-  ];
-  const element = renderContextMenuItem(arr[idx]);
-  idx = idx == 5 ? 0 : idx + 1;
-  menuList.appendChild(element);
-}
-
-// function renderText() {
-//   const position = {
-//     x: 1,
-//     y: -1,
-//     z: 3,
-//   };
-//   const text2D = render2DText(position, "Boas");
-
-//   SceneStore.renderer2D.group.add(text2D);
-
-//   window.addEventListener("click", async (e) => {
-//     const result = await pickObject(e, false);
-//     if (!result) return;
-//     text2D.position.copy(found.object.point);
-//     // setTimeout(() => {
-//     //   text2D.removeFromParent();
-//     // }, 2000);
-//   });
-// }
-//
-// END TESTING
-//
-
-/**
- *  Creates subset with custom material, used for highlighting
- * @param {Model} model model instance of the loaded IFC
- * @param {array} ids array with all the expressIDs of the object to add to the subset
- * @param {string} type name of type of material to be used (see configs/materials.js)
- */
-function createSubset(model, ids, type) {
-  //create subset for provided model
-  const material = materials[type];
-  model.loader.ifcManager.createSubset({
-    modelID: 0,
-    ids: ids,
-    material: material,
-    scene: scene,
-    removePrevious: true,
-  });
-}
-
-/**
- * Removes previously craeted subset. Identifies subset by its custom material
- * @param {Model} model model instance of the loaded IFC
- * @param {String} type name of type of material to be used (see configs/materials.js)
- */
-function removeSubset(model, type) {
-  createSubset(model, [], type);
-}
-
-/**
- * Add object to subset by its expressID
- * @param {Integer} modelIdx Identifies which model to manipulate
- * @param {Array<Integer>} expressIDs 
- */
-function addToSubset(modelIdx, expressIDs) {
-  const loader = models[modelIdx].loader;
-  loader.ifcManager.createSubset({
-    modelID: 0,
-    ids: expressIDs,
-    scene: scene,
-    removePrevious: false,
-    customID: modelIdx,
-  });
-}
-
-/**
- * Removes object to subset by its expressID
- * @param {Integer} modelIdx Identifies which model to manipulate
- * @param {Integer} expressID 
- */
-function removeFromSubset(modelIdx, expressIDs) {
-  const loader = models[modelIdx].loader;
-  loader.ifcManager.removeFromSubset(0, expressIDs, modelIdx);
-}
-
-function startRenderingEvents() {
-  document.addEventListener("selectedChanged", (event) => {
-    processRenderization("selected");
-  });
-
-  document.addEventListener("highlightedChanged", (event) => {
-    processRenderization("highlighted");
-  });
-}
-
-// Handles renderization of subsets in the viewer
-// @type (string) = material type, according to src/configs/materials.js
-function processRenderization(type) {
-  const storedObj = vars[type];
-
-  if (storedObj.isValid()) {
-    /* Code for only 1 object selected at a time
-
-    // get selected model index in Store array
-    const modelIdx = storedObj.modelIdx;
-
-    // get all not selected models and remove any selection subsets on them
-    const otherModels = Models.models.filter(
-      (value, index) => index !== modelIdx
-    );
-    otherModels.forEach((model) => {
-      removeSubset(model, type);
-    });
-
-    // add selection subset to the selected model
-    const model = Models.models[modelIdx];
-    const IdArr = storedObj.ids;
-
-    */
-
-    for (const modelIdx in storedObj.objects) {
-      const idsToHighlight = storedObj.objects[modelIdx];
-      const model = models[modelIdx];
-      createSubset(model, idsToHighlight, type);
-    }
-  } else {
-    // if there's no selection, remove all selections
-    for (let idx = 0; idx < models.length; idx++) {
-      const model = models[idx];
-      removeSubset(model, type);
-    }
-  }
-}
-
-function loadCSS(filePathFromRoot) {
-  const link = document.createElement("link");
-  link.href = filePathFromRoot;
-  link.type = "text/css";
-  link.rel = "stylesheet";
-
-  document.getElementsByTagName("head")[0].appendChild(link);
-}
-
-function startLoadingPopup() {
-  const modal = buildModal();
-
-  const content = document.createElement("div");
-  content.classList.add("modal-loading-container");
-  content.innerHTML = `
-    <div class="cube-container">
-      <div class="h1Container">
-        <div class="cube cube-h1 cube-w1 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w1 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w1 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w2 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w2 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w2 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w3 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w3 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h1 cube-w3 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-      </div>
-      <div class="h2Container">
-
-        <div class="cube cube-h2 cube-w1 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w1 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w1 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w2 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w2 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w2 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w3 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w3 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h2 cube-w3 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-      </div>
-
-      <div class="h3Container">
-
-        <div class="cube cube-h3 cube-w1 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w1 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w1 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w2 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w2 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w2 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w3 cube-l1">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w3 cube-l2">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-
-        <div class="cube cube-h3 cube-w3 cube-l3">
-          <div class="cube-face cube-top"></div>
-          <div class="cube-face cube-left"></div>
-          <div class="cube-face cube-right"></div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.addEventListener("loading", () => {
-    modal.classList.remove("hidden");
-  });
-
-  document.addEventListener("loadingComplete", () => {
-    modal.classList.add("hidden");
-  });
-
-  modal.appendChild(content);
-
-  loadCSS("./src/assets/css/loading.css");
-
-  document.body.appendChild(modal);
-}
-
-const navbarItems = {};
-
-/**
- *
- * @param {NavbarItem} item
- */
-function featureRenderingHandler$1(item) {
-  if (!item.isRendered) {
-    item.isRendered = true;
-    item.build();
-  }
-
-  if (item.isActive) item.load();
-  else item.unload();
-}
-
-/**
- * Renders tabs component for sidebar feature.
- * All events pass tab "ref" as detail
- * Emits: tabSelected
- * Listens: selectTab, deselectTab
- * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
- * @param {boolean} isOnlyOneActiveTab Default true; Wether or not tabs disable automatically when another one is selected
- */
-function render$c(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive = true) {
-  const element = createElement("ul", {
-    classes: ["sidebar-feature-tabs-wrapper"],
-  });
-
-  tabs.forEach((tab) => {
-    const tabEl = createElement("li", {
-      classes: ["sidebar-feature-tabs-tab"],
-      textContent: tab.title,
-    });
-    handleTabEvents(tab, tabEl);
-    element.appendChild(tabEl);
-  });
-
-  return element;
-
-  function handleTabEvents(tab, tabEl) {
-    // Emits "tabSelected" to parent element on click and enables "active" class
-    tabEl.addEventListener("click", (e) => {
-      const isActive = tab.status;
-      if (isActive) {
-        const activeCounter = element.getElementsByClassName("active").length;
-        if(!isAlwaysOneTabActive || activeCounter > 1) emitCustomEventOnElement(component, "tabDeselected", { ref: tab.ref });
-      }
-      else emitCustomEventOnElement(component, "tabSelected", { ref: tab.ref });
-    });
-
-    // Listens "tabSelected" triggered by other tab or own tab
-    component.addEventListener("tabSelected", (e) => {
-      const ref = e.detail.ref;
-      tab.status = false;
-      if (tab.ref === ref) tab.status = true;
-
-      // When multiple tabs can be active at the same time and it's not the selected tab by the user, do nothing;
-      if (!isOnlyOneActiveTab && !isActivedTab) return;
-
-      tabEl.classList.toggle("active", tab.status);
-    });
-
-    // Listens "tabDeselected" triggered by other tab or own tab
-    component.addEventListener("tabDeselected", (e) => {
-      disableActiveStatus(tabEl, tab, e);
-    });
-
-    // Listens "selectTab" coming from outside parent and enables "active" class
-    component.addEventListener("selectTab", (e) => {
-      const ref = e.detail.ref;
-      if (tab.ref !== ref) return;
-      tabEl.classList.toggle("active", true);
-    });
-
-    // Listens "deselectTab" coming from outside parent and disables "active" class
-    component.addEventListener("deselectTab", (e) => {
-      disableActiveStatus(tabEl, tab, e);
-    });
-  }
-}
-
-function disableActiveStatus(element, data, event) {
-  const ref = event.detail.ref;
-  if (data.ref !== ref) return;
-  tab.status = false;
-  element.classList.toggle("active", false);
-}
-
-/**
- *
- * @param {NavbarItem} item
- */
-function render$b(item) {
-  const mainSidebarFeature = createElement("div", {
-    classes: ["main-sidebar-feature"],
-  });
-
-  mainSidebarFeature.innerHTML = `
-    <span>${item.title}</span>
-    <div class="main-sidebar-feature-content content-container"></div>
-  `;
-  const contentEl = mainSidebarFeature.getElementsByTagName("div")[0];
-
-  const closeIcon = buildIcon(icons.closeDark);
-  mainSidebarFeature.insertBefore(closeIcon, contentEl);
-
-  handleEvents();
-
-  return mainSidebarFeature;
-
-  function handleEvents() {
-    closeIcon.addEventListener("click", (e) => {
-      item.isActive = false;
-      featureRenderingHandler$1(item);
-    });
-  }
-}
-
-function addContent(component, content) {
-  const contentEl = component.getElementsByClassName("content-container")[0];
-  contentEl.appendChild(content);
-}
-
-/**
- * Adds tabs to sidebar feature.
- * 
- * All events pass tab "ref" as detail
- * 
- * Emits: tabSelected, tabDeselected
- * 
- * Listens: selectTab, deselectTab
- * @param {HTMLElement} component Feature base component
- * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
- */
-function addTabs(component, tabs) {
-  const oldContentEl = component.getElementsByTagName("div")[0];
-  const content = oldContentEl.innerHTML;
-  oldContentEl.classList.remove("content-container");
-
-  const wrapper = createElement("div", {
-    classes: ["main-sidebar-feature-wrapper-with-tabs"],
-  });
-  const contentEl = createElement("div", {
-    classes: ["content-container", "main-sidebar-feature-wrapper-with-tabs-content"],
-    innerHTML: content,
-  });
-  wrapper.appendChild(contentEl);
-
-  const tabsEl = render$c(component, tabs);
-  wrapper.appendChild(tabsEl);
-  
-  oldContentEl.innerHTML = "";
-  oldContentEl.appendChild(wrapper);
-}
-
-let sidebarEls = {
-  l: undefined,
-  r: undefined,
-};
-
-/**
- * Initialize references for sidebar logic
- */
-function getReferences() {
-  sidebarEls.l = document.getElementById("left-sidebar");
-  sidebarEls.r = document.getElementById("right-sidebar");
-}
-
-/**
- * Loads feature into sidebar. Previously loaded feature is removed first
- * @param {NavbarItem} navItem
- */
-function loadFeatureIntoSidebar(navItem) {
-  if (!sidebarEls.l) getReferences();
-  
-  const sidebarCode = navItem.sidebarPosition.charAt(0);
-  const position = navItem.sidebarPosition.charAt(1);
-  const sidebar = sidebarEls[sidebarCode];
-  
-  if (position == 1 && sidebar.firstChild) sidebar.insertBefore(navItem.component, sidebar.firstChild);
-  else sidebar.appendChild(navItem.component);
-
-  emitGlobalEvent("featureLoaded");
-}
-
-
-/**
- * Unloads features from sidebar. If a component is specified, only removes the specific component
- * @param {NavbarItem} navItem Optional - navItem containing HTML component to remove
- */
-function unloadFeatureFromSidebar(navItem) {
-  navItem.component.remove();
-  emitGlobalEvent("featureUnloaded");
-}
-
-class NavbarItem {
-  #buildFunction;
-  #loadFunction;
-  #unloadFunction;
-
-  /**
-   *
-   * @param {string} title Text to show in UI
-   * @param {function} buildFunction handles feature initialization. Should return html element, if sidebarPosition has a value
-   * @param {function?} loadFunction optional - runs when feature loads to UI
-   * @param {function?} unloadFunction optional - runs when feature unloads from UI
-   * @param {string?} sidebarPosition optional - UI position for this feature. "l1", "l2", "r1", "r2". Default undefined
-   */
-  constructor(title, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
-    this.title = title;
-    this.#buildFunction = buildFunction;
-    this.#loadFunction = loadFunction;
-    this.#unloadFunction = unloadFunction;
-    this.isRendered = false;
-    this.isActive = false;
-    this.navbarItem = undefined;
-    this.subitems = [];
-    this.component = undefined;
-    this.sidebarPosition = undefined;
-    this.hasTabs = undefined;
-    this.isExclusive = false;
-    this.loadAfterDOMRender = false;
-  }
-
-  async build() {
-    if (this.sidebarPosition) {
-      this.component = render$b(this);
-      const content = await this.#buildFunction(this);
-      addContent(this.component, await content);
-    } else this.#buildFunction(this);
-
-    this.isRendered = true;
-  }
-
-  async load() {
-    this.isActive = true;
-
-    if (this.#loadFunction !== undefined && !this.loadAfterDOMRender) await this.#loadFunction(this);
-
-    emitEventOnElement(this.navbarItem, "loaded");
-
-    // checks if feature is to be rendered in sidebar
-    if (!this.sidebarPosition) return;
-
-    // add to sidebar
-    loadFeatureIntoSidebar(this);
-
-    if (this.#loadFunction !== undefined && this.loadAfterDOMRender) await this.#loadFunction(this);
-  }
-
-  async unload() {
-    this.isActive = false;
-
-    if (this.#unloadFunction !== undefined) await this.#unloadFunction(this);
-
-    emitEventOnElement(this.navbarItem, "unloaded");
-
-    // checks if feature is to be rendered in sidebar
-    if (!this.sidebarPosition) return;
-
-    // remove from sidebar
-    unloadFeatureFromSidebar(this);
-  }
-
-  getContentElement() {
-    try {
-      return this.component.getElementsByClassName("content-container")[0];
-    } catch {
-      throw new Error("Feature has no DOM element");
-    }
-  }
-}
-
-/**
- *
- * @param {NavbarItem} subitem
- * @param {HTMLElement} parent
- * @param {number} idx
- * @param {boolean} isExclusive If true, disables all other items in the list also marked as exclusive
- * @returns
- */
-function render$a(subitem, parent, idx) {
-  const navbarItemDropdown = createElement("li", {
-    classes: ["feature-navbar-item-dropdown-item"],
-    textContent: subitem.title,
-  });
-
-  handleSubitemEvents();
-
-  subitem.navbarItem = navbarItemDropdown;
-  return navbarItemDropdown;
-
-  //// Aux functions in scope
-
-  function handleSubitemEvents() {
-    navbarItemDropdown.addEventListener("click", (e) => {
-      subitem.isActive = !subitem.isActive;
-      const eventName = subitem.isActive ? "subitemSelected" : "subitemDeselected";
-      emitCustomEventOnElement(parent, eventName, {
-        idx,
-        hasExclusivity: subitem.isExclusive,
-      });
-    });
-
-    parent.addEventListener("subitemSelected", (e) => {
-      // const eventIdx = e.detail.idx;
-      // const hasExclusivity = e.detail.hasExclusivity;
-      // if (eventIdx != idx) {
-      //   if (!hasExclusivity) return;
-      //   if (!subitem.isExclusive) return;
-      //   if (!subitem.isRendered) return;
-      //   if (!subitem.isActive) return;
-      //   subitem.isActive = false;
-      // } else subitem.isActive = true;
-      // featureRenderingHandler(subitem);
-    });
-
-    parent.addEventListener("subitemDeselected", (e) => {
-      const eventIdx = e.detail.idx;
-      if (eventIdx !== idx) return;
-      subitem.isActive = false;
-      featureRenderingHandler$1(subitem);
-    });
-
-    navbarItemDropdown.addEventListener("loaded", (e) => {
-      subitem.isActive = true;
-      navbarItemDropdown.classList.toggle("active", true);
-    });
-
-    navbarItemDropdown.addEventListener("unloaded", (e) => {
-      subitem.isActive = false;
-      navbarItemDropdown.classList.toggle("active", false);
-      emitEventOnElement(parent, "subitemDeselectedOutter");
-    });
-  }
-}
-
-/**
- *
- * @param {NavbarItem} item
- * @returns
- */
-function render$9(item) {
-  const navbarItem = createElement("li", {
-    classes: ["feature-navbar-item"],
-  });
-
-  const title = createElement("span", {
-    textContent: item.title,
-  });
-  navbarItem.appendChild(title);
-
-  handleItemEvents();
-
-  if (!hasSubitems()) {
-    item.navbarItem = navbarItem;
-    return navbarItem;
-  }
-  // If doesn't have subitems, exists
-
-  const arrow = buildIcon(icons.chevronRight);
-  navbarItem.appendChild(arrow);
-
-  const sublist = createElement("ul", {
-    classes: ["feature-navbar-item-dropdown", "hidden"],
-  });
-
-  for (let idx = 0; idx < item.subitems.length; idx++) {
-    const subitem = item.subitems[idx];
-    itemGlobalRenderCall(subitem);
-    const subitmeEl = render$a(subitem, navbarItem, idx);
-    sublist.appendChild(subitmeEl);
-    // if (subitem.hasSidebarTab) {
-    //   subitem.tabElement = renderSidebarTab(subitem);
-    // }
-  }
-  navbarItem.appendChild(sublist);
-
-  handleSubitemEvents();
-
-  return navbarItem;
-
-  //// Aux functions in scope
-
-  function handleItemEvents() {
-    itemGlobalRenderCall(item);
-    navbarItem.addEventListener("mouseover", () => {
-      const width = navbarItem.getBoundingClientRect().width;
-      navbarItem.style.width = width + "px";
-      if (hasSubitems()) sublist.classList.toggle("hidden");
-    });
-
-    navbarItem.addEventListener("mouseout", () => {
-      if (hasSubitems()) sublist.classList.toggle("hidden");
-    });
-
-    navbarItem.addEventListener("click", (e) => {
-      if (hasSubitems()) return;
-
-      item.isActive = !item.isActive;
-
-      // only runs if there are no subitems
-      featureRenderingHandler$1(item);
-
-      // navbarItem.classList.toggle("active"); -> is now handled by events
-    });
-
-    navbarItem.addEventListener("loaded", (e) => {
-      item.isActive = true;
-      navbarItem.classList.toggle("active", true);
-    });
-
-    navbarItem.addEventListener("unloaded", (e) => {
-      item.isActive = false;
-      navbarItem.classList.toggle("active", false);
-    });
-  }
-
-  function handleSubitemEvents() {
-    navbarItem.addEventListener("subitemSelected", (e) => {
-      const eventIdx = e.detail.idx;
-      const hasExclusivity = e.detail.hasExclusivity;
-      const subitems = item.subitems;
-      const changesArr = [];
-
-      for (let idx = 0; idx < subitems.length; idx++) {
-        const subitem = subitems[idx];
-        if (eventIdx != idx) {
-          if (!hasExclusivity) continue;
-          if (!subitem.isExclusive) continue;
-          if (!subitem.isRendered) continue;
-          if (!subitem.isActive) continue;
-          subitem.isActive = false;
-        } else subitem.isActive = true;
-        changesArr.push(subitem);
-      }
-
-      // Sort array to make sure to unload items before loading others
-      changesArr.sort((a, b) => {
-        return a.isActive == true && b.isActive == false;
-      });
-
-      changesArr.forEach((subitem) => {
-        featureRenderingHandler$1(subitem);
-      });
-
-      navbarItem.classList.toggle("active", true);
-    });
-
-    navbarItem.addEventListener("subitemDeselected", (e) => {
-      checkStatus();
-    });
-
-    navbarItem.addEventListener("subitemDeselectedOutter", (e) => {
-      checkStatus();
-    });
-
-    function checkStatus() {
-      const activeSubitems = navbarItem.getElementsByClassName("active");
-      if (activeSubitems.length == 0) navbarItem.classList.toggle("active", false);
-    }
-  }
-
-  function hasSubitems() {
-    return item.subitems !== undefined && item.subitems.length > 0;
-  }
-
-  function itemGlobalRenderCall(item) {
-    if (item.sidebarPosition) {
-      const globalRenderTrigger = ("openFeature" + item.title).replace(/\s/g, "");
-      document.addEventListener(globalRenderTrigger, async () => {
-        if (!item.isRendered) await item.build();
-        item.load();
-      });
-    }
-  }
-}
-
-/**
- *
- * @param {*} items item list -> item = {text, callFunction, subitems}. Each id has to be different
- */
-function render$8() {
-  const navbar = createElement("ul", {
-    classes: ["feature-navbar"],
-  });
-
-  for (const featureName in navbarItems) {
-    if (Object.hasOwnProperty.call(navbarItems, featureName)) {
-      const feature = navbarItems[featureName];
-      const itemEl = render$9(feature);
-      navbar.appendChild(itemEl);
-    }
-  }
-
-  loadCSS("./src/assets/css/navbar.css");
-
-  document.addEventListener("wereReady", append);
-
-  function append() {
-    document.body.appendChild(navbar);
-    document.removeEventListener("wereReady", append);
-  }
-}
-
-function initializeNavbar() {
-  render$8();
-}
-
-async function initializeSidebar() {
-  loadCSS("./src/assets/css/sidebar.css");
-
-  const leftSidebar = createElement("div", {
-    id: "left-sidebar",
-    classes: ["main-sidebar", "hidden"],
-  });
-
-  const rightSidebar = createElement("div", {
-    id: "right-sidebar",
-    classes: ["main-sidebar", "hidden"],
-  });
-
-  document.body.appendChild(leftSidebar);
-  document.body.appendChild(rightSidebar);
-
-  // handle sidebar visibility
-  document.addEventListener("featureLoaded", (e) => {
-    if (leftSidebar.children.length > 0) leftSidebar.classList.toggle("hidden", false);
-    if (rightSidebar.children.length > 0) rightSidebar.classList.toggle("hidden", false);
-  });
-
-  document.addEventListener("featureUnloaded", (e) => {
-    if (leftSidebar.children.length == 0) leftSidebar.classList.toggle("hidden", true);
-    if (rightSidebar.children.length == 0) rightSidebar.classList.toggle("hidden", true);
-  });
-}
-
 const referenceVectors = {
   x2: new Vector3(1, 0, 0),
   x1: new Vector3(-1, 0, 0),
@@ -98080,39 +96836,7 @@ function clipping(isEnabled) {
 
 }
 
-/**
- *
- * @param {NavbarItem} navItem
- * @returns
- */
-function build$3(navItem) {
-  document.addEventListener("openClippingPlanes", (e) => {
-    navItem.isActive = true;
-    navItem.load();
-  });
-}
-
-/**
- *
- * @param {NavbarItem} navItem
- * @returns
- */
-function load$3(navItem) {
-  userInteractions.clippingPlanes = true;
-  clipping(true);
-}
-
-/**
- *
- * @param {NavbarItem} navItem
- * @returns
- */
-function unload$2(navItem) {
-  userInteractions.clippingPlanes = false;
-  clipping(false);
-}
-
-function render$7() {
+function render$c() {
   const headerProps = {
     title: "Saving view",
     subtitle: "Creating new saved perspective",
@@ -98240,6 +96964,59 @@ function saveView(note) {
   addSavedView(savedView);
 }
 
+/**
+ *  Creates subset with custom material, used for highlighting
+ * @param {Model} model model instance of the loaded IFC
+ * @param {array} ids array with all the expressIDs of the object to add to the subset
+ * @param {string} type name of type of material to be used (see configs/materials.js)
+ */
+function createSubset(model, ids, type) {
+  //create subset for provided model
+  const material = materials[type];
+  model.loader.ifcManager.createSubset({
+    modelID: 0,
+    ids: ids,
+    material: material,
+    scene: scene,
+    removePrevious: true,
+  });
+}
+
+/**
+ * Removes previously craeted subset. Identifies subset by its custom material
+ * @param {Model} model model instance of the loaded IFC
+ * @param {String} type name of type of material to be used (see configs/materials.js)
+ */
+function removeSubset(model, type) {
+  createSubset(model, [], type);
+}
+
+/**
+ * Add object to subset by its expressID
+ * @param {Integer} modelIdx Identifies which model to manipulate
+ * @param {Array<Integer>} expressIDs 
+ */
+function addToSubset(modelIdx, expressIDs) {
+  const loader = models[modelIdx].loader;
+  loader.ifcManager.createSubset({
+    modelID: 0,
+    ids: expressIDs,
+    scene: scene,
+    removePrevious: false,
+    customID: modelIdx,
+  });
+}
+
+/**
+ * Removes object to subset by its expressID
+ * @param {Integer} modelIdx Identifies which model to manipulate
+ * @param {Integer} expressID 
+ */
+function removeFromSubset(modelIdx, expressIDs) {
+  const loader = models[modelIdx].loader;
+  loader.ifcManager.removeFromSubset(0, expressIDs, modelIdx);
+}
+
 function renderAllObjects() {
   for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
     const model = models[modelIdx];
@@ -98300,7 +97077,7 @@ function resetView() {
  *
  * @param {*} popupProps title, subtitle, message, affirmativeText, negativeText
  */
-function render$6(props, isWarning) {
+function render$b(props, isWarning) {
   const { title, subtitle } = props;
   const icon = icons.helper;
 
@@ -98366,7 +97143,7 @@ function render$6(props, isWarning) {
  * Call "addOptionToMenuExtras" to add an option to the menu
  * @returns HTML element
  */
-function render$5() {
+function render$a() {
   // render base UI
   const element = createElement("div", {
     classes: ["styling-menu-extras"],
@@ -98559,7 +97336,7 @@ function renderSavedView(savedView, parent) {
         negativeText: "Cancel",
       };
 
-      const popup = render$6(popupProps, true);
+      const popup = render$b(popupProps, true);
 
       document.body.appendChild(popup);
 
@@ -98578,7 +97355,7 @@ function renderSavedView(savedView, parent) {
 }
 
 function createOptionsMenu$1(options) {
-  const menuExtras = render$5();
+  const menuExtras = render$a();
 
   const eventsToPreventPropagation = ["click"];
   preventPropagation(menuExtras, eventsToPreventPropagation);
@@ -98644,9 +97421,1212 @@ function renderSavedViews() {
 }
 
 function openSavedViewForm() {
-  const form = render$7();
+  const form = render$c();
   form.classList.remove("hidden");
   document.body.appendChild(form);
+}
+
+let isMouseDragging = false;
+const canvas = document.getElementById("three-canvas");
+
+function startUserInputs() {
+  document.addEventListener("wereReady", () => {
+    emitGlobalEvent("loadingComplete");
+
+    // Double-click => highlights and shows details of pointed object
+    canvas.ondblclick = (event) => pickObject(event, true, true);
+
+    canvas.onmousemove = async (event) => {
+      // When mouse is dragging a clipping plane
+      if (isMouseDragging) {
+        if (userInteractions.draggingPlane) await dragClippingPlane(event);
+        return;
+      }
+      // When user is pressing any special key, do nothing
+      if (isUserPressingSpecialKeys() || userInteractions.keyCActive) {
+        resetVisualPlanesColoring();
+        resetHighlighted();
+        return;
+      }
+      // When mouse is just hovering
+      //// and C is active
+      if (userInteractions.clippingPlanes && !userInteractions.keyXActive) {
+        resetHighlighted(); // prevent visual artifacts
+        const isPlaneFound = await pickClippingPlane(event);
+        if (!isPlaneFound) resetVisualPlanesColoring();
+        else highlightVisualPlane();
+        return;
+      }
+      //// and C is inactiveccc
+      if (userInteractions.keyXActive) {
+        resetVisualPlanesColoring(); // prevent visual artifacts
+        pickObject(event, true, false);
+      }
+    };
+
+    let isMovingPlanes = false;
+    // Prevents highlighting when moving camera (more fluid movement)
+    canvas.onmousedown = async (event) => {
+      isMouseDragging = true;
+
+      // clipping plane
+      if (
+        !foundPlane ||
+        !userInteractions.clippingPlanes ||
+        userInteractions.keyCActive ||
+        userInteractions.keyXActive
+      )
+        return;
+
+      isMovingPlanes = true;
+
+      // plane moving logic
+      await moveClippingPlane(event);
+    };
+    canvas.onmouseup = (event) => {
+      isMouseDragging = false;
+
+      // clipping plane
+      if (!isMovingPlanes) return;
+
+      isMovingPlanes = false;
+
+      // plane end movement logic
+      stopMovingClippingPlane();
+    };
+
+    window.addEventListener("keydown", (event) => {
+      const keyPressed = event.code;
+      switch (keyPressed) {
+        case "ControlLeft":
+          userInteractions.controlActive = true;
+          break;
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      const keyPressed = event.code;
+      switch (keyPressed) {
+        case "ControlLeft":
+          userInteractions.controlActive = false;
+          break;
+        case "KeyC": {
+          userInteractions.keyCActive = !userInteractions.keyCActive;
+          if (userInteractions.keyCActive) disableFeatureKeys();
+          resetVisuals();
+          break;
+        }
+        case "KeyX": {
+          if (userInteractions.keyCActive) return;
+          userInteractions.keyXActive = !userInteractions.keyXActive;
+          resetVisuals();
+          break;
+        }
+      }
+    });
+  });
+}
+
+function resetVisuals() {
+  resetVisualPlanesColoring();
+  resetHighlighted();
+}
+
+let _opacity = undefined;
+let _color = undefined;
+let _uuid = undefined;
+function resetVisualPlanesColoring() {
+  if (!_uuid) return;
+  for (let idx = 0; idx < visualPlanes.length; idx++) {
+    const visualPlane = visualPlanes[idx];
+    visualPlane.material.opacity = _opacity;
+    visualPlane.material.color = _color;
+  }
+  _uuid = undefined;
+}
+
+function resetHighlighted() {
+  resetFound();
+  resetHighlightedProperties();
+}
+
+function highlightVisualPlane() {
+  const visualPlane = foundPlane.object;
+
+  if (visualPlane.uuid == _uuid) return;
+
+  resetVisualPlanesColoring();
+
+  const noRef = { ...visualPlane };
+  _uuid = noRef.uuid;
+  if (!_opacity) _opacity = noRef.material.opacity;
+  if (!_color) _color = noRef.material.color;
+
+  visualPlane.material.opacity = 0.28;
+  visualPlane.material.color = materials.highlighted.color;
+}
+
+async function moveClippingPlane(event) {
+  // disable camera
+  toggleCameraControls(false);
+  // drag plane
+  userInteractions.draggingPlane = true;
+
+  const vNormal = normals[selectedPlaneIdx];
+  const key = vNormal.y !== 0 ? "y" : "x";
+  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
+
+  const normals$1 = {
+    x: new Vector3(1, 0, 0),
+    y: new Vector3(0, 1, 0),
+    z: new Vector3(0, 0, 1),
+  };
+
+  for (const axle in normals$1) {
+    if (axle == axleOfMovement) continue;
+
+    const normal = normals$1[axle];
+    const crossPlane$1 = new Plane(normal, center[axle]);
+    crossPlane.planes.push(crossPlane$1);
+
+    // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
+    // scene.add(helper);
+  }
+
+  crossPlane.points.start = await pickCrossPlane(event);
+}
+
+function stopMovingClippingPlane(event) {
+  // enable camera
+  toggleCameraControls(true);
+  // stop plane
+  userInteractions.draggingPlane = false;
+  resetCrossPlane();
+}
+
+async function dragClippingPlane(event, isUserInteraction) {
+  const visualPlane = foundPlane.object;
+  const vNormal = normals[selectedPlaneIdx];
+
+  const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
+
+  const multiplier = userInteractions.controlActive ? clippingConfigs.multiplier.precision : clippingConfigs.multiplier.normal;
+  const maximum = clippingConfigs.maxJump;
+
+  const endPoint = await pickCrossPlane(event);
+
+  if (!endPoint) return;
+
+  crossPlane.points.end.copy(endPoint);
+
+  const initialPosition = crossPlane.points.start;
+  const finalPosition = crossPlane.points.end;
+
+  let value = (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) * multiplier;
+  if (value > maximum) value = maximum;
+  else if (value < maximum * -1) value = maximum * -1;
+
+  const vectorAxles = {
+    x: axleOfMovement == "x" ? value : 0,
+    y: axleOfMovement == "y" ? value : 0,
+    z: axleOfMovement == "z" ? value : 0,
+  };
+  const moveVector = new Vector3(vectorAxles.x, vectorAxles.y, vectorAxles.z);
+
+  visualPlane.position.add(moveVector);
+
+  // Checks for plane positioning reaching the minimum or maximum
+  const buffer = clippingConfigs.buffer;
+  const absoluteMinPosition = edgePositions.min[axleOfMovement];
+  const absoluteMaxPosition = edgePositions.max[axleOfMovement];
+  if (absoluteMinPosition > visualPlane.position[axleOfMovement]) visualPlane.position[axleOfMovement] = absoluteMinPosition;
+  else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
+    visualPlane.position[axleOfMovement] = absoluteMaxPosition;
+
+  const edgeVectorChanged = vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
+  const edgeVectorOther = edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
+
+  const relativeEdgePosition = edgePositions[edgeVectorOther][axleOfMovement];
+
+  if (edgeVectorChanged == "currentMax") {
+    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]) {
+      visualPlane.position[axleOfMovement] = relativeEdgePosition + buffer;
+    }
+  } else {
+    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]) {
+      visualPlane.position[axleOfMovement] = relativeEdgePosition - buffer;
+    }
+  }
+
+  edgePositions[edgeVectorChanged][axleOfMovement] = visualPlane.position[axleOfMovement];
+
+  const cuttingPlane = clippingPlanes[selectedPlaneIdx];
+
+  const newConstant = visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
+  cuttingPlane.constant = newConstant;
+
+  crossPlane.points.start.copy(crossPlane.points.end);
+}
+
+//
+// TESTING
+//
+// window.addEventListener("keydown", (event) => {
+//   const keyPressed = event.code;
+//   switch (keyPressed) {
+//     case "KeyT": {
+//       console.log("lets go!");
+//       renderText();
+//       break;
+//     }
+//     default:
+//       break;
+//   }
+// });
+//
+//
+
+window.addEventListener("contextmenu", async (e) => {
+  e.preventDefault();
+
+  if (!userInteractions.controlActive) return;
+
+  toggleCameraControls(false);
+
+  const object = await pickObject(e, false);
+  // render menu
+  const contextMenu = renderContextMenu();
+  document.body.appendChild(contextMenu);
+  // position menu
+  contextMenu.style.left = `${e.clientX}px`;
+  contextMenu.style.top = `${e.clientY}px`;
+
+  // Closing event handling
+  document.body.addEventListener("mousedown", closeMenu);
+  function closeMenu() {
+    contextMenu.remove();
+    document.body.removeEventListener("mousedown", closeMenu);
+    toggleCameraControls(true);
+  }
+
+  const menuList = document.getElementById("context-menu-list");
+
+  // Menu content
+  const config = {
+    options: object ? objectContextOptions() : freeContextOptions(),
+    object
+  };
+  // Render menu
+  renderMenu(config);
+
+  //
+  // Aux functions in scope
+  //
+  function objectContextOptions() {
+    return [
+      {
+        displayText: "Focus camera here",
+        hasSeperator: true,
+        action: (position) => setCameraLookingPoint(position),
+      },
+      {
+        displayText: "Save view",
+        hasSeperator: false,
+        action: (position) => openSavedViewForm(),
+      },
+      {
+        displayText: "Create annotation",
+        hasSeperator: true,
+        action: (position) => {
+          const form = render$d(position);
+          document.body.appendChild(form);
+        },
+      },
+    ];
+  }
+
+  function freeContextOptions() {
+    return [
+      {
+        displayText: "Save view",
+        hasSeperator: true,
+        action: (position) => openSavedViewForm(),
+      },
+    ];
+  }
+
+  function renderMenu(config) {
+    config.options.forEach((option) => {
+      renderOption(menuList, option, config.object);
+    });
+  }
+
+  /**
+   *
+   * @param {HTMLElement} menuList Text to display in the UI
+   * @param {object} option {displayText: string, action: function, hasSeperator: boolean}
+   */
+  function renderOption(menuList, option, object) {
+    const optionEl = renderContextMenuItem(option.displayText, option.hasSeperator);
+    menuList.appendChild(optionEl);
+    optionEl.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+
+      // get position and run custom action
+      const position = object ? object.object.point : undefined;
+      option.action(position);
+
+      closeMenu();
+    });
+  }
+});
+
+function toggleCameraControls(isOn) {
+  controls.enabled = isOn;
+}
+
+// function renderText() {
+//   const position = {
+//     x: 1,
+//     y: -1,
+//     z: 3,
+//   };
+//   const text2D = render2DText(position, "Boas");
+
+//   SceneStore.renderer2D.group.add(text2D);
+
+//   window.addEventListener("click", async (e) => {
+//     const result = await pickObject(e, false);
+//     if (!result) return;
+//     text2D.position.copy(found.object.point);
+//     // setTimeout(() => {
+//     //   text2D.removeFromParent();
+//     // }, 2000);
+//   });
+// }
+//
+// END TESTING
+//
+
+function startRenderingEvents() {
+  document.addEventListener("selectedChanged", (event) => {
+    processRenderization("selected");
+  });
+
+  document.addEventListener("highlightedChanged", (event) => {
+    processRenderization("highlighted");
+  });
+}
+
+// Handles renderization of subsets in the viewer
+// @type (string) = material type, according to src/configs/materials.js
+function processRenderization(type) {
+  const storedObj = vars[type];
+
+  if (storedObj.isValid()) {
+    /* Code for only 1 object selected at a time
+
+    // get selected model index in Store array
+    const modelIdx = storedObj.modelIdx;
+
+    // get all not selected models and remove any selection subsets on them
+    const otherModels = Models.models.filter(
+      (value, index) => index !== modelIdx
+    );
+    otherModels.forEach((model) => {
+      removeSubset(model, type);
+    });
+
+    // add selection subset to the selected model
+    const model = Models.models[modelIdx];
+    const IdArr = storedObj.ids;
+
+    */
+
+    for (const modelIdx in storedObj.objects) {
+      const idsToHighlight = storedObj.objects[modelIdx];
+      const model = models[modelIdx];
+      createSubset(model, idsToHighlight, type);
+    }
+  } else {
+    // if there's no selection, remove all selections
+    for (let idx = 0; idx < models.length; idx++) {
+      const model = models[idx];
+      removeSubset(model, type);
+    }
+  }
+}
+
+function loadCSS(filePathFromRoot) {
+  const link = document.createElement("link");
+  link.href = filePathFromRoot;
+  link.type = "text/css";
+  link.rel = "stylesheet";
+
+  document.getElementsByTagName("head")[0].appendChild(link);
+}
+
+function startLoadingPopup() {
+  const modal = buildModal();
+
+  const content = document.createElement("div");
+  content.classList.add("modal-loading-container");
+  content.innerHTML = `
+    <div class="cube-container">
+      <div class="h1Container">
+        <div class="cube cube-h1 cube-w1 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w1 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w1 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w2 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w2 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w2 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w3 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w3 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h1 cube-w3 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+      </div>
+      <div class="h2Container">
+
+        <div class="cube cube-h2 cube-w1 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w1 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w1 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w2 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w2 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w2 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w3 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w3 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h2 cube-w3 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+      </div>
+
+      <div class="h3Container">
+
+        <div class="cube cube-h3 cube-w1 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w1 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w1 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w2 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w2 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w2 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w3 cube-l1">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w3 cube-l2">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+
+        <div class="cube cube-h3 cube-w3 cube-l3">
+          <div class="cube-face cube-top"></div>
+          <div class="cube-face cube-left"></div>
+          <div class="cube-face cube-right"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.addEventListener("loading", () => {
+    modal.classList.remove("hidden");
+  });
+
+  document.addEventListener("loadingComplete", () => {
+    modal.classList.add("hidden");
+  });
+
+  modal.appendChild(content);
+
+  loadCSS("./src/assets/css/loading.css");
+
+  document.body.appendChild(modal);
+}
+
+const navbarItems = {};
+
+/**
+ *
+ * @param {NavbarItem} item
+ */
+function featureRenderingHandler$1(item) {
+  if (!item.isRendered) {
+    item.isRendered = true;
+    item.build();
+  }
+
+  if (item.isActive) item.load();
+  else item.unload();
+}
+
+/**
+ * Renders tabs component for sidebar feature.
+ * All events pass tab "ref" as detail
+ * Emits: tabSelected
+ * Listens: selectTab, deselectTab
+ * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
+ * @param {boolean} isOnlyOneActiveTab Default true; Wether or not tabs disable automatically when another one is selected
+ */
+function render$9(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive = true) {
+  const element = createElement("ul", {
+    classes: ["sidebar-feature-tabs-wrapper"],
+  });
+
+  tabs.forEach((tab) => {
+    const tabEl = createElement("li", {
+      classes: ["sidebar-feature-tabs-tab"],
+      textContent: tab.title,
+    });
+    handleTabEvents(tab, tabEl);
+    element.appendChild(tabEl);
+  });
+
+  return element;
+
+  function handleTabEvents(tab, tabEl) {
+    // Emits "tabSelected" to parent element on click and enables "active" class
+    tabEl.addEventListener("click", (e) => {
+      const isActive = tab.status;
+      if (isActive) {
+        const activeCounter = element.getElementsByClassName("active").length;
+        if(!isAlwaysOneTabActive || activeCounter > 1) emitCustomEventOnElement(component, "tabDeselected", { ref: tab.ref });
+      }
+      else emitCustomEventOnElement(component, "tabSelected", { ref: tab.ref });
+    });
+
+    // Listens "tabSelected" triggered by other tab or own tab
+    component.addEventListener("tabSelected", (e) => {
+      const ref = e.detail.ref;
+      tab.status = false;
+      if (tab.ref === ref) tab.status = true;
+
+      // When multiple tabs can be active at the same time and it's not the selected tab by the user, do nothing;
+      if (!isOnlyOneActiveTab && !isActivedTab) return;
+
+      tabEl.classList.toggle("active", tab.status);
+    });
+
+    // Listens "tabDeselected" triggered by other tab or own tab
+    component.addEventListener("tabDeselected", (e) => {
+      disableActiveStatus(tabEl, tab, e);
+    });
+
+    // Listens "selectTab" coming from outside parent and enables "active" class
+    component.addEventListener("selectTab", (e) => {
+      const ref = e.detail.ref;
+      if (tab.ref !== ref) return;
+      tabEl.classList.toggle("active", true);
+    });
+
+    // Listens "deselectTab" coming from outside parent and disables "active" class
+    component.addEventListener("deselectTab", (e) => {
+      disableActiveStatus(tabEl, tab, e);
+    });
+  }
+}
+
+function disableActiveStatus(element, data, event) {
+  const ref = event.detail.ref;
+  if (data.ref !== ref) return;
+  tab.status = false;
+  element.classList.toggle("active", false);
+}
+
+/**
+ *
+ * @param {NavbarItem} item
+ */
+function render$8(item) {
+  const mainSidebarFeature = createElement("div", {
+    classes: ["main-sidebar-feature"],
+  });
+
+  mainSidebarFeature.innerHTML = `
+    <span>${item.title}</span>
+    <div class="main-sidebar-feature-content content-container"></div>
+  `;
+  const contentEl = mainSidebarFeature.getElementsByTagName("div")[0];
+
+  const closeIcon = buildIcon(icons.closeDark);
+  mainSidebarFeature.insertBefore(closeIcon, contentEl);
+
+  handleEvents();
+
+  return mainSidebarFeature;
+
+  function handleEvents() {
+    closeIcon.addEventListener("click", (e) => {
+      item.isActive = false;
+      featureRenderingHandler$1(item);
+    });
+  }
+}
+
+function addContent(component, content) {
+  const contentEl = component.getElementsByClassName("content-container")[0];
+  contentEl.appendChild(content);
+}
+
+/**
+ * Adds tabs to sidebar feature.
+ * 
+ * All events pass tab "ref" as detail
+ * 
+ * Emits: tabSelected, tabDeselected
+ * 
+ * Listens: selectTab, deselectTab
+ * @param {HTMLElement} component Feature base component
+ * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
+ */
+function addTabs(component, tabs) {
+  const oldContentEl = component.getElementsByTagName("div")[0];
+  const content = oldContentEl.innerHTML;
+  oldContentEl.classList.remove("content-container");
+
+  const wrapper = createElement("div", {
+    classes: ["main-sidebar-feature-wrapper-with-tabs"],
+  });
+  const contentEl = createElement("div", {
+    classes: ["content-container", "main-sidebar-feature-wrapper-with-tabs-content"],
+    innerHTML: content,
+  });
+  wrapper.appendChild(contentEl);
+
+  const tabsEl = render$9(component, tabs);
+  wrapper.appendChild(tabsEl);
+  
+  oldContentEl.innerHTML = "";
+  oldContentEl.appendChild(wrapper);
+}
+
+let sidebarEls = {
+  l: undefined,
+  r: undefined,
+};
+
+/**
+ * Initialize references for sidebar logic
+ */
+function getReferences() {
+  sidebarEls.l = document.getElementById("left-sidebar");
+  sidebarEls.r = document.getElementById("right-sidebar");
+}
+
+/**
+ * Loads feature into sidebar. Previously loaded feature is removed first
+ * @param {NavbarItem} navItem
+ */
+function loadFeatureIntoSidebar(navItem) {
+  if (!sidebarEls.l) getReferences();
+  
+  const sidebarCode = navItem.sidebarPosition.charAt(0);
+  const position = navItem.sidebarPosition.charAt(1);
+  const sidebar = sidebarEls[sidebarCode];
+  
+  if (position == 1 && sidebar.firstChild) sidebar.insertBefore(navItem.component, sidebar.firstChild);
+  else sidebar.appendChild(navItem.component);
+
+  emitGlobalEvent("featureLoaded");
+}
+
+
+/**
+ * Unloads features from sidebar. If a component is specified, only removes the specific component
+ * @param {NavbarItem} navItem Optional - navItem containing HTML component to remove
+ */
+function unloadFeatureFromSidebar(navItem) {
+  navItem.component.remove();
+  emitGlobalEvent("featureUnloaded");
+}
+
+class NavbarItem {
+  #buildFunction;
+  #loadFunction;
+  #unloadFunction;
+
+  /**
+   *
+   * @param {string} title Text to show in UI
+   * @param {function} buildFunction handles feature initialization. Should return html element, if sidebarPosition has a value
+   * @param {function?} loadFunction optional - runs when feature loads to UI
+   * @param {function?} unloadFunction optional - runs when feature unloads from UI
+   * @param {string?} sidebarPosition optional - UI position for this feature. "l1", "l2", "r1", "r2". Default undefined
+   */
+  constructor(title, buildFunction, loadFunction = undefined, unloadFunction = undefined) {
+    this.title = title;
+    this.#buildFunction = buildFunction;
+    this.#loadFunction = loadFunction;
+    this.#unloadFunction = unloadFunction;
+    this.isRendered = false;
+    this.isActive = false;
+    this.navbarItem = undefined;
+    this.subitems = [];
+    this.component = undefined;
+    this.sidebarPosition = undefined;
+    this.hasTabs = undefined;
+    this.isExclusive = false;
+    this.loadAfterDOMRender = false;
+  }
+
+  async build() {
+    if (this.sidebarPosition) {
+      this.component = render$8(this);
+      const content = await this.#buildFunction(this);
+      addContent(this.component, await content);
+    } else this.#buildFunction(this);
+
+    this.isRendered = true;
+  }
+
+  async load() {
+    this.isActive = true;
+
+    if (this.#loadFunction !== undefined && !this.loadAfterDOMRender) await this.#loadFunction(this);
+
+    emitEventOnElement(this.navbarItem, "loaded");
+
+    // checks if feature is to be rendered in sidebar
+    if (!this.sidebarPosition) return;
+
+    // add to sidebar
+    loadFeatureIntoSidebar(this);
+
+    if (this.#loadFunction !== undefined && this.loadAfterDOMRender) await this.#loadFunction(this);
+  }
+
+  async unload() {
+    this.isActive = false;
+
+    if (this.#unloadFunction !== undefined) await this.#unloadFunction(this);
+
+    emitEventOnElement(this.navbarItem, "unloaded");
+
+    // checks if feature is to be rendered in sidebar
+    if (!this.sidebarPosition) return;
+
+    // remove from sidebar
+    unloadFeatureFromSidebar(this);
+  }
+
+  getContentElement() {
+    try {
+      return this.component.getElementsByClassName("content-container")[0];
+    } catch {
+      throw new Error("Feature has no DOM element");
+    }
+  }
+}
+
+/**
+ *
+ * @param {NavbarItem} subitem
+ * @param {HTMLElement} parent
+ * @param {number} idx
+ * @param {boolean} isExclusive If true, disables all other items in the list also marked as exclusive
+ * @returns
+ */
+function render$7(subitem, parent, idx) {
+  const navbarItemDropdown = createElement("li", {
+    classes: ["feature-navbar-item-dropdown-item"],
+    textContent: subitem.title,
+  });
+
+  handleSubitemEvents();
+
+  subitem.navbarItem = navbarItemDropdown;
+  return navbarItemDropdown;
+
+  //// Aux functions in scope
+
+  function handleSubitemEvents() {
+    navbarItemDropdown.addEventListener("click", (e) => {
+      subitem.isActive = !subitem.isActive;
+      const eventName = subitem.isActive ? "subitemSelected" : "subitemDeselected";
+      emitCustomEventOnElement(parent, eventName, {
+        idx,
+        hasExclusivity: subitem.isExclusive,
+      });
+    });
+
+    parent.addEventListener("subitemSelected", (e) => {
+      // const eventIdx = e.detail.idx;
+      // const hasExclusivity = e.detail.hasExclusivity;
+      // if (eventIdx != idx) {
+      //   if (!hasExclusivity) return;
+      //   if (!subitem.isExclusive) return;
+      //   if (!subitem.isRendered) return;
+      //   if (!subitem.isActive) return;
+      //   subitem.isActive = false;
+      // } else subitem.isActive = true;
+      // featureRenderingHandler(subitem);
+    });
+
+    parent.addEventListener("subitemDeselected", (e) => {
+      const eventIdx = e.detail.idx;
+      if (eventIdx !== idx) return;
+      subitem.isActive = false;
+      featureRenderingHandler$1(subitem);
+    });
+
+    navbarItemDropdown.addEventListener("loaded", (e) => {
+      subitem.isActive = true;
+      navbarItemDropdown.classList.toggle("active", true);
+    });
+
+    navbarItemDropdown.addEventListener("unloaded", (e) => {
+      subitem.isActive = false;
+      navbarItemDropdown.classList.toggle("active", false);
+      emitEventOnElement(parent, "subitemDeselectedOutter");
+    });
+  }
+}
+
+/**
+ *
+ * @param {NavbarItem} item
+ * @returns
+ */
+function render$6(item) {
+  const navbarItem = createElement("li", {
+    classes: ["feature-navbar-item"],
+  });
+
+  const title = createElement("span", {
+    textContent: item.title,
+  });
+  navbarItem.appendChild(title);
+
+  handleItemEvents();
+
+  if (!hasSubitems()) {
+    item.navbarItem = navbarItem;
+    return navbarItem;
+  }
+  // If doesn't have subitems, exists
+
+  const arrow = buildIcon(icons.chevronRight);
+  navbarItem.appendChild(arrow);
+
+  const sublist = createElement("ul", {
+    classes: ["feature-navbar-item-dropdown", "hidden"],
+  });
+
+  for (let idx = 0; idx < item.subitems.length; idx++) {
+    const subitem = item.subitems[idx];
+    itemGlobalRenderCall(subitem);
+    const subitmeEl = render$7(subitem, navbarItem, idx);
+    sublist.appendChild(subitmeEl);
+    // if (subitem.hasSidebarTab) {
+    //   subitem.tabElement = renderSidebarTab(subitem);
+    // }
+  }
+  navbarItem.appendChild(sublist);
+
+  handleSubitemEvents();
+
+  return navbarItem;
+
+  //// Aux functions in scope
+
+  function handleItemEvents() {
+    itemGlobalRenderCall(item);
+    navbarItem.addEventListener("mouseover", () => {
+      const width = navbarItem.getBoundingClientRect().width;
+      navbarItem.style.width = width + "px";
+      if (hasSubitems()) sublist.classList.toggle("hidden");
+    });
+
+    navbarItem.addEventListener("mouseout", () => {
+      if (hasSubitems()) sublist.classList.toggle("hidden");
+    });
+
+    navbarItem.addEventListener("click", (e) => {
+      if (hasSubitems()) return;
+
+      item.isActive = !item.isActive;
+
+      // only runs if there are no subitems
+      featureRenderingHandler$1(item);
+
+      // navbarItem.classList.toggle("active"); -> is now handled by events
+    });
+
+    navbarItem.addEventListener("loaded", (e) => {
+      item.isActive = true;
+      navbarItem.classList.toggle("active", true);
+    });
+
+    navbarItem.addEventListener("unloaded", (e) => {
+      item.isActive = false;
+      navbarItem.classList.toggle("active", false);
+    });
+  }
+
+  function handleSubitemEvents() {
+    navbarItem.addEventListener("subitemSelected", (e) => {
+      const eventIdx = e.detail.idx;
+      const hasExclusivity = e.detail.hasExclusivity;
+      const subitems = item.subitems;
+      const changesArr = [];
+
+      for (let idx = 0; idx < subitems.length; idx++) {
+        const subitem = subitems[idx];
+        if (eventIdx != idx) {
+          if (!hasExclusivity) continue;
+          if (!subitem.isExclusive) continue;
+          if (!subitem.isRendered) continue;
+          if (!subitem.isActive) continue;
+          subitem.isActive = false;
+        } else subitem.isActive = true;
+        changesArr.push(subitem);
+      }
+
+      // Sort array to make sure to unload items before loading others
+      changesArr.sort((a, b) => {
+        return a.isActive == true && b.isActive == false;
+      });
+
+      changesArr.forEach((subitem) => {
+        featureRenderingHandler$1(subitem);
+      });
+
+      navbarItem.classList.toggle("active", true);
+    });
+
+    navbarItem.addEventListener("subitemDeselected", (e) => {
+      checkStatus();
+    });
+
+    navbarItem.addEventListener("subitemDeselectedOutter", (e) => {
+      checkStatus();
+    });
+
+    function checkStatus() {
+      const activeSubitems = navbarItem.getElementsByClassName("active");
+      if (activeSubitems.length == 0) navbarItem.classList.toggle("active", false);
+    }
+  }
+
+  function hasSubitems() {
+    return item.subitems !== undefined && item.subitems.length > 0;
+  }
+
+  function itemGlobalRenderCall(item) {
+    if (item.sidebarPosition) {
+      const globalRenderTrigger = ("openFeature" + item.title).replace(/\s/g, "");
+      document.addEventListener(globalRenderTrigger, async () => {
+        if (!item.isRendered) await item.build();
+        item.load();
+      });
+    }
+  }
+}
+
+/**
+ *
+ * @param {*} items item list -> item = {text, callFunction, subitems}. Each id has to be different
+ */
+function render$5() {
+  const navbar = createElement("ul", {
+    classes: ["feature-navbar"],
+  });
+
+  for (const featureName in navbarItems) {
+    if (Object.hasOwnProperty.call(navbarItems, featureName)) {
+      const feature = navbarItems[featureName];
+      const itemEl = render$6(feature);
+      navbar.appendChild(itemEl);
+    }
+  }
+
+  loadCSS("./src/assets/css/navbar.css");
+
+  document.addEventListener("wereReady", append);
+
+  function append() {
+    document.body.appendChild(navbar);
+    document.removeEventListener("wereReady", append);
+  }
+}
+
+function initializeNavbar() {
+  render$5();
+}
+
+async function initializeSidebar() {
+  loadCSS("./src/assets/css/sidebar.css");
+
+  const leftSidebar = createElement("div", {
+    id: "left-sidebar",
+    classes: ["main-sidebar", "hidden"],
+  });
+
+  const rightSidebar = createElement("div", {
+    id: "right-sidebar",
+    classes: ["main-sidebar", "hidden"],
+  });
+
+  document.body.appendChild(leftSidebar);
+  document.body.appendChild(rightSidebar);
+
+  // handle sidebar visibility
+  document.addEventListener("featureLoaded", (e) => {
+    if (leftSidebar.children.length > 0) leftSidebar.classList.toggle("hidden", false);
+    if (rightSidebar.children.length > 0) rightSidebar.classList.toggle("hidden", false);
+  });
+
+  document.addEventListener("featureUnloaded", (e) => {
+    if (leftSidebar.children.length == 0) leftSidebar.classList.toggle("hidden", true);
+    if (rightSidebar.children.length == 0) rightSidebar.classList.toggle("hidden", true);
+  });
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build$3(navItem) {
+  document.addEventListener("openClippingPlanes", (e) => {
+    navItem.isActive = true;
+    navItem.load();
+  });
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load$3(navItem) {
+  userInteractions.clippingPlanes = true;
+  clipping(true);
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function unload$2(navItem) {
+  userInteractions.clippingPlanes = false;
+  clipping(false);
 }
 
 /**
@@ -99032,7 +99012,7 @@ function renderAnnotation(category, annotation, parent) {
         negativeText: "Cancel",
       };
 
-      const popup = render$6(popupProps, true);
+      const popup = render$b(popupProps, true);
 
       document.body.appendChild(popup);
 
@@ -99052,7 +99032,7 @@ function renderAnnotation(category, annotation, parent) {
 }
 
 function createOptionsMenu(options) {
-  const menuExtras = render$5();
+  const menuExtras = render$a();
 
   const eventsToPreventPropagation = ["click"];
   preventPropagation(menuExtras, eventsToPreventPropagation);
@@ -99614,7 +99594,6 @@ async function getNodePropertyName(node) {
 
 async function processNodeEvents(titleEl, icons, node) {
   const objectsData = getAllObjectsDataByModel(node);
-  console.log("objectsData", objectsData);
   handleEvents(titleEl, icons, objectsData, node);
 }
 
@@ -99992,8 +99971,6 @@ async function render$4() {
         return acc;
       }, []);
 
-      console.log("tree", tree);
-
       await buildTree(element, tree);
 
       worker.terminate();
@@ -100045,8 +100022,6 @@ function render$3() {
       };
       worker.onmessage = async (e) => {
         const tree = e.data;
-
-        console.log("objectsByLevelByCategory", tree);
 
         emitGlobalEvent("loadingComplete");
 

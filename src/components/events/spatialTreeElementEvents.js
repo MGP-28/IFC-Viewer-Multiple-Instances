@@ -4,7 +4,6 @@ import * as SelectionStore from "../../stores/selection";
 
 async function processNodeEvents(titleEl, icons, node) {
   const objectsData = getAllObjectsDataByModel(node);
-  console.log("objectsData", objectsData);
   handleEvents(titleEl, icons, objectsData, node);
 }
 

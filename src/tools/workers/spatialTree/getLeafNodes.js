@@ -5,7 +5,6 @@ onmessage = (e) => {
   const leafNodes = [];
 
   trees.forEach((tree, idx) => {
-    console.log(tree);
     modelIdx = idx;
     const treeLeafNodes = findLeafNode(tree);
     leafNodes.push(...treeLeafNodes);
