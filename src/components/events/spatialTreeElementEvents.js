@@ -4,7 +4,7 @@ import * as SelectionStore from "../../stores/selection";
 
 async function processNodeEvents(titleEl, icons, node) {
   const objectsData = getAllObjectsDataByModel(node);
-  handleEvents(titleEl, icons, objectsData);
+  handleEvents(titleEl, icons, objectsData, node);
 }
 
 // #region aux functions
@@ -54,12 +54,12 @@ function toggleActiveCSSClass(title, isActive) {
  * @param {HTMLElement[]} icons
  * @param {Object[]} objectsData Array of {expressId, modelIdx}
  */
-async function handleEvents(titleEl, icons, objectsData) {
+async function handleEvents(titleEl, icons, objectsData, node) {
   let isEnabled = true;
   handleVisibility(icons, objectsData);
 
   let isSelection = false;
-  await handleSelection(icons.selection, objectsData, titleEl);
+  await handleSelection(icons.selection, objectsData, titleEl, node);
 
   handleHighlighting(titleEl, objectsData);
 
@@ -88,21 +88,24 @@ async function handleEvents(titleEl, icons, objectsData) {
     document.addEventListener("visibilityChanged", (e) => {
       coordinateVisibility(icons, objectsData);
     });
+
+    // Runs coordination at creation -> Necessary after implementing lazy loading
+    coordinateVisibility(icons, objectsData);
   }
 
-  async function handleSelection(selectionEl, objectsData, titleEl) {
-    const jointExpressIDs = Object.keys(objectsData).reduce((acc, cv) => acc.concat(objectsData[cv].expressIDs), []);
-    const isLeaf = jointExpressIDs.length == 1;
-    const props = isLeaf ? await getProps(objectsData[0]) : "fake props";
-
+  async function handleSelection(selectionEl, objectsData, titleEl, node) {
+    const isLeaf = !node.children;
     const eventEls = isLeaf ? [titleEl, selectionEl] : [selectionEl];
 
     eventEls.forEach((eventEl) => {
-      eventEl.addEventListener("click", (e) => {
+      eventEl.addEventListener("click", async (e) => {
         e.stopPropagation();
         isSelection = !isSelection;
         if (!isSelection) SelectionStore.resetSelectedProperties();
-        else SelectionStore.setSelectedProperties(props, objectsData, false);
+        else {
+          const props = isLeaf ? await getProps(objectsData[0]) : "fake props";
+          SelectionStore.setSelectedProperties(props, objectsData, false);
+        }
       });
     });
 

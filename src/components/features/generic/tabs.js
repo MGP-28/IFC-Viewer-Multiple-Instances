@@ -28,7 +28,7 @@ function render(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive
   function handleTabEvents(tab, tabEl) {
     // Emits "tabSelected" to parent element on click and enables "active" class
     tabEl.addEventListener("click", (e) => {
-      const isActive = tabEl.classList.contains("active");
+      const isActive = tab.status;
       if (isActive) {
         const activeCounter = element.getElementsByClassName("active").length;
         if(!isAlwaysOneTabActive || activeCounter > 1) emitCustomEventOnElement(component, "tabDeselected", { ref: tab.ref });
@@ -39,13 +39,13 @@ function render(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive
     // Listens "tabSelected" triggered by other tab or own tab
     component.addEventListener("tabSelected", (e) => {
       const ref = e.detail.ref;
-      let isActivedTab = false;
-      if (tab.ref === ref) isActivedTab = true;
+      tab.status = false;
+      if (tab.ref === ref) tab.status = true;
 
       // When multiple tabs can be active at the same time and it's not the selected tab by the user, do nothing;
       if (!isOnlyOneActiveTab && !isActivedTab) return;
 
-      tabEl.classList.toggle("active", isActivedTab);
+      tabEl.classList.toggle("active", tab.status);
     });
 
     // Listens "tabDeselected" triggered by other tab or own tab
@@ -70,6 +70,7 @@ function render(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive
 function disableActiveStatus(element, data, event) {
   const ref = event.detail.ref;
   if (data.ref !== ref) return;
+  tab.status = false;
   element.classList.toggle("active", false);
 }
 

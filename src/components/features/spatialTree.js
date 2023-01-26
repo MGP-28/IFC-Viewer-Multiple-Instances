@@ -12,7 +12,7 @@ import { loadCSS } from "../../helpers/generic/cssLoader";
 
 const tabControls = [
   { title: "Tree", ref: 0, status: false, content: undefined, buildFunction: renderSpatialTreeByLevelCategory },
-  { title: "Category", ref: 1, status: true, content: undefined, buildFunction: renderSpatialTreeByCategory },
+  { title: "Category", ref: 1, status: false, content: undefined, buildFunction: renderSpatialTreeByCategory },
   { title: "System", ref: 2, status: false, content: undefined, buildFunction: renderSpatialTreeBySystem },
   { title: "Discipline", ref: 3, status: false, content: undefined, buildFunction: renderSpatialTreeByDiscipline },
 ];
@@ -68,10 +68,11 @@ async function build(item) {
 let firstLoad = true;
 async function load(item) {
   if (!firstLoad) return;
+  firstLoad = false;
   const activeTab = tabControls.find((x) => x.status);
+  if(!activeTab) return;
   emitCustomEventOnElement(item.component, "selectTab", { ref: activeTab.ref });
   updateContent(item, activeTab);
-  firstLoad = false;
 }
 
 async function updateContent(item, tabData) {
