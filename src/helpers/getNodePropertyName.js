@@ -9,7 +9,7 @@ import { clearString } from "../helpers/string";
 export default async function getNodePropertyName(node) {
   const model = Models.models[node.modelIdx];
   const props = await model.loader.ifcManager.getItemProperties(0, node.expressId);
-  let name = "No title";
+  let name = "";
 
   if (props.LongName) name = props.LongName.value;
   else if (props.Name) {
@@ -21,7 +21,6 @@ export default async function getNodePropertyName(node) {
     }
     name = _name;
   } else if (props.ObjectType) name = props.ObjectType.value;
-
-  const text = clearString(name);
+  const text = name ? clearString(name) : node.category;
   return text;
 }
