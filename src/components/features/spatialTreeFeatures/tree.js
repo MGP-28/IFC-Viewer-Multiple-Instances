@@ -106,8 +106,8 @@ async function buildTitle(node, parentList) {
  */
 async function buildChildren(node) {
   const childrenEl = createElement("ul");
-  // let childrenAreLeaves = false;
   let isFirstRender = true;
+  // Lazy loading of children
   childrenEl.addEventListener("renderChildren", async () => {
     if(!isFirstRender) return;
     isFirstRender = false;
@@ -117,10 +117,6 @@ async function buildChildren(node) {
       childrenEl.appendChild(node);
     }
   });
-
-  // if (childrenAreLeaves) {
-  //   lazyLoadTitles(childrenEl);
-  // }
 
   return childrenEl;
 }
@@ -138,27 +134,29 @@ function hasChildren(node) {
   return node.children && node.children.length > 0;
 }
 
-function lazyLoadTitles(parent) {
-  // Create observer for lazy loading
-  const callback = async (mutationList, observer) => {
-    const mutation = mutationList[0];
-    // It it renders hidden, do nothing
-    if (mutation.target.classList.contains("hidden")) return;
-    // Emit event for children to load in
-    emitEventOnElement(parent, "lazyLoad");
-    // put observer asleep
-    observer.disconnect();
-  };
-  const observer = new MutationObserver(callback);
-  observer.observe(parent, { attributes: true });
-}
+// Full HTML now lazy loads - obsolete
+//
+// function lazyLoadTitles(parent) {
+//   // Create observer for lazy loading
+//   const callback = async (mutationList, observer) => {
+//     const mutation = mutationList[0];
+//     // It it renders hidden, do nothing
+//     if (mutation.target.classList.contains("hidden")) return;
+//     // Emit event for children to load in
+//     emitEventOnElement(parent, "lazyLoad");
+//     // put observer asleep
+//     observer.disconnect();
+//   };
+//   const observer = new MutationObserver(callback);
+//   observer.observe(parent, { attributes: true });
+// }
 
-function handleTitleLazyLoading(parent, span, node) {
-  parent.addEventListener("lazyLoad", async () => {
-    const baseName = await getNodePropertyName(node);
-    const cleanName = removeIFCTagsFromName(baseName);
-    span.textContent = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
-  });
-}
+// function handleTitleLazyLoading(parent, span, node) {
+//   parent.addEventListener("lazyLoad", async () => {
+//     const baseName = await getNodePropertyName(node);
+//     const cleanName = removeIFCTagsFromName(baseName);
+//     span.textContent = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+//   });
+// }
 
 export { buildTree };

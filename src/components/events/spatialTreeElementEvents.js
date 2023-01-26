@@ -88,6 +88,9 @@ async function handleEvents(titleEl, icons, objectsData, node) {
     document.addEventListener("visibilityChanged", (e) => {
       coordinateVisibility(icons, objectsData);
     });
+
+    // Runs coordination at creation -> Necessary after implementing lazy loading
+    coordinateVisibility(icons, objectsData);
   }
 
   async function handleSelection(selectionEl, objectsData, titleEl, node) {
