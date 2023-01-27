@@ -2,10 +2,10 @@
  *
  * @param {NavbarItem} item
  */
-export default function featureRenderingHandler(item) {
+export default async function featureRenderingHandler(item) {
   if (!item.isRendered) {
     item.isRendered = true;
-    item.build();
+    await item.build();
   }
 
   if (item.isActive) item.load();

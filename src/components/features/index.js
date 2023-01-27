@@ -7,6 +7,7 @@ import * as ClippingPlanes from "./clippingPlanes";
 import * as SavedViews from "./savedViews";
 import * as Annotations from "./annotations";
 import * as SpatialTree from "./spatialTree";
+import * as Properties from "./properties";
 
 export default async function startFeatures() {
   //// Temporary, for testing
@@ -19,7 +20,7 @@ export default async function startFeatures() {
   selectionTree.sidebarPosition = "l1";
   selectionTree.hasTabs = true;
   selectionTree.loadAfterDOMRender = true;
-  const properties = new NavbarItem("Properties", buildTemp);
+  const properties = new NavbarItem("Properties", Properties.build, Properties.load);
   properties.sidebarPosition = "l2";
   // append subitems
   window.subitems.push(selectionTree, properties);

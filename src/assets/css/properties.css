@@ -1,0 +1,46 @@
+.properties-list {
+  display: grid;
+  padding: 0 2px;
+}
+
+.properties-list > li {
+  font-size: 13px;
+  padding: 2px 0;
+}
+
+.properties-list > li.properties-header {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 4px 0;
+  margin: 2px 0;
+}
+
+.properties-list > li.properties-header:not(:last-child) {
+  border-bottom: 1px solid var(--primary-color-light);
+}
+
+.properties-list > li.properties-header:not(:first-child) {
+  border-top: 1px solid var(--primary-color-light);
+}
+
+.properties-list > li:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.properties-list > li:last-child {
+  margin-bottom: 0;
+}
+
+.properties-list > li.properties-line {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.properties-line-label {
+  font-weight: 500;
+}
+
+.properties-line-value {
+}
