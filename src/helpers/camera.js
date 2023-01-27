@@ -1,11 +1,10 @@
 import * as StoreScene from "../stores/scene";
 import * as THREE from "three";
 import { cameraConfigs } from "../configs/camera";
-import {
-  getLineVector,
-} from "./generic/vectors";
+import { getLineVector } from "./generic/vectors";
 import { Vector3 } from "three";
 import { pickAxlePlane } from "./raytracing";
+import { getModelsCenterPoint } from "./meshes";
 
 function getCameraData() {
   const camera = StoreScene.camera;
@@ -37,10 +36,7 @@ function setCameraData(savedView) {
   // rotation
   const pointLookingAt = pickAxlePlane();
   const finalPointLookedAt = savedView.camera.pointLookedAt;
-  const movementVectorRotation = getLineVector(
-    pointLookingAt,
-    finalPointLookedAt
-  );
+  const movementVectorRotation = getLineVector(pointLookingAt, finalPointLookedAt);
   const vecByFrameRotation = getFrameVector(movementVectorRotation, frames);
 
   const currentPointBeingLookedAt = new Vector3();
@@ -104,12 +100,15 @@ function setCameraLookingPoint(point) {
   controls.update();
 }
 
-function setCameraPosition(point){
+function setCameraLookingWorldCenter() {
+  const center = getModelsCenterPoint();
+  setCameraLookingPoint(center);
+}
+
+function setCameraPosition(point) {
   const camera = StoreScene.camera;
   camera.position.copy(point);
 }
-
-export { getCameraData, setCameraData, setCameraLookingPoint, setCameraPosition };
 
 function getFrameVector(movementVector, frames) {
   const frameVector = new THREE.Vector3();
@@ -117,3 +116,5 @@ function getFrameVector(movementVector, frames) {
   frameVector.divideScalar(frames);
   return frameVector;
 }
+
+export { getCameraData, setCameraData, setCameraLookingPoint, setCameraLookingWorldCenter, setCameraPosition };
