@@ -86,7 +86,7 @@ function renderMultipleOptions(element, options) {
   for (const key in options) {
     if (Object.hasOwnProperty.call(options, key)) {
       const option = options[key];
-      option.idx = renderOption(element, option.text);
+      option.idx = renderOption(element, option);
     }
   }
 }
@@ -97,9 +97,9 @@ function renderMultipleOptions(element, options) {
  * @param {*} text String to show user
  * @returns List item index (idx)
  */
-function renderOption(element, text) {
+function renderOption(element, option) {
   // Capitalize first letter
-  const textContent = text.charAt(0).toUpperCase() + text.slice(1);
+  const textContent = option.text.charAt(0).toUpperCase() + option.text.slice(1);
   // Create list item
   const li = createElement("li", {
     textContent,
@@ -109,7 +109,7 @@ function renderOption(element, text) {
   // Handle events
   let idx = list.children.length;
   li.addEventListener("click", (e) => {
-    emitCustomEventOnElement(element, "optionSelected", { idx });
+    option.action();
   });
   // Reference for parent
   return idx;
