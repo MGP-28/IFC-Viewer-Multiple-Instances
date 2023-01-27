@@ -96785,6 +96785,7 @@ function clipping(isEnabled) {
     assignClippingPlanesToEachPlane();
 
     function assignClippingPlanesToModels(planes) {
+      const meshes = getAllMeshes();
       // assign each cutting plane as a clipping plane of all models
       for (let idx = 0; idx < meshes.length; idx++) {
         const mesh = meshes[idx];
