@@ -96414,6 +96414,68 @@ const cameraConfigs = {
   framesPerAnimation: 100, // lower value, faster animation. Too low may turn the animation "choppy"
 };
 
+function getModelsCenterPoint() {
+  const meshes = getAllMeshes();
+  if (meshes.length == 0) return;
+
+  const center = getMeshesCenterPoint(meshes);
+
+  return center;
+}
+
+function getMeshesCenterPoint(meshes) {
+  const boundingBox = getBoundingBox(meshes);
+  const boxCenter = new Vector3();
+  boundingBox.getCenter(boxCenter);
+  return boxCenter;
+}
+
+function getBoxCenterPoint(boundingBox) {
+  const boxCenter = new Vector3();
+  boundingBox.getCenter(boxCenter);
+  return boxCenter;
+}
+
+function getAllMeshes() {
+  return models.map((model) => model.model);
+}
+
+/**
+ * Renders a bounding box for each model and calculates a container box that fits all bounding boxes inside.
+ *
+ * This container is the starting point to render the planes
+ */
+function getBoundingBox(meshes) {
+  if (meshes.length == 0) return;
+  // cycles each model's min and max vectors and computes the lowest values for minVector and the highest values for maxVector
+  const minVector = new Vector3();
+  const maxVector = new Vector3();
+  for (let idx = 0; idx < meshes.length; idx++) {
+    const mesh = meshes[idx];
+    const boundingBox = new BoxHelper(mesh, 0xff0000);
+    const box = new Box3();
+    box.setFromObject(boundingBox);
+    // if first model, just copies values
+    if (idx == 0) {
+      minVector.copy(box.min);
+      maxVector.copy(box.max);
+      continue;
+    }
+    // if not, calculates which axle value needs to be replaced
+    for (const key in minVector) {
+      if (minVector[key] > box.min[key]) minVector[key] = box.min[key];
+    }
+    for (const key in maxVector) {
+      if (maxVector[key] < box.max[key]) maxVector[key] = box.max[key];
+    }
+  }
+
+  const box3 = new Box3(minVector, maxVector);
+
+  return box3;
+  //#endregion render box in scene - comment return for it
+}
+
 function getCameraData() {
   const camera$1 = camera;
 
@@ -96444,10 +96506,7 @@ function setCameraData(savedView) {
   // rotation
   const pointLookingAt = pickAxlePlane();
   const finalPointLookedAt = savedView.camera.pointLookedAt;
-  const movementVectorRotation = getLineVector(
-    pointLookingAt,
-    finalPointLookedAt
-  );
+  const movementVectorRotation = getLineVector(pointLookingAt, finalPointLookedAt);
   const vecByFrameRotation = getFrameVector(movementVectorRotation, frames);
 
   const currentPointBeingLookedAt = new Vector3();
@@ -96511,7 +96570,12 @@ function setCameraLookingPoint(point) {
   controls$1.update();
 }
 
-function setCameraPosition(point){
+function setCameraLookingWorldCenter() {
+  const center = getModelsCenterPoint();
+  setCameraLookingPoint(center);
+}
+
+function setCameraPosition(point) {
   const camera$1 = camera;
   camera$1.position.copy(point);
 }
@@ -96536,9 +96600,6 @@ function clipping(isEnabled) {
   // prevents clipping plane rendering when no models are loaded
   if (models.length == 0) return;
 
-  const meshes = [];
-  getMeshes();
-
   if (!isEnabled) {
     updateModelsMaterials(false);
     removePlanes();
@@ -96551,7 +96612,8 @@ function clipping(isEnabled) {
     return;
   }
 
-  const boundingBox = getBoundingBox();
+  const meshes = getAllMeshes();
+  const boundingBox = getBoundingBox(meshes);
 
   // Initialize variables for plane creation
   // get box's min and max vectors
@@ -96567,14 +96629,15 @@ function clipping(isEnabled) {
   }
 
   setEdgePositions(vMin, vMax);
+  
+  // const boxCenter = new Vector3();
+  // boundingBox.getCenter(boxCenter);
+  const boxCenter = getBoxCenterPoint(boundingBox);
+  center.copy(boxCenter);
 
   // Get plane max size
   const boundingBoxSize = new Vector3();
   boundingBox.getSize(boundingBoxSize);
-
-  const boxCenter = new Vector3();
-  boundingBox.getCenter(boxCenter);
-  center.copy(boxCenter);
 
   buildWireframe();
   function buildWireframe() {
@@ -96673,48 +96736,6 @@ function clipping(isEnabled) {
   updateModelsMaterials(true);
 
   // #region Auxiliary functions in scope
-
-  function getMeshes() {
-    for (let idx = 0; idx < models.length; idx++) {
-      const modelInstance = models[idx];
-      meshes.push(modelInstance.model);
-    }
-  }
-
-  /**
-   * Renders a bounding box for each model and calculates a container box that fits all bounding boxes inside.
-   *
-   * This container is the starting point to render the planes
-   */
-  function getBoundingBox() {
-    // cycles each model's min and max vectors and computes the lowest values for minVector and the highest values for maxVector
-    const minVector = new Vector3();
-    const maxVector = new Vector3();
-    for (let idx = 0; idx < meshes.length; idx++) {
-      const mesh = meshes[idx];
-      const boundingBox = new BoxHelper(mesh, 0xff0000);
-      const box = new Box3();
-      box.setFromObject(boundingBox);
-      // if first model, just copies values
-      if (idx == 0) {
-        minVector.copy(box.min);
-        maxVector.copy(box.max);
-        continue;
-      }
-      // if not, calculates which axle value needs to be replaced
-      for (const key in minVector) {
-        if (minVector[key] > box.min[key]) minVector[key] = box.min[key];
-      }
-      for (const key in maxVector) {
-        if (maxVector[key] < box.max[key]) maxVector[key] = box.max[key];
-      }
-    }
-
-    const box3 = new Box3(minVector, maxVector);
-
-    return box3;
-    //#endregion render box in scene - comment return for it
-  }
 
   function buildPlane(
     vNormal,
@@ -97714,7 +97735,7 @@ window.addEventListener("contextmenu", async (e) => {
   // Menu content
   const config = {
     options: object ? objectContextOptions() : freeContextOptions(),
-    object
+    object,
   };
   // Render menu
   renderMenu(config);
@@ -97726,8 +97747,13 @@ window.addEventListener("contextmenu", async (e) => {
     return [
       {
         displayText: "Focus camera here",
-        hasSeperator: true,
+        hasSeperator: false,
         action: (position) => setCameraLookingPoint(position),
+      },
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
       },
       {
         displayText: "Save view",
@@ -97747,6 +97773,11 @@ window.addEventListener("contextmenu", async (e) => {
 
   function freeContextOptions() {
     return [
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
+      },
       {
         displayText: "Save view",
         hasSeperator: true,

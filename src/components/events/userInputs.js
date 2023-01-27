@@ -9,7 +9,7 @@ import { clippingConfigs } from "../../configs/clippingPlanes";
 import { renderContextMenu } from "../contextMenu/contextMenu";
 import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
 import { renderAnnotationForm } from "../annotation/form";
-import { setCameraLookingPoint } from "../../helpers/camera";
+import { setCameraLookingPoint, setCameraLookingWorldCenter } from "../../helpers/camera";
 import * as RaycastStore from "../../stores/raycast";
 import * as SelectedStore from "../../stores/selection.js";
 import { openSavedViewForm } from "../../helpers/savedViews";
@@ -309,8 +309,8 @@ window.addEventListener("contextmenu", async (e) => {
   // Menu content
   const config = {
     options: object ? objectContextOptions() : freeContextOptions(),
-    object
-  }
+    object,
+  };
   // Render menu
   renderMenu(config);
 
@@ -321,8 +321,13 @@ window.addEventListener("contextmenu", async (e) => {
     return [
       {
         displayText: "Focus camera here",
-        hasSeperator: true,
+        hasSeperator: false,
         action: (position) => setCameraLookingPoint(position),
+      },
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
       },
       {
         displayText: "Save view",
@@ -342,6 +347,11 @@ window.addEventListener("contextmenu", async (e) => {
 
   function freeContextOptions() {
     return [
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
+      },
       {
         displayText: "Save view",
         hasSeperator: true,
