@@ -45,8 +45,6 @@ function render() {
       worker.onmessage = async (e) => {
         const tree = e.data;
 
-        console.log("objectsByLevelByCategory", tree);
-
         emitGlobalEvent("loadingComplete");
 
         await buildTree(element, tree);

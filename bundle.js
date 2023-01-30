@@ -94749,12 +94749,18 @@ const setSelectedProperties = (props, objectsData, isFromViewer) => {
     const expressIDs = objectsData[idx].expressIDs;
     vars.selected.addProps(props, expressIDs, modelIdx);
   }
-  emitGlobalEvent("selectedChanged");
+  emitGlobalEvent("selectedChangedPriority");
+  setTimeout(() => {
+    emitGlobalEvent("selectedChanged");
+  }, 1);
 };
 
 const resetSelectedProperties = () => {
   vars.selected.reset();
-  emitGlobalEvent("selectedChanged");
+  emitGlobalEvent("selectedChangedPriority");
+  setTimeout(() => {
+    emitGlobalEvent("selectedChanged");
+  }, 1);
 };
 
 // Currently highlighted object's properties
@@ -94942,7 +94948,7 @@ function setEdgePositions(vMin, vMax) {
   edgePositions.currentMax = new Vector3(vMax.x, vMax.y, vMax.z);
 }
 
-function reset() {
+function reset$1() {
   for (let idx = 0; idx < visualPlanes.length; idx++) {
     const vP = visualPlanes[idx];
     scene.add(vP);
@@ -95387,10 +95393,11 @@ function renderContextMenu(){
     return element;
 }
 
-function renderContextMenuItem(text) {
-  const classCSS = text != "" ? "context-menu-item" : "context-menu-seperator";
+function renderContextMenuItem(text, hasSeperator) {
+  const classes = ["context-menu-item"];
+  if(hasSeperator) classes.push("context-menu-seperator");
   const element = createElement("li", {
-    classes: [classCSS],
+    classes,
     textContent: text,
   });
 
@@ -95744,14 +95751,20 @@ function addSavedView(newSavedView) {
     savedView: savedView,
   });
 
+  setActiveId(id);
 
   return savedView.id;
 }
 
 function removeSavedView(id) {
+
+  
   const ids = savedViews.map((sv) => sv.id);
   const idx = ids.indexOf(id);
   if (idx == -1) return;
+
+  if(id === activeId) removeActiveId();
+
   savedViews.splice(idx, 1);
   // trigger event
   const customEvent = new CustomEvent("removedSavedView", {
@@ -96407,6 +96420,68 @@ const cameraConfigs = {
   framesPerAnimation: 100, // lower value, faster animation. Too low may turn the animation "choppy"
 };
 
+function getModelsCenterPoint() {
+  const meshes = getAllMeshes();
+  if (meshes.length == 0) return;
+
+  const center = getMeshesCenterPoint(meshes);
+
+  return center;
+}
+
+function getMeshesCenterPoint(meshes) {
+  const boundingBox = getBoundingBox(meshes);
+  const boxCenter = new Vector3();
+  boundingBox.getCenter(boxCenter);
+  return boxCenter;
+}
+
+function getBoxCenterPoint(boundingBox) {
+  const boxCenter = new Vector3();
+  boundingBox.getCenter(boxCenter);
+  return boxCenter;
+}
+
+function getAllMeshes() {
+  return models.map((model) => model.model);
+}
+
+/**
+ * Renders a bounding box for each model and calculates a container box that fits all bounding boxes inside.
+ *
+ * This container is the starting point to render the planes
+ */
+function getBoundingBox(meshes) {
+  if (meshes.length == 0) return;
+  // cycles each model's min and max vectors and computes the lowest values for minVector and the highest values for maxVector
+  const minVector = new Vector3();
+  const maxVector = new Vector3();
+  for (let idx = 0; idx < meshes.length; idx++) {
+    const mesh = meshes[idx];
+    const boundingBox = new BoxHelper(mesh, 0xff0000);
+    const box = new Box3();
+    box.setFromObject(boundingBox);
+    // if first model, just copies values
+    if (idx == 0) {
+      minVector.copy(box.min);
+      maxVector.copy(box.max);
+      continue;
+    }
+    // if not, calculates which axle value needs to be replaced
+    for (const key in minVector) {
+      if (minVector[key] > box.min[key]) minVector[key] = box.min[key];
+    }
+    for (const key in maxVector) {
+      if (maxVector[key] < box.max[key]) maxVector[key] = box.max[key];
+    }
+  }
+
+  const box3 = new Box3(minVector, maxVector);
+
+  return box3;
+  //#endregion render box in scene - comment return for it
+}
+
 function getCameraData() {
   const camera$1 = camera;
 
@@ -96437,10 +96512,7 @@ function setCameraData(savedView) {
   // rotation
   const pointLookingAt = pickAxlePlane();
   const finalPointLookedAt = savedView.camera.pointLookedAt;
-  const movementVectorRotation = getLineVector(
-    pointLookingAt,
-    finalPointLookedAt
-  );
+  const movementVectorRotation = getLineVector(pointLookingAt, finalPointLookedAt);
   const vecByFrameRotation = getFrameVector(movementVectorRotation, frames);
 
   const currentPointBeingLookedAt = new Vector3();
@@ -96504,7 +96576,12 @@ function setCameraLookingPoint(point) {
   controls$1.update();
 }
 
-function setCameraPosition(point){
+function setCameraLookingWorldCenter() {
+  const center = getModelsCenterPoint();
+  setCameraLookingPoint(center);
+}
+
+function setCameraPosition(point) {
   const camera$1 = camera;
   camera$1.position.copy(point);
 }
@@ -96516,413 +96593,404 @@ function getFrameVector(movementVector, frames) {
   return frameVector;
 }
 
-let isMouseDragging = false;
-const canvas = document.getElementById("three-canvas");
+const referenceVectors = {
+  x2: new Vector3(1, 0, 0),
+  x1: new Vector3(-1, 0, 0),
+  y2: new Vector3(0, 1, 0),
+  y1: new Vector3(0, -1, 0),
+  z2: new Vector3(0, 0, 1),
+  z1: new Vector3(0, 0, -1),
+};
 
-function startUserInputs() {
-  document.addEventListener("wereReady", () => {
-    emitGlobalEvent("loadingComplete");
+function clipping(isEnabled) {
+  // prevents clipping plane rendering when no models are loaded
+  if (models.length == 0) return;
 
-    // Double-click => highlights and shows details of pointed object
-    canvas.ondblclick = (event) => pickObject(event, true, true);
-
-    canvas.onmousemove = async (event) => {
-      // When mouse is dragging a clipping plane
-      if (isMouseDragging) {
-        if (userInteractions.draggingPlane) await dragClippingPlane(event);
-        return;
-      }
-      // When user is pressing any special key, do nothing
-      if (isUserPressingSpecialKeys() || userInteractions.keyCActive) {
-        resetVisualPlanesColoring();
-        resetHighlighted();
-        return;
-      }
-      // When mouse is just hovering
-      //// and C is active
-      if (userInteractions.clippingPlanes && !userInteractions.keyXActive) {
-        console.log('catching planes');
-        resetHighlighted(); // prevent visual artifacts
-        const isPlaneFound = await pickClippingPlane(event);
-        if (!isPlaneFound) resetVisualPlanesColoring();
-        else highlightVisualPlane();
-        return
-      } 
-      //// and C is inactiveccc
-      if (userInteractions.keyXActive) {
-        resetVisualPlanesColoring(); // prevent visual artifacts
-        pickObject(event, true, false);
-      }
-    };
-
-    let isMovingPlanes = false;
-    // Prevents highlighting when moving camera (more fluid movement)
-    canvas.onmousedown = async (event) => {
-      isMouseDragging = true;
-
-      // clipping plane
-      if (
-        !foundPlane ||
-        !userInteractions.clippingPlanes ||
-        userInteractions.keyCActive || 
-        userInteractions.keyXActive
-      )
-        return;
-
-      isMovingPlanes = true;
-
-      // plane moving logic
-      await moveClippingPlane(event);
-    };
-    canvas.onmouseup = (event) => {
-      isMouseDragging = false;
-
-      // clipping plane
-      if (!isMovingPlanes) return;
-
-      isMovingPlanes = false;
-
-      // plane end movement logic
-      stopMovingClippingPlane();
-    };
-
-    window.addEventListener("keydown", (event) => {
-      const keyPressed = event.code;
-      switch (keyPressed) {
-        case "ControlLeft":
-          userInteractions.controlActive = true;
-          break;
-      }
-    });
-
-    window.addEventListener("keyup", (event) => {
-      const keyPressed = event.code;
-      switch (keyPressed) {
-        case "ControlLeft":
-          userInteractions.controlActive = false;
-          break;
-        case "KeyC": {
-          userInteractions.keyCActive = !userInteractions.keyCActive;
-          if(userInteractions.keyCActive) disableFeatureKeys();
-          resetVisuals();
-          break;
-        }
-        case "KeyX": {
-          if(userInteractions.keyCActive) return;
-          userInteractions.keyXActive = !userInteractions.keyXActive;
-          resetVisuals();
-          break;
-        }
-      }
-    });
-  });
-}
-
-function resetVisuals(){
-  resetVisualPlanesColoring();
-  resetHighlighted();
-}
-
-let _opacity = undefined;
-let _color = undefined;
-let _uuid = undefined;
-function resetVisualPlanesColoring() {
-  if (!_uuid) return;
-  for (let idx = 0; idx < visualPlanes.length; idx++) {
-    const visualPlane = visualPlanes[idx];
-    visualPlane.material.opacity = _opacity;
-    visualPlane.material.color = _color;
-  }
-  _uuid = undefined;
-}
-
-function resetHighlighted(){
-  resetFound();
-  resetHighlightedProperties();
-}
-
-function highlightVisualPlane() {
-  const visualPlane = foundPlane.object;
-
-  if (visualPlane.uuid == _uuid) return;
-
-  resetVisualPlanesColoring();
-
-  const noRef = { ...visualPlane };
-  _uuid = noRef.uuid;
-  if (!_opacity) _opacity = noRef.material.opacity;
-  if (!_color) _color = noRef.material.color;
-
-  visualPlane.material.opacity = 0.28;
-  visualPlane.material.color = materials.highlighted.color;
-}
-
-async function moveClippingPlane(event) {
-  // disable camera
-  toggleCameraControls(false);
-  // drag plane
-  userInteractions.draggingPlane = true;
-
-  const vNormal =
-    normals[selectedPlaneIdx];
-  const key = vNormal.y !== 0 ? "y" : "x";
-  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
-
-  const normals$1 = {
-    x: new Vector3(1, 0, 0),
-    y: new Vector3(0, 1, 0),
-    z: new Vector3(0, 0, 1),
-  };
-
-  for (const axle in normals$1) {
-    if (axle == axleOfMovement) continue;
-
-    const normal = normals$1[axle];
-    const crossPlane$1 = new Plane(
-      normal,
-      center[axle]
-    );
-    crossPlane.planes.push(crossPlane$1);
-
-    // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
-    // scene.add(helper);
-  }
-
-  crossPlane.points.start = await pickCrossPlane(event);
-}
-
-function stopMovingClippingPlane(event) {
-  // enable camera
-  toggleCameraControls(true);
-  // stop plane
-  userInteractions.draggingPlane = false;
-  resetCrossPlane();
-}
-
-async function dragClippingPlane(event, isUserInteraction) {
-  const visualPlane = foundPlane.object;
-  const vNormal =
-    normals[selectedPlaneIdx];
-
-  const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
-
-  const multiplier = userInteractions.controlActive
-    ? clippingConfigs.multiplier.precision
-    : clippingConfigs.multiplier.normal;
-  const maximum = clippingConfigs.maxJump;
-
-  const endPoint = await pickCrossPlane(event);
-
-  if (!endPoint) return;
-
-  crossPlane.points.end.copy(endPoint);
-
-  const initialPosition = crossPlane.points.start;
-  const finalPosition = crossPlane.points.end;
-
-  let value =
-    (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) *
-    multiplier;
-  if (value > maximum) value = maximum;
-  else if (value < maximum * -1) value = maximum * -1;
-
-  const vectorAxles = {
-    x: axleOfMovement == "x" ? value : 0,
-    y: axleOfMovement == "y" ? value : 0,
-    z: axleOfMovement == "z" ? value : 0,
-  };
-  const moveVector = new Vector3(
-    vectorAxles.x,
-    vectorAxles.y,
-    vectorAxles.z
-  );
-
-  visualPlane.position.add(moveVector);
-
-  // Checks for plane positioning reaching the minimum or maximum
-  const buffer = clippingConfigs.buffer;
-  const absoluteMinPosition =
-    edgePositions.min[axleOfMovement];
-  const absoluteMaxPosition =
-    edgePositions.max[axleOfMovement];
-  if (absoluteMinPosition > visualPlane.position[axleOfMovement])
-    visualPlane.position[axleOfMovement] = absoluteMinPosition;
-  else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
-    visualPlane.position[axleOfMovement] = absoluteMaxPosition;
-
-  const edgeVectorChanged =
-    vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
-  const edgeVectorOther =
-    edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
-
-  const relativeEdgePosition =
-    edgePositions[edgeVectorOther][axleOfMovement];
-
-  if (edgeVectorChanged == "currentMax") {
-    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]) {
-      visualPlane.position[axleOfMovement] = relativeEdgePosition + buffer;
-    }
-  } else {
-    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]) {
-      visualPlane.position[axleOfMovement] = relativeEdgePosition - buffer;
-    }
-  }
-
-  edgePositions[edgeVectorChanged][axleOfMovement] =
-    visualPlane.position[axleOfMovement];
-
-  const cuttingPlane =
-    clippingPlanes[selectedPlaneIdx];
-
-  const newConstant =
-    visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
-  cuttingPlane.constant = newConstant;
-
-  crossPlane.points.start.copy(
-    crossPlane.points.end
-  );
-}
-
-//
-// TESTING
-//
-// window.addEventListener("keydown", (event) => {
-//   const keyPressed = event.code;
-//   switch (keyPressed) {
-//     case "KeyT": {
-//       console.log("lets go!");
-//       renderText();
-//       break;
-//     }
-//     default:
-//       break;
-//   }
-// });
-//
-//
-
-window.addEventListener("contextmenu", async (e) => {
-  e.preventDefault();
-
-  if (!userInteractions.controlActive) return;
-
-  toggleCameraControls(false);
-
-  const object = await pickObject(e, false);
-  // render menu
-  const contextMenu = renderContextMenu();
-  document.body.appendChild(contextMenu);
-  // position menu
-  contextMenu.style.left = `${e.clientX}px`;
-  contextMenu.style.top = `${e.clientY}px`;
-
-  // Closing event handling
-  document.body.addEventListener("mousedown", closeMenu);
-  function closeMenu() {
-    contextMenu.remove();
-    document.body.removeEventListener("mousedown", closeMenu);
-    toggleCameraControls(true);
-  }
-
-  const menuList = document.getElementById("context-menu-list");
-
-  // Menu content
-  if (object) {
-    objectContextMenu(object);
+  if (!isEnabled) {
+    updateModelsMaterials(false);
+    removePlanes();
     return;
-  } else freeContextMenu();
+  }
+
+  if (visualPlanes.length > 0) {
+    resetPlanes();
+    updateModelsMaterials(true);
+    return;
+  }
+
+  const meshes = getAllMeshes();
+  const boundingBox = getBoundingBox(meshes);
+
+  // Initialize variables for plane creation
+  // get box's min and max vectors
+  const vMin = boundingBox.min;
+  const vMax = boundingBox.max;
+  bufferEdgeVectors(vMin);
+  bufferEdgeVectors(vMax);
+
+  function bufferEdgeVectors(vector) {
+    for (const axle in vector) {
+      vector[axle] = vector[axle] > 0 ? vector[axle] + 1 : vector[axle] - 1;
+    }
+  }
+
+  setEdgePositions(vMin, vMax);
+  
+  // const boxCenter = new Vector3();
+  // boundingBox.getCenter(boxCenter);
+  const boxCenter = getBoxCenterPoint(boundingBox);
+  center.copy(boxCenter);
+
+  // Get plane max size
+  const boundingBoxSize = new Vector3();
+  boundingBox.getSize(boundingBoxSize);
+
+  buildWireframe();
+  function buildWireframe() {
+    const size = {
+      x: vMax.x - vMin.x,
+      y: vMax.y - vMin.y,
+      z: vMax.z - vMin.z,
+    };
+    const boxGeometry = new BoxGeometry(size.x, size.y, size.z);
+    const wireframeGeometry = new EdgesGeometry(boxGeometry);
+    const wireframeMaterial = materials.wireframe.clone();
+    const wireframe = new LineSegments(
+      wireframeGeometry,
+      wireframeMaterial
+    );
+    for (const axle in boxCenter) {
+      wireframe.position[axle] = boxCenter[axle];
+    }
+    addWireframe(wireframe);
+    scene.add(wireframe);
+  }
+
+  for (const key in referenceVectors) {
+    const vNormal = referenceVectors[key];
+    // preset for x1 plane
+    let width = boundingBoxSize.z;
+    let height = boundingBoxSize.y;
+    let position = vMin.x;
+    let angle = "90º";
+    let vAxle = referenceVectors.y2;
+    let invertConstant = true;
+    // assigns the correct vars for each case
+    if (vNormal.x > 0) ; else if (vNormal.x < 0) {
+      position = vMax.x;
+      vAxle = referenceVectors.y2;
+      angle = "-90º";
+      invertConstant = false;
+    } else if (vNormal.y > 0) {
+      position = vMin.y;
+      vAxle = referenceVectors.x2;
+      width = boundingBoxSize.x;
+      height = boundingBoxSize.z;
+    } else if (vNormal.y < 0) {
+      position = vMax.y;
+      vAxle = referenceVectors.x2;
+      angle = "-90º";
+      width = boundingBoxSize.x;
+      height = boundingBoxSize.z;
+      invertConstant = false;
+    } else if (vNormal.z > 0) {
+      position = vMin.z;
+      vAxle = referenceVectors.z2;
+      width = boundingBoxSize.y;
+      height = boundingBoxSize.x;
+    } else if (vNormal.z < 0) {
+      position = vMax.z;
+      vAxle = referenceVectors.z2;
+      angle = "-90º";
+      width = boundingBoxSize.y;
+      height = boundingBoxSize.x;
+      invertConstant = false;
+    }
+    angle = angle == "90º" ? MathUtils.degToRad(90) : MathUtils.degToRad(270);
+
+    buildPlane(vNormal, position, vAxle, angle, width, height, invertConstant);
+  }
+
+  // #region Axle plane helpers (debug)
+  // // Axle planes, for debug
+  //
+  // const planeXY = new THREE.Mesh(planeGeom, planeMat);
+  // const planeXZ = new THREE.Mesh(planeGeom, planeMat);
+  // const planeYZ = new THREE.Mesh(planeGeom, planeMat);
+
+  // // Default plane already occupies XY plane
+  // planeXY.rotation.set(0, 0, 0);
+  // planeXY.scale.addScalar(100);
+  // planeXY.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
+  // SceneStore.scene.add(planeXY);
+
+  // // Rotate around x-axis to occupy XZ plane
+  // planeXZ.rotation.set(Math.PI / 2, 0, 0);
+  // planeXZ.scale.addScalar(100);
+  // planeXZ.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
+  // SceneStore.scene.add(planeXZ);
+
+  // // Rotate around y-axis to occupy YZ plane
+  // planeYZ.rotation.set(0, Math.PI / 2, 0);
+  // planeYZ.scale.addScalar(100);
+  // planeYZ.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
+  // SceneStore.scene.add(planeYZ);
+  //
+  //
+  // #endregion
+
+  updateModelsMaterials(true);
+
+  // #region Auxiliary functions in scope
+
+  function buildPlane(
+    vNormal,
+    position,
+    vAxle,
+    angle,
+    width,
+    height,
+    invertConstant
+  ) {
+    // position = position * 2 / 3
+
+    const planeMaterial = materials.transparent.clone();
+
+    // visual plane
+    const visualPlane = new Mesh(
+      new PlaneGeometry(width, height),
+      planeMaterial
+    );
+
+    visualPlane.position.copy(boxCenter);
+
+    // cycles axles in position
+    for (const key in visualPlane.position) {
+      if (vNormal[key] !== 0) visualPlane.position[key] = position;
+    }
+    visualPlane.rotateOnWorldAxis(vAxle, angle);
+
+    scene.add(visualPlane);
+
+    // cutting plane
+    // Align movement with plane normal
+    const constant = invertConstant ? position * -1 : position;
+    const cuttingPlane = new Plane(vNormal, constant);
+
+    // Add normal vector and visual and clipping planes to the store
+    addClippingPlane(visualPlane, cuttingPlane, vNormal);
+  }
+
+  function updateModelsMaterials(isClipping) {
+    if (!isClipping) {
+      assignClippingPlanesToModels([]);
+      return;
+    }
+
+    assignClippingPlanesToModels(clippingPlanes);
+    assignClippingPlanesToEachPlane();
+
+    function assignClippingPlanesToModels(planes) {
+      const meshes = getAllMeshes();
+      // assign each cutting plane as a clipping plane of all models
+      for (let idx = 0; idx < meshes.length; idx++) {
+        const mesh = meshes[idx];
+        for (const subMat in mesh.material) {
+          mesh.material[subMat].clippingPlanes = planes;
+        }
+      }
+    }
+
+    function assignClippingPlanesToEachPlane() {
+      for (let idx = 0; idx < visualPlanes.length; idx++) {
+        let clippingPlanes$1 = [];
+        const vP = visualPlanes[idx];
+        for (
+          let idx2 = 0;
+          idx2 < clippingPlanes.length;
+          idx2++
+        ) {
+          const cP = clippingPlanes[idx2];
+          if (idx == idx2) continue;
+          clippingPlanes$1.push(cP);
+        }
+        vP.material.clippingPlanes = clippingPlanes$1;
+      }
+    }
+  }
+
+  function removePlanes() {
+    hide();
+  }
+
+  function resetPlanes() {
+    reset$1();
+  }
+
+  // #endregion Auxiliary functions in scope
+}
+
+ /**
+   * 
+   * @param {*} positions {vMin, vMax}
+   */
+ function updatePlanesPositions() {
+  const positions = {
+    vMin: edgePositions.currentMin,
+    vMax: edgePositions.currentMax
+  };
+  const visualPlanes$1 = visualPlanes;
+  const cuttingPlanes = clippingPlanes;
+  const normals$1 = normals;
+  
+  edgePositions.currentMin = positions.vMin.clone();
+  edgePositions.currentMax = positions.vMax.clone();
+
+  for (let idx = 0; idx < visualPlanes$1.length; idx++) {
+    const visualPlane = visualPlanes$1[idx];
+    const cuttingPlane = cuttingPlanes[idx];
+    const normal = normals$1[idx];
+
+    const axleOfMovement = normal.y !== 0 ? "y" : normal.x !== 0 ? "x" : "z";
+
+    const edgeVector = normal[axleOfMovement] > 0 ? "vMin" : "vMax";
+
+    visualPlane.position[axleOfMovement] = positions[edgeVector][axleOfMovement];
+
+    const newConstant =
+      visualPlane.position[axleOfMovement] * normal[axleOfMovement] * -1;
+    cuttingPlane.constant = newConstant;
+  }
+
+}
+
+function render$c() {
+  const headerProps = {
+    title: "Saving view",
+    subtitle: "Creating new saved perspective",
+    icon: icons.savedViews,
+  };
+
+  //
+  // Popup element
+  const popup = render$g(headerProps);
+
+  const container = popup.getElementsByClassName("popup-header-content")[0];
+
+  container.innerHTML = `
+    <form class="styling-form">
+      <label for="note" class="styling-form-label">Title</label>
+      <input type="text" id="saved-view-form-note-input" class="styling-form-input" name="note">
+      <span id="styling-form-warning" class="styling-form-warning hidden"></span>
+      <input type="submit" value="Save" class="styling-form-submit">
+    </form>
+  `;
+
+  handleEvents();
+
+  return popup;
 
   //
   // Aux functions in scope
   //
-  function objectContextMenu(object) {
-    // create annotation
-    const annotationEl = renderContextMenuItem("Create annotation");
-    menuList.appendChild(annotationEl);
-    annotationEl.addEventListener("mousedown", (e) => {
+  function handleEvents() {
+    const form = container.getElementsByTagName("form")[0];
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
       e.stopPropagation();
-      const position = object.object.point;
-      const form = render$d(position);
-      document.body.appendChild(form);
 
-      closeMenu();
+      const noteInput = document.getElementById("saved-view-form-note-input");
+      const note = noteInput.value;
+
+      // fields incorrectly filled
+      if (!note) {
+        errorName(true);
+        return;
+      }
+
+      // fields filled
+      const viewsNamesUsed = savedViews.map((x) => x.note);
+      const isNameValid = viewsNamesUsed.indexOf(note) == -1;
+
+      if (!isNameValid) {
+        errorName(false);
+        return;
+      }
+
+      saveView(note);
+
+      popup.remove();
+
+      //
+      // Aux functions in scope
+      //
+      function errorName(isEmpty) {
+        noteInput.classList.remove("error");
+        noteInput.classList.add("error");
+        noteInput.addEventListener("focus", classing);
+
+        const message = isEmpty
+          ? "Please input a title"
+          : "There's already a saved view with the same title!";
+
+        errorMessage(message);
+
+        function classing() {
+          noteInput.classList.remove("error");
+          noteInput.removeEventListener("focus", classing);
+        }
+      }
+
+      function errorMessage(message) {
+        const errorEl = container.getElementsByClassName(
+          "styling-form-warning"
+        )[0];
+        errorEl.innerHTML = "";
+        errorEl.classList.remove("hidden");
+        errorEl.textContent = message;
+      }
     });
-    seperatorElement(menuList);
 
-    const cameraPointEl = renderContextMenuItem("Focus camera here");
-    menuList.appendChild(cameraPointEl);
-    cameraPointEl.addEventListener("mousedown", (e) => {
-      e.stopPropagation();
-      const position = object.object.point;
-      setCameraLookingPoint(position);
-
-      closeMenu();
+    popup.addEventListener("toggle", () => {
+      popup.remove();
     });
-    seperatorElement(menuList);
-
-    // testing
-    testerElement(menuList);
-    seperatorElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    seperatorElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    ////
   }
-
-  function freeContextMenu() {
-    console.log("outside object");
-  }
-
-  function seperatorElement(menuList) {
-    const seperator = renderContextMenuItem("");
-    menuList.appendChild(seperator);
-  }
-});
-
-function toggleCameraControls(isOn) {
-  controls.enabled = isOn;
 }
 
-let idx = 0;
-function testerElement(menuList) {
-  const arr = [
-    "Tester",
-    "I'm real",
-    "Dummy",
-    "I'm stuck here!",
-    "Super important tester for sure",
-    "A wizard did this!",
-  ];
-  const element = renderContextMenuItem(arr[idx]);
-  idx = idx == 5 ? 0 : idx + 1;
-  menuList.appendChild(element);
+function saveView(note) {
+  const cameraData = getCameraData();
+  if (visualPlanes.length == 0) {
+    // build clipping planes
+    clipping(true);
+    // disable their render
+    clipping(false);
+  }
+  const clippingData = {
+    min: edgePositions.currentMin.clone(),
+    max: edgePositions.currentMax.clone(),
+  };
+  const renderVisibilityData = JSON.parse(JSON.stringify(getVisibilityByIds()));
+  const hiddenIds = {};
+  // Cycle models
+  for (const modelIdx in renderVisibilityData) {
+    if (Object.hasOwnProperty.call(renderVisibilityData, modelIdx)) {
+      const modelVisibilityData = renderVisibilityData[modelIdx];
+      hiddenIds[modelIdx] = [];
+      // Cycle objects in model
+      for (const expressId in modelVisibilityData) {
+        if (Object.hasOwnProperty.call(modelVisibilityData, expressId)) {
+          // If object is hidden, push its expressId to hiddensIds 
+          const status = modelVisibilityData[expressId];
+          if(!status) hiddenIds[modelIdx].push(expressId);
+        }
+      }
+    }
+  }
+  const savedView = new SavedView(cameraData, clippingData, hiddenIds);
+  savedView.note = note;
+  addSavedView(savedView);
 }
-
-// function renderText() {
-//   const position = {
-//     x: 1,
-//     y: -1,
-//     z: 3,
-//   };
-//   const text2D = render2DText(position, "Boas");
-
-//   SceneStore.renderer2D.group.add(text2D);
-
-//   window.addEventListener("click", async (e) => {
-//     const result = await pickObject(e, false);
-//     if (!result) return;
-//     text2D.position.copy(found.object.point);
-//     // setTimeout(() => {
-//     //   text2D.removeFromParent();
-//     // }, 2000);
-//   });
-// }
-//
-// END TESTING
-//
 
 /**
  *  Creates subset with custom material, used for highlighting
@@ -96977,8 +97045,788 @@ function removeFromSubset(modelIdx, expressIDs) {
   loader.ifcManager.removeFromSubset(0, expressIDs, modelIdx);
 }
 
+function renderAllObjects() {
+  for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
+    const model = models[modelIdx];
+    // render all objects
+    const allObjectIDs = model.getAllIDs();
+
+    addIdsToVisible(modelIdx, allObjectIDs);
+    addToSubset(modelIdx, allObjectIDs);
+  }
+}
+
+function loadView(id) {
+  if (savedViews.length == 0) return;
+
+  const savedView = savedViews.find((x) => x.id == id);
+
+  if (!savedView) {
+    console.error("invalid saved view");
+    return;
+  }
+
+  setActiveId(id);
+
+  // set camera
+  setCameraData(savedView);
+  edgePositions.currentMin = savedView.clipping.min.clone();
+  edgePositions.currentMax = savedView.clipping.max.clone();
+  if (visualPlanes.length > 0) updatePlanesPositions();
+
+  // set objects
+  const hiddenIdsByModel = savedView.hiddenIds;
+
+  // render all objects
+  renderAllObjects();
+
+  for (const modelIdx in hiddenIdsByModel) {
+    if (!Object.hasOwnProperty.call(hiddenIdsByModel, modelIdx)) continue;
+
+    // remove hidden objects from scene
+    const hiddenIds = hiddenIdsByModel[modelIdx];
+
+    removeIdsFromVisible(modelIdx, hiddenIds);
+    removeFromSubset(modelIdx, hiddenIds);
+  }
+}
+
+function resetView() {
+  removeActiveId();
+
+  edgePositions.currentMin =
+    edgePositions.min.clone();
+  edgePositions.currentMax =
+    edgePositions.max.clone();
+  if (visualPlanes.length > 0) updatePlanesPositions();
+}
+
+/**
+ *
+ * @param {*} popupProps title, subtitle, message, affirmativeText, negativeText
+ */
+function render$b(props, isWarning) {
+  const { title, subtitle } = props;
+  const icon = icons.helper;
+
+  const popupProps = {
+    title,
+    subtitle,
+    icon,
+  };
+
+  const classes = {
+    affirmative: !isWarning ? "confirm" : "reject",
+    negative: !isWarning ? "reject" : "cancel",
+  };
+
+  const popup = render$g(popupProps);
+  popup.classList.remove("hidden");
+
+  const container = popup.getElementsByClassName("popup-header-content")[0];
+
+  container.innerHTML = `
+    <div class="confirmation-popup-wrapper">
+        <span>${props.message}</span>
+        <div class="${classes.affirmative}">${props.affirmativeText}</div>
+        <div class="${classes.negative}">${props.negativeText}</div>
+    </div>
+  `;
+
+  handleEvents();
+
+  return popup;
+
+  function handleEvents() {
+    popup.addEventListener("toggle", () => {
+      popup.remove();
+    });
+
+    container.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+
+    const btnAffirmative = container.getElementsByClassName(
+      classes.affirmative
+    )[0];
+    const btnNegative = container.getElementsByClassName(classes.negative)[0];
+    btnAffirmative.addEventListener("click", (e) => {
+      emitActionToParent(true);
+    });
+
+    btnNegative.addEventListener("click", (e) => {
+      emitActionToParent(false);
+    });
+
+    function emitActionToParent(result) {
+      emitCustomEventOnElement(popup, "confirmationResult", { result });
+    }
+  }
+}
+
+/**
+ * Dimensions: 30 x 25 px
+ *
+ * Call "addOptionToMenuExtras" to add an option to the menu
+ * @returns HTML element
+ */
+function render$a() {
+  // render base UI
+  const element = createElement("div", {
+    classes: ["styling-menu-extras"],
+  });
+
+  const icon = buildIcon(icons.dots);
+  icon.title = "More options";
+  element.appendChild(icon);
+
+  const list = createElement("ul");
+  list.classList.add("hidden", "styling-menu-extras-list");
+  element.appendChild(list);
+
+  handleEvents();
+
+  let status = false;
+
+  function handleEvents() {
+    window.addEventListener("click", (e) => {
+      if (!status) return;
+
+      const elements = [icon, list];
+      if (elements.includes(e.target)) return;
+
+      icon.click();
+    });
+
+    icon.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      status = !status;
+      toggleStatus(status);
+
+      if (status) updatePosition();
+    });
+
+    list.addEventListener("click", (e) => {
+      e.stopPropagation();
+      icon.click();
+    });
+
+    function updatePosition() {
+      const id = setInterval(() => {
+        if (!status) clearInterval(id);
+
+        list.style.left = "0px";
+        list.style.top = "0px";
+        const menuBoundingData = element.getBoundingClientRect();
+        const listBoundingData = list.getBoundingClientRect();
+        const newPosition = {
+          x: menuBoundingData.right - listBoundingData.left - listBoundingData.width,
+          y: menuBoundingData.bottom - listBoundingData.top,
+        };
+        list.style.left = newPosition.x + "px";
+        list.style.top = newPosition.y + "px";
+      }, 20);
+    }
+  }
+
+  function toggleStatus(status) {
+    list.classList.toggle("hidden", !status);
+    element.classList.toggle("active", status);
+  }
+
+  return element;
+}
+
+/**
+ *
+ * @param {*} element Menu element
+ * @param {*} options key: {text, idx} -> idx will be filled
+ */
+function renderMultipleOptions(element, options) {
+  for (const key in options) {
+    if (Object.hasOwnProperty.call(options, key)) {
+      const option = options[key];
+      option.idx = renderOption(element, option);
+    }
+  }
+}
+
+/**
+ * On selection, a event "optionSelected" is dispatched on the element, where the detail has a idx corresponding to which item was selected
+ * @param {*} element Menu element
+ * @param {*} text String to show user
+ * @returns List item index (idx)
+ */
+function renderOption(element, option) {
+  // Capitalize first letter
+  const textContent = option.text.charAt(0).toUpperCase() + option.text.slice(1);
+  // Create list item
+  const li = createElement("li", {
+    textContent,
+  });
+  const list = element.getElementsByTagName("ul")[0];
+  list.appendChild(li);
+  // Handle events
+  let idx = list.children.length;
+  li.addEventListener("click", (e) => {
+    option.action();
+  });
+  // Reference for parent
+  return idx;
+}
+
+function renderSavedView(savedView, parent) {
+  const element = createElement("li", {
+    classes: ["saved-list-item"],
+  });
+
+  // const deleteEl = buildIcon(icons.trash);
+  // deleteEl.classList.add("saved-list-item-icon");
+  // element.appendChild(deleteEl);
+
+  const text = createElement("span", {
+    classes: ["saved-list-item-text"],
+    textContent: savedView.note,
+  });
+  element.appendChild(text);
+
+  const options = {
+    delete: {
+      text: "Delete",
+      action: () => popupConfirmationDeleteSavedView(),
+    },
+    dummy: {
+      text: "A very nice option indeed",
+      action: () => console.log("dummy option enabled"),
+    },
+  };
+  const menuExtras = createOptionsMenu$1(options);
+  element.appendChild(menuExtras);
+
+  handleEvents();
+
+  return element;
+
+  //
+  // Aux scoped functions
+  //
+  function handleEvents() {
+    let isEnabled = false;
+    // Show saved view
+    element.addEventListener("click", () => {
+      isEnabled = !isEnabled;
+      if (isEnabled) loadView(savedView.id);
+      else resetView();
+    });
+
+    // update active status
+    document.addEventListener("savedViewChanged", () => {
+      const activeId = getActiveId();
+      isEnabled = savedView.id == activeId;
+      if (isEnabled) element.classList.add("anim-gradient");
+      else element.classList.remove("anim-gradient");
+    });
+    // check if removed. When true, removes self
+    document.addEventListener("removedSavedView", (e) => {
+      const removedId = e.detail.removedId;
+      if (savedView.id == removedId) element.remove();
+    });
+  }
+
+  function popupConfirmationDeleteSavedView() {
+    const popupProps = {
+      title: "Confirmation",
+      subtitle: "",
+      message: `Are you sure you want to remove the saved view "${savedView.note}"?`,
+      affirmativeText: "Remove",
+      negativeText: "Cancel",
+    };
+
+    const popup = render$b(popupProps, true);
+
+    document.body.appendChild(popup);
+
+    popup.addEventListener("confirmationResult", (e) => {
+      const result = e.detail.result;
+      if (result) deleteSavedView();
+      popup.remove();
+    });
+
+    function deleteSavedView(e) {
+      removeSavedView(savedView.id);
+      element.remove();
+    }
+  }
+}
+
+function createOptionsMenu$1(options) {
+  const menuExtras = render$a();
+
+  const eventsToPreventPropagation = ["click"];
+  preventPropagation(menuExtras, eventsToPreventPropagation);
+
+  renderMultipleOptions(menuExtras, options);
+
+  return menuExtras;
+}
+
+function renderSavedViews() {
+
+  // content
+  const contentEl = createElement("div", {
+    classes: ["saved-wrapper"],
+  });
+  contentEl.innerHTML = `
+    <div class="saved-toolbar"></div>
+    <ul class="saved-list" id="saved-views-list"></ul>
+  `;
+
+  // toolbar
+  const toolbar = contentEl.getElementsByClassName("saved-toolbar")[0];
+  const toolbarSpan = createElement("span", {
+    classes: ["saved-add-text"],
+    textContent: "Save new view",
+  });
+  toolbar.appendChild(toolbarSpan);
+
+  const toolbarIcon = buildIcon(icons.plus);
+  toolbarIcon.classList.add("saved-add", "spatial-tree-icon");
+  toolbar.appendChild(toolbarIcon);
+
+  // list
+  const list = contentEl.getElementsByClassName("saved-list")[0];
+  // add loaded views
+  for (let idx = 0; idx < savedViews.length; idx++) {
+    const savedView = savedViews[idx];
+    renderListItem(savedView);
+  }
+  // add new views created
+  document.addEventListener("newSavedView", (e) => {
+    const savedView = e.detail.savedView;
+    renderListItem(savedView);
+  });
+
+  function renderListItem(savedView) {
+    const savedViewEl = renderSavedView(savedView);
+    list.appendChild(savedViewEl);
+  }
+
+  // events
+  handleEvents();
+
+  return contentEl;
+
+  function handleEvents() {
+    toolbarIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      openSavedViewForm();
+    });
+  }
+}
+
+function openSavedViewForm() {
+  const form = render$c();
+  form.classList.remove("hidden");
+  document.body.appendChild(form);
+}
+
+let isMouseDragging = false;
+const canvas = document.getElementById("three-canvas");
+
+function startUserInputs() {
+  document.addEventListener("wereReady", () => {
+    emitGlobalEvent("loadingComplete");
+
+    // Double-click => highlights and shows details of pointed object
+    canvas.ondblclick = (event) => pickObject(event, true, true);
+
+    canvas.onmousemove = async (event) => {
+      // When mouse is dragging a clipping plane
+      if (isMouseDragging) {
+        if (userInteractions.draggingPlane) await dragClippingPlane(event);
+        return;
+      }
+      // When user is pressing any special key, do nothing
+      if (isUserPressingSpecialKeys() || userInteractions.keyCActive) {
+        resetVisualPlanesColoring();
+        resetHighlighted();
+        return;
+      }
+      // When mouse is just hovering
+      //// and C is active
+      if (userInteractions.clippingPlanes && !userInteractions.keyXActive) {
+        resetHighlighted(); // prevent visual artifacts
+        const isPlaneFound = await pickClippingPlane(event);
+        if (!isPlaneFound) resetVisualPlanesColoring();
+        else highlightVisualPlane();
+        return;
+      }
+      //// and C is inactiveccc
+      if (userInteractions.keyXActive) {
+        resetVisualPlanesColoring(); // prevent visual artifacts
+        pickObject(event, true, false);
+      }
+    };
+
+    let isMovingPlanes = false;
+    // Prevents highlighting when moving camera (more fluid movement)
+    canvas.onmousedown = async (event) => {
+      isMouseDragging = true;
+
+      // clipping plane
+      if (
+        !foundPlane ||
+        !userInteractions.clippingPlanes ||
+        userInteractions.keyCActive ||
+        userInteractions.keyXActive
+      )
+        return;
+
+      isMovingPlanes = true;
+
+      // plane moving logic
+      await moveClippingPlane(event);
+    };
+    canvas.onmouseup = (event) => {
+      isMouseDragging = false;
+
+      // clipping plane
+      if (!isMovingPlanes) return;
+
+      isMovingPlanes = false;
+
+      // plane end movement logic
+      stopMovingClippingPlane();
+    };
+
+    window.addEventListener("keydown", (event) => {
+      const keyPressed = event.code;
+      switch (keyPressed) {
+        case "ControlLeft":
+          userInteractions.controlActive = true;
+          break;
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      const keyPressed = event.code;
+      switch (keyPressed) {
+        case "ControlLeft":
+          userInteractions.controlActive = false;
+          break;
+        case "KeyC": {
+          userInteractions.keyCActive = !userInteractions.keyCActive;
+          if (userInteractions.keyCActive) disableFeatureKeys();
+          resetVisuals();
+          break;
+        }
+        case "KeyX": {
+          if (userInteractions.keyCActive) return;
+          userInteractions.keyXActive = !userInteractions.keyXActive;
+          resetVisuals();
+          break;
+        }
+      }
+    });
+  });
+}
+
+function resetVisuals() {
+  resetVisualPlanesColoring();
+  resetHighlighted();
+}
+
+let _opacity = undefined;
+let _color = undefined;
+let _uuid = undefined;
+function resetVisualPlanesColoring() {
+  if (!_uuid) return;
+  for (let idx = 0; idx < visualPlanes.length; idx++) {
+    const visualPlane = visualPlanes[idx];
+    visualPlane.material.opacity = _opacity;
+    visualPlane.material.color = _color;
+  }
+  _uuid = undefined;
+}
+
+function resetHighlighted() {
+  resetFound();
+  resetHighlightedProperties();
+}
+
+function highlightVisualPlane() {
+  const visualPlane = foundPlane.object;
+
+  if (visualPlane.uuid == _uuid) return;
+
+  resetVisualPlanesColoring();
+
+  const noRef = { ...visualPlane };
+  _uuid = noRef.uuid;
+  if (!_opacity) _opacity = noRef.material.opacity;
+  if (!_color) _color = noRef.material.color;
+
+  visualPlane.material.opacity = 0.28;
+  visualPlane.material.color = materials.highlighted.color;
+}
+
+async function moveClippingPlane(event) {
+  // disable camera
+  toggleCameraControls(false);
+  // drag plane
+  userInteractions.draggingPlane = true;
+
+  const vNormal = normals[selectedPlaneIdx];
+  const key = vNormal.y !== 0 ? "y" : "x";
+  const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
+
+  const normals$1 = {
+    x: new Vector3(1, 0, 0),
+    y: new Vector3(0, 1, 0),
+    z: new Vector3(0, 0, 1),
+  };
+
+  for (const axle in normals$1) {
+    if (axle == axleOfMovement) continue;
+
+    const normal = normals$1[axle];
+    const crossPlane$1 = new Plane(normal, center[axle]);
+    crossPlane.planes.push(crossPlane$1);
+
+    // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
+    // scene.add(helper);
+  }
+
+  crossPlane.points.start = await pickCrossPlane(event);
+}
+
+function stopMovingClippingPlane(event) {
+  // enable camera
+  toggleCameraControls(true);
+  // stop plane
+  userInteractions.draggingPlane = false;
+  resetCrossPlane();
+}
+
+async function dragClippingPlane(event, isUserInteraction) {
+  const visualPlane = foundPlane.object;
+  const vNormal = normals[selectedPlaneIdx];
+
+  const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
+
+  const multiplier = userInteractions.controlActive ? clippingConfigs.multiplier.precision : clippingConfigs.multiplier.normal;
+  const maximum = clippingConfigs.maxJump;
+
+  const endPoint = await pickCrossPlane(event);
+
+  if (!endPoint) return;
+
+  crossPlane.points.end.copy(endPoint);
+
+  const initialPosition = crossPlane.points.start;
+  const finalPosition = crossPlane.points.end;
+
+  let value = (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) * multiplier;
+  if (value > maximum) value = maximum;
+  else if (value < maximum * -1) value = maximum * -1;
+
+  const vectorAxles = {
+    x: axleOfMovement == "x" ? value : 0,
+    y: axleOfMovement == "y" ? value : 0,
+    z: axleOfMovement == "z" ? value : 0,
+  };
+  const moveVector = new Vector3(vectorAxles.x, vectorAxles.y, vectorAxles.z);
+
+  visualPlane.position.add(moveVector);
+
+  // Checks for plane positioning reaching the minimum or maximum
+  const buffer = clippingConfigs.buffer;
+  const absoluteMinPosition = edgePositions.min[axleOfMovement];
+  const absoluteMaxPosition = edgePositions.max[axleOfMovement];
+  if (absoluteMinPosition > visualPlane.position[axleOfMovement]) visualPlane.position[axleOfMovement] = absoluteMinPosition;
+  else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
+    visualPlane.position[axleOfMovement] = absoluteMaxPosition;
+
+  const edgeVectorChanged = vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
+  const edgeVectorOther = edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
+
+  const relativeEdgePosition = edgePositions[edgeVectorOther][axleOfMovement];
+
+  if (edgeVectorChanged == "currentMax") {
+    if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]) {
+      visualPlane.position[axleOfMovement] = relativeEdgePosition + buffer;
+    }
+  } else {
+    if (relativeEdgePosition - buffer < visualPlane.position[axleOfMovement]) {
+      visualPlane.position[axleOfMovement] = relativeEdgePosition - buffer;
+    }
+  }
+
+  edgePositions[edgeVectorChanged][axleOfMovement] = visualPlane.position[axleOfMovement];
+
+  const cuttingPlane = clippingPlanes[selectedPlaneIdx];
+
+  const newConstant = visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
+  cuttingPlane.constant = newConstant;
+
+  crossPlane.points.start.copy(crossPlane.points.end);
+}
+
+//
+// TESTING
+//
+// window.addEventListener("keydown", (event) => {
+//   const keyPressed = event.code;
+//   switch (keyPressed) {
+//     case "KeyT": {
+//       console.log("lets go!");
+//       renderText();
+//       break;
+//     }
+//     default:
+//       break;
+//   }
+// });
+//
+//
+
+window.addEventListener("contextmenu", async (e) => {
+  e.preventDefault();
+
+  if (!userInteractions.controlActive) return;
+
+  toggleCameraControls(false);
+
+  const object = await pickObject(e, false);
+  // render menu
+  const contextMenu = renderContextMenu();
+  document.body.appendChild(contextMenu);
+  // position menu
+  contextMenu.style.left = `${e.clientX}px`;
+  contextMenu.style.top = `${e.clientY}px`;
+
+  // Closing event handling
+  document.body.addEventListener("mousedown", closeMenu);
+  function closeMenu() {
+    contextMenu.remove();
+    document.body.removeEventListener("mousedown", closeMenu);
+    toggleCameraControls(true);
+  }
+
+  const menuList = document.getElementById("context-menu-list");
+
+  // Menu content
+  const config = {
+    options: object ? objectContextOptions() : freeContextOptions(),
+    object,
+  };
+  // Render menu
+  renderMenu(config);
+
+  //
+  // Aux functions in scope
+  //
+  function objectContextOptions() {
+    return [
+      {
+        displayText: "Focus camera here",
+        hasSeperator: false,
+        action: (position) => setCameraLookingPoint(position),
+      },
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
+      },
+      {
+        displayText: "Save view",
+        hasSeperator: false,
+        action: (position) => openSavedViewForm(),
+      },
+      {
+        displayText: "Create annotation",
+        hasSeperator: true,
+        action: (position) => {
+          const form = render$d(position);
+          document.body.appendChild(form);
+        },
+      },
+    ];
+  }
+
+  function freeContextOptions() {
+    return [
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
+      },
+      {
+        displayText: "Save view",
+        hasSeperator: true,
+        action: (position) => openSavedViewForm(),
+      },
+    ];
+  }
+
+  function renderMenu(config) {
+    config.options.forEach((option) => {
+      renderOption(menuList, option, config.object);
+    });
+  }
+
+  /**
+   *
+   * @param {HTMLElement} menuList Text to display in the UI
+   * @param {object} option {displayText: string, action: function, hasSeperator: boolean}
+   */
+  function renderOption(menuList, option, object) {
+    const optionEl = renderContextMenuItem(option.displayText, option.hasSeperator);
+    menuList.appendChild(optionEl);
+    optionEl.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+
+      // get position and run custom action
+      const position = object ? object.object.point : undefined;
+      option.action(position);
+
+      closeMenu();
+    });
+  }
+});
+
+function toggleCameraControls(isOn) {
+  controls.enabled = isOn;
+}
+
+// function renderText() {
+//   const position = {
+//     x: 1,
+//     y: -1,
+//     z: 3,
+//   };
+//   const text2D = render2DText(position, "Boas");
+
+//   SceneStore.renderer2D.group.add(text2D);
+
+//   window.addEventListener("click", async (e) => {
+//     const result = await pickObject(e, false);
+//     if (!result) return;
+//     text2D.position.copy(found.object.point);
+//     // setTimeout(() => {
+//     //   text2D.removeFromParent();
+//     // }, 2000);
+//   });
+// }
+//
+// END TESTING
+//
+
 function startRenderingEvents() {
-  document.addEventListener("selectedChanged", (event) => {
+  document.addEventListener("selectedChangedPriority", (event) => {
     processRenderization("selected");
   });
 
@@ -97234,10 +98082,10 @@ const navbarItems = {};
  *
  * @param {NavbarItem} item
  */
-function featureRenderingHandler$1(item) {
+async function featureRenderingHandler$1(item) {
   if (!item.isRendered) {
     item.isRendered = true;
-    item.build();
+    await item.build();
   }
 
   if (item.isActive) item.load();
@@ -97252,7 +98100,7 @@ function featureRenderingHandler$1(item) {
  * @param {object[]} tabs {title, ref, status} - title refers to the text displayed in the UI; ref is used when for event handling between the component and the parent; status is wether it renders active of not
  * @param {boolean} isOnlyOneActiveTab Default true; Wether or not tabs disable automatically when another one is selected
  */
-function render$c(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive = true) {
+function render$9(component, tabs, isOnlyOneActiveTab = true, isAlwaysOneTabActive = true) {
   const element = createElement("ul", {
     classes: ["sidebar-feature-tabs-wrapper"],
   });
@@ -97321,7 +98169,7 @@ function disableActiveStatus(element, data, event) {
  *
  * @param {NavbarItem} item
  */
-function render$b(item) {
+function render$8(item) {
   const mainSidebarFeature = createElement("div", {
     classes: ["main-sidebar-feature"],
   });
@@ -97377,7 +98225,7 @@ function addTabs(component, tabs) {
   });
   wrapper.appendChild(contentEl);
 
-  const tabsEl = render$c(component, tabs);
+  const tabsEl = render$9(component, tabs);
   wrapper.appendChild(tabsEl);
   
   oldContentEl.innerHTML = "";
@@ -97455,7 +98303,7 @@ class NavbarItem {
 
   async build() {
     if (this.sidebarPosition) {
-      this.component = render$b(this);
+      this.component = render$8(this);
       const content = await this.#buildFunction(this);
       addContent(this.component, await content);
     } else this.#buildFunction(this);
@@ -97510,7 +98358,7 @@ class NavbarItem {
  * @param {boolean} isExclusive If true, disables all other items in the list also marked as exclusive
  * @returns
  */
-function render$a(subitem, parent, idx) {
+function render$7(subitem, parent, idx) {
   const navbarItemDropdown = createElement("li", {
     classes: ["feature-navbar-item-dropdown-item"],
     textContent: subitem.title,
@@ -97571,7 +98419,7 @@ function render$a(subitem, parent, idx) {
  * @param {NavbarItem} item
  * @returns
  */
-function render$9(item) {
+function render$6(item) {
   const navbarItem = createElement("li", {
     classes: ["feature-navbar-item"],
   });
@@ -97599,7 +98447,7 @@ function render$9(item) {
   for (let idx = 0; idx < item.subitems.length; idx++) {
     const subitem = item.subitems[idx];
     itemGlobalRenderCall(subitem);
-    const subitmeEl = render$a(subitem, navbarItem, idx);
+    const subitmeEl = render$7(subitem, navbarItem, idx);
     sublist.appendChild(subitmeEl);
     // if (subitem.hasSidebarTab) {
     //   subitem.tabElement = renderSidebarTab(subitem);
@@ -97711,7 +98559,7 @@ function render$9(item) {
  *
  * @param {*} items item list -> item = {text, callFunction, subitems}. Each id has to be different
  */
-function render$8() {
+function render$5() {
   const navbar = createElement("ul", {
     classes: ["feature-navbar"],
   });
@@ -97719,7 +98567,7 @@ function render$8() {
   for (const featureName in navbarItems) {
     if (Object.hasOwnProperty.call(navbarItems, featureName)) {
       const feature = navbarItems[featureName];
-      const itemEl = render$9(feature);
+      const itemEl = render$6(feature);
       navbar.appendChild(itemEl);
     }
   }
@@ -97735,7 +98583,7 @@ function render$8() {
 }
 
 function initializeNavbar() {
-  render$8();
+  render$5();
 }
 
 async function initializeSidebar() {
@@ -97766,325 +98614,12 @@ async function initializeSidebar() {
   });
 }
 
-const referenceVectors = {
-  x2: new Vector3(1, 0, 0),
-  x1: new Vector3(-1, 0, 0),
-  y2: new Vector3(0, 1, 0),
-  y1: new Vector3(0, -1, 0),
-  z2: new Vector3(0, 0, 1),
-  z1: new Vector3(0, 0, -1),
-};
-
-function clipping(isEnabled) {
-  // prevents clipping plane rendering when no models are loaded
-  if (models.length == 0) return;
-
-  const meshes = [];
-  getMeshes();
-
-  if (!isEnabled) {
-    updateModelsMaterials(false);
-    removePlanes();
-    return;
-  }
-
-  if (visualPlanes.length > 0) {
-    resetPlanes();
-    updateModelsMaterials(true);
-    return;
-  }
-
-  const boundingBox = getBoundingBox();
-
-  // Initialize variables for plane creation
-  // get box's min and max vectors
-  const vMin = boundingBox.min;
-  const vMax = boundingBox.max;
-  bufferEdgeVectors(vMin);
-  bufferEdgeVectors(vMax);
-
-  function bufferEdgeVectors(vector) {
-    for (const axle in vector) {
-      vector[axle] = vector[axle] > 0 ? vector[axle] + 1 : vector[axle] - 1;
-    }
-  }
-
-  setEdgePositions(vMin, vMax);
-
-  // Get plane max size
-  const boundingBoxSize = new Vector3();
-  boundingBox.getSize(boundingBoxSize);
-
-  const boxCenter = new Vector3();
-  boundingBox.getCenter(boxCenter);
-  center.copy(boxCenter);
-
-  buildWireframe();
-  function buildWireframe() {
-    const size = {
-      x: vMax.x - vMin.x,
-      y: vMax.y - vMin.y,
-      z: vMax.z - vMin.z,
-    };
-    const boxGeometry = new BoxGeometry(size.x, size.y, size.z);
-    const wireframeGeometry = new EdgesGeometry(boxGeometry);
-    const wireframeMaterial = materials.wireframe.clone();
-    const wireframe = new LineSegments(
-      wireframeGeometry,
-      wireframeMaterial
-    );
-    for (const axle in boxCenter) {
-      wireframe.position[axle] = boxCenter[axle];
-    }
-    addWireframe(wireframe);
-    scene.add(wireframe);
-  }
-
-  for (const key in referenceVectors) {
-    const vNormal = referenceVectors[key];
-    // preset for x1 plane
-    let width = boundingBoxSize.z;
-    let height = boundingBoxSize.y;
-    let position = vMin.x;
-    let angle = "90º";
-    let vAxle = referenceVectors.y2;
-    let invertConstant = true;
-    // assigns the correct vars for each case
-    if (vNormal.x > 0) ; else if (vNormal.x < 0) {
-      position = vMax.x;
-      vAxle = referenceVectors.y2;
-      angle = "-90º";
-      invertConstant = false;
-    } else if (vNormal.y > 0) {
-      position = vMin.y;
-      vAxle = referenceVectors.x2;
-      width = boundingBoxSize.x;
-      height = boundingBoxSize.z;
-    } else if (vNormal.y < 0) {
-      position = vMax.y;
-      vAxle = referenceVectors.x2;
-      angle = "-90º";
-      width = boundingBoxSize.x;
-      height = boundingBoxSize.z;
-      invertConstant = false;
-    } else if (vNormal.z > 0) {
-      position = vMin.z;
-      vAxle = referenceVectors.z2;
-      width = boundingBoxSize.y;
-      height = boundingBoxSize.x;
-    } else if (vNormal.z < 0) {
-      position = vMax.z;
-      vAxle = referenceVectors.z2;
-      angle = "-90º";
-      width = boundingBoxSize.y;
-      height = boundingBoxSize.x;
-      invertConstant = false;
-    }
-    angle = angle == "90º" ? MathUtils.degToRad(90) : MathUtils.degToRad(270);
-
-    buildPlane(vNormal, position, vAxle, angle, width, height, invertConstant);
-  }
-
-  // #region Axle plane helpers (debug)
-  // // Axle planes, for debug
-  //
-  // const planeXY = new THREE.Mesh(planeGeom, planeMat);
-  // const planeXZ = new THREE.Mesh(planeGeom, planeMat);
-  // const planeYZ = new THREE.Mesh(planeGeom, planeMat);
-
-  // // Default plane already occupies XY plane
-  // planeXY.rotation.set(0, 0, 0);
-  // planeXY.scale.addScalar(100);
-  // planeXY.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
-  // SceneStore.scene.add(planeXY);
-
-  // // Rotate around x-axis to occupy XZ plane
-  // planeXZ.rotation.set(Math.PI / 2, 0, 0);
-  // planeXZ.scale.addScalar(100);
-  // planeXZ.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
-  // SceneStore.scene.add(planeXZ);
-
-  // // Rotate around y-axis to occupy YZ plane
-  // planeYZ.rotation.set(0, Math.PI / 2, 0);
-  // planeYZ.scale.addScalar(100);
-  // planeYZ.material.clippingPlanes = ClippingPlanesStore.clippingPlanes;
-  // SceneStore.scene.add(planeYZ);
-  //
-  //
-  // #endregion
-
-  updateModelsMaterials(true);
-
-  // #region Auxiliary functions in scope
-
-  function getMeshes() {
-    for (let idx = 0; idx < models.length; idx++) {
-      const modelInstance = models[idx];
-      meshes.push(modelInstance.model);
-    }
-  }
-
-  /**
-   * Renders a bounding box for each model and calculates a container box that fits all bounding boxes inside.
-   *
-   * This container is the starting point to render the planes
-   */
-  function getBoundingBox() {
-    // cycles each model's min and max vectors and computes the lowest values for minVector and the highest values for maxVector
-    const minVector = new Vector3();
-    const maxVector = new Vector3();
-    for (let idx = 0; idx < meshes.length; idx++) {
-      const mesh = meshes[idx];
-      const boundingBox = new BoxHelper(mesh, 0xff0000);
-      const box = new Box3();
-      box.setFromObject(boundingBox);
-      // if first model, just copies values
-      if (idx == 0) {
-        minVector.copy(box.min);
-        maxVector.copy(box.max);
-        continue;
-      }
-      // if not, calculates which axle value needs to be replaced
-      for (const key in minVector) {
-        if (minVector[key] > box.min[key]) minVector[key] = box.min[key];
-      }
-      for (const key in maxVector) {
-        if (maxVector[key] < box.max[key]) maxVector[key] = box.max[key];
-      }
-    }
-
-    const box3 = new Box3(minVector, maxVector);
-
-    return box3;
-    //#endregion render box in scene - comment return for it
-  }
-
-  function buildPlane(
-    vNormal,
-    position,
-    vAxle,
-    angle,
-    width,
-    height,
-    invertConstant
-  ) {
-    // position = position * 2 / 3
-
-    const planeMaterial = materials.transparent.clone();
-
-    // visual plane
-    const visualPlane = new Mesh(
-      new PlaneGeometry(width, height),
-      planeMaterial
-    );
-
-    visualPlane.position.copy(boxCenter);
-
-    // cycles axles in position
-    for (const key in visualPlane.position) {
-      if (vNormal[key] !== 0) visualPlane.position[key] = position;
-    }
-    visualPlane.rotateOnWorldAxis(vAxle, angle);
-
-    scene.add(visualPlane);
-
-    // cutting plane
-    // Align movement with plane normal
-    const constant = invertConstant ? position * -1 : position;
-    const cuttingPlane = new Plane(vNormal, constant);
-
-    // Add normal vector and visual and clipping planes to the store
-    addClippingPlane(visualPlane, cuttingPlane, vNormal);
-  }
-
-  function updateModelsMaterials(isClipping) {
-    if (!isClipping) {
-      assignClippingPlanesToModels([]);
-      return;
-    }
-
-    assignClippingPlanesToModels(clippingPlanes);
-    assignClippingPlanesToEachPlane();
-
-    function assignClippingPlanesToModels(planes) {
-      // assign each cutting plane as a clipping plane of all models
-      for (let idx = 0; idx < meshes.length; idx++) {
-        const mesh = meshes[idx];
-        for (const subMat in mesh.material) {
-          mesh.material[subMat].clippingPlanes = planes;
-        }
-      }
-    }
-
-    function assignClippingPlanesToEachPlane() {
-      for (let idx = 0; idx < visualPlanes.length; idx++) {
-        let clippingPlanes$1 = [];
-        const vP = visualPlanes[idx];
-        for (
-          let idx2 = 0;
-          idx2 < clippingPlanes.length;
-          idx2++
-        ) {
-          const cP = clippingPlanes[idx2];
-          if (idx == idx2) continue;
-          clippingPlanes$1.push(cP);
-        }
-        vP.material.clippingPlanes = clippingPlanes$1;
-      }
-    }
-  }
-
-  function removePlanes() {
-    hide();
-  }
-
-  function resetPlanes() {
-    reset();
-  }
-
-  // #endregion Auxiliary functions in scope
-}
-
- /**
-   * 
-   * @param {*} positions {vMin, vMax}
-   */
- function updatePlanesPositions() {
-  const positions = {
-    vMin: edgePositions.currentMin,
-    vMax: edgePositions.currentMax
-  };
-  const visualPlanes$1 = visualPlanes;
-  const cuttingPlanes = clippingPlanes;
-  const normals$1 = normals;
-  
-  edgePositions.currentMin = positions.vMin.clone();
-  edgePositions.currentMax = positions.vMax.clone();
-
-  for (let idx = 0; idx < visualPlanes$1.length; idx++) {
-    const visualPlane = visualPlanes$1[idx];
-    const cuttingPlane = cuttingPlanes[idx];
-    const normal = normals$1[idx];
-
-    const axleOfMovement = normal.y !== 0 ? "y" : normal.x !== 0 ? "x" : "z";
-
-    const edgeVector = normal[axleOfMovement] > 0 ? "vMin" : "vMax";
-
-    visualPlane.position[axleOfMovement] = positions[edgeVector][axleOfMovement];
-
-    const newConstant =
-      visualPlane.position[axleOfMovement] * normal[axleOfMovement] * -1;
-    cuttingPlane.constant = newConstant;
-  }
-
-}
-
 /**
  *
  * @param {NavbarItem} navItem
  * @returns
  */
-function build$3(navItem) {
+function build$4(navItem) {
   document.addEventListener("openClippingPlanes", (e) => {
     navItem.isActive = true;
     navItem.load();
@@ -98096,7 +98631,7 @@ function build$3(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function load$3(navItem) {
+function load$4(navItem) {
   userInteractions.clippingPlanes = true;
   clipping(true);
 }
@@ -98111,523 +98646,12 @@ function unload$2(navItem) {
   clipping(false);
 }
 
-function render$7() {
-  const headerProps = {
-    title: "Saving view",
-    subtitle: "Creating new saved perspective",
-    icon: icons.savedViews,
-  };
-
-  //
-  // Popup element
-  const popup = render$g(headerProps);
-
-  const container = popup.getElementsByClassName("popup-header-content")[0];
-
-  container.innerHTML = `
-    <form class="styling-form">
-      <label for="note" class="styling-form-label">Title</label>
-      <input type="text" id="saved-view-form-note-input" class="styling-form-input" name="note">
-      <span id="styling-form-warning" class="styling-form-warning hidden"></span>
-      <input type="submit" value="Save" class="styling-form-submit">
-    </form>
-  `;
-
-  handleEvents();
-
-  return popup;
-
-  //
-  // Aux functions in scope
-  //
-  function handleEvents() {
-    const form = container.getElementsByTagName("form")[0];
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const noteInput = document.getElementById("saved-view-form-note-input");
-      const note = noteInput.value;
-
-      // fields incorrectly filled
-      if (!note) {
-        errorName(true);
-        return;
-      }
-
-      // fields filled
-      const viewsNamesUsed = savedViews.map((x) => x.note);
-      const isNameValid = viewsNamesUsed.indexOf(note) == -1;
-
-      if (!isNameValid) {
-        errorName(false);
-        return;
-      }
-
-      saveView(note);
-
-      popup.remove();
-
-      //
-      // Aux functions in scope
-      //
-      function errorName(isEmpty) {
-        noteInput.classList.remove("error");
-        noteInput.classList.add("error");
-        noteInput.addEventListener("focus", classing);
-
-        const message = isEmpty
-          ? "Please input a title"
-          : "There's already a saved view with the same title!";
-
-        errorMessage(message);
-
-        function classing() {
-          noteInput.classList.remove("error");
-          noteInput.removeEventListener("focus", classing);
-        }
-      }
-
-      function errorMessage(message) {
-        const errorEl = container.getElementsByClassName(
-          "styling-form-warning"
-        )[0];
-        errorEl.innerHTML = "";
-        errorEl.classList.remove("hidden");
-        errorEl.textContent = message;
-      }
-    });
-
-    popup.addEventListener("toggle", () => {
-      popup.remove();
-    });
-  }
-}
-
-function saveView(note) {
-  const cameraData = getCameraData();
-  if (visualPlanes.length == 0) {
-    // build clipping planes
-    clipping(true);
-    // disable their render
-    clipping(false);
-  }
-  const clippingData = {
-    min: edgePositions.currentMin.clone(),
-    max: edgePositions.currentMax.clone(),
-  };
-  const renderVisibilityData = JSON.parse(JSON.stringify(getVisibilityByIds()));
-  const hiddenIds = {};
-  // Cycle models
-  for (const modelIdx in renderVisibilityData) {
-    if (Object.hasOwnProperty.call(renderVisibilityData, modelIdx)) {
-      const modelVisibilityData = renderVisibilityData[modelIdx];
-      hiddenIds[modelIdx] = [];
-      // Cycle objects in model
-      for (const expressId in modelVisibilityData) {
-        if (Object.hasOwnProperty.call(modelVisibilityData, expressId)) {
-          // If object is hidden, push its expressId to hiddensIds 
-          const status = modelVisibilityData[expressId];
-          if(!status) hiddenIds[modelIdx].push(expressId);
-        }
-      }
-    }
-  }
-  const savedView = new SavedView(cameraData, clippingData, hiddenIds);
-  savedView.note = note;
-  addSavedView(savedView);
-}
-
-function renderAllObjects() {
-  for (let modelIdx = 0; modelIdx < models.length; modelIdx++) {
-    const model = models[modelIdx];
-    // render all objects
-    const allObjectIDs = model.getAllIDs();
-
-    addIdsToVisible(modelIdx, allObjectIDs);
-    addToSubset(modelIdx, allObjectIDs);
-  }
-}
-
-function loadView(id) {
-  if (savedViews.length == 0) return;
-
-  const savedView = savedViews.find((x) => x.id == id);
-
-  if (!savedView) {
-    console.error("invalid saved view");
-    return;
-  }
-
-  setActiveId(id);
-
-  // set camera
-  setCameraData(savedView);
-  edgePositions.currentMin = savedView.clipping.min.clone();
-  edgePositions.currentMax = savedView.clipping.max.clone();
-  if (visualPlanes.length > 0) updatePlanesPositions();
-
-  // set objects
-  const hiddenIdsByModel = savedView.hiddenIds;
-
-  // render all objects
-  renderAllObjects();
-
-  for (const modelIdx in hiddenIdsByModel) {
-    if (!Object.hasOwnProperty.call(hiddenIdsByModel, modelIdx)) continue;
-
-    // remove hidden objects from scene
-    const hiddenIds = hiddenIdsByModel[modelIdx];
-
-    removeIdsFromVisible(modelIdx, hiddenIds);
-    removeFromSubset(modelIdx, hiddenIds);
-  }
-}
-
-function resetView() {
-  removeActiveId();
-
-  edgePositions.currentMin =
-    edgePositions.min.clone();
-  edgePositions.currentMax =
-    edgePositions.max.clone();
-  if (visualPlanes.length > 0) updatePlanesPositions();
-}
-
-/**
- *
- * @param {*} popupProps title, subtitle, message, affirmativeText, negativeText
- */
-function render$6(props, isWarning) {
-  const { title, subtitle } = props;
-  const icon = icons.helper;
-
-  const popupProps = {
-    title,
-    subtitle,
-    icon,
-  };
-
-  const classes = {
-    affirmative: !isWarning ? "confirm" : "reject",
-    negative: !isWarning ? "reject" : "cancel",
-  };
-
-  const popup = render$g(popupProps);
-  popup.classList.remove("hidden");
-
-  const container = popup.getElementsByClassName("popup-header-content")[0];
-
-  container.innerHTML = `
-    <div class="confirmation-popup-wrapper">
-        <span>${props.message}</span>
-        <div class="${classes.affirmative}">${props.affirmativeText}</div>
-        <div class="${classes.negative}">${props.negativeText}</div>
-    </div>
-  `;
-
-  handleEvents();
-
-  return popup;
-
-  function handleEvents() {
-    popup.addEventListener("toggle", () => {
-      popup.remove();
-    });
-
-    container.addEventListener("click", (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-    });
-
-    const btnAffirmative = container.getElementsByClassName(
-      classes.affirmative
-    )[0];
-    const btnNegative = container.getElementsByClassName(classes.negative)[0];
-    btnAffirmative.addEventListener("click", (e) => {
-      emitActionToParent(true);
-    });
-
-    btnNegative.addEventListener("click", (e) => {
-      emitActionToParent(false);
-    });
-
-    function emitActionToParent(result) {
-      emitCustomEventOnElement(popup, "confirmationResult", { result });
-    }
-  }
-}
-
-/**
- * Dimensions: 30 x 25 px
- *
- * Call "addOptionToMenuExtras" to add an option to the menu
- * @returns HTML element
- */
-function render$5() {
-  // render base UI
-  const element = createElement("div", {
-    classes: ["styling-menu-extras"],
-  });
-
-  const icon = buildIcon(icons.dots);
-  icon.title = "More options";
-  element.appendChild(icon);
-
-  const list = createElement("ul");
-  list.classList.add("hidden", "styling-menu-extras-list");
-  element.appendChild(list);
-
-  handleEvents();
-
-  function handleEvents() {
-
-    icon.addEventListener("click", (e) => {
-      list.classList.toggle("hidden");
-      list.style.left = "0px";
-      list.style.top = "0px";
-      const menuBoundingData = element.getBoundingClientRect();
-      const listBoundingData = list.getBoundingClientRect();
-      const newPosition = {
-        x: menuBoundingData.right - listBoundingData.left,
-        y: menuBoundingData.bottom - listBoundingData.top,
-      };
-      list.style.left = newPosition.x + "px";
-      list.style.top = newPosition.y + "px";
-
-      element.classList.toggle("active");
-    });
-
-    list.addEventListener("click", () => {
-      icon.click();
-    });
-  }
-
-  return element;
-}
-
-/**
- *
- * @param {*} element Menu element
- * @param {*} options key: {text, idx} -> idx will be filled
- */
-function renderMultipleOptions(element, options) {
-  for (const key in options) {
-    if (Object.hasOwnProperty.call(options, key)) {
-      const option = options[key];
-      option.idx = renderOption(element, option.text);
-    }
-  }
-}
-
-/**
- * On selection, a event "optionSelected" is dispatched on the element, where the detail has a idx corresponding to which item was selected
- * @param {*} element Menu element
- * @param {*} text String to show user
- * @returns List item index (idx)
- */
-function renderOption(element, text) {
-  // Capitalize first letter
-  const textContent = text.charAt(0).toUpperCase() + text.slice(1);
-  // Create list item
-  const li = createElement("li", {
-    textContent,
-  });
-  const list = element.getElementsByTagName("ul")[0];
-  list.appendChild(li);
-  // Handle events
-  let idx = list.children.length;
-  li.addEventListener("click", (e) => {
-    emitCustomEventOnElement(element, "optionSelected", { idx });
-  });
-  // Reference for parent
-  return idx;
-}
-
-function renderSavedView(savedView, parent) {
-  const element = createElement("li", {
-    classes: ["saved-list-item"],
-  });
-
-  // const deleteEl = buildIcon(icons.trash);
-  // deleteEl.classList.add("saved-list-item-icon");
-  // element.appendChild(deleteEl);
-
-  const text = createElement("span", {
-    classes: ["saved-list-item-text"],
-    textContent: savedView.note,
-  });
-  element.appendChild(text);
-
-  const options = {
-    delete: {
-      text: "Delete",
-      idx: undefined,
-    },
-    dummy: {
-      text: "A very nice option indeed",
-      idx: undefined,
-    },
-  };
-  const menuExtras = createOptionsMenu$1(options);
-  element.appendChild(menuExtras);
-
-  handleEvents();
-
-  return element;
-
-  //
-  // Aux scoped functions
-  //
-  function handleEvents() {
-    // Delete saved view
-    // deleteEl.addEventListener("click", (e) => {
-    //   e.stopPropagation();
-    //   removeSavedView(savedView.id);
-    //   element.remove();
-    // });
-
-    menuExtras.addEventListener("optionSelected", (e) => {
-      const idx = e.detail.idx;
-      switch (idx) {
-        case options.delete.idx: {
-          popupConfirmationDeleteSavedView();
-          break;
-        }
-
-        default:
-          console.error(`Event handler for index ${idx} is not defined!`);
-          break;
-      }
-    });
-
-    let isEnabled = false;
-    // Show saved view
-    element.addEventListener("click", () => {
-      isEnabled = !isEnabled;
-      if (isEnabled) loadView(savedView.id);
-      else resetView();
-    });
-
-    // update active status
-    document.addEventListener("savedViewChanged", () => {
-      const activeId = getActiveId();
-      isEnabled = savedView.id == activeId;
-      if (isEnabled) element.classList.add("anim-gradient");
-      else element.classList.remove("anim-gradient");
-    });
-    // check if removed. When true, removes self
-    document.addEventListener("removedSavedView", (e) => {
-      const removedId = e.detail.removedId;
-      if (savedView.id == removedId) element.remove();
-    });
-
-    function popupConfirmationDeleteSavedView() {
-      const popupProps = {
-        title: "Confirmation",
-        subtitle: "",
-        message: `Are you sure you want to remove the saved view "${savedView.note}"?`,
-        affirmativeText: "Remove",
-        negativeText: "Cancel",
-      };
-
-      const popup = render$6(popupProps, true);
-
-      document.body.appendChild(popup);
-
-      popup.addEventListener("confirmationResult", (e) => {
-        const result = e.detail.result;
-        if (result) deleteSavedView();
-        popup.remove();
-      });
-
-      function deleteSavedView(e) {
-        removeSavedView(savedView.id);
-        element.remove();
-      }
-    }
-  }
-}
-
-function createOptionsMenu$1(options) {
-  const menuExtras = render$5();
-
-  const eventsToPreventPropagation = ["click"];
-  preventPropagation(menuExtras, eventsToPreventPropagation);
-
-  renderMultipleOptions(menuExtras, options);
-
-  return menuExtras;
-}
-
-function renderSavedViews() {
-
-  // content
-  const contentEl = createElement("div", {
-    classes: ["saved-wrapper"],
-  });
-  contentEl.innerHTML = `
-    <div class="saved-toolbar"></div>
-    <ul class="saved-list" id="saved-views-list"></ul>
-  `;
-
-  // toolbar
-  const toolbar = contentEl.getElementsByClassName("saved-toolbar")[0];
-  const toolbarSpan = createElement("span", {
-    classes: ["saved-add-text"],
-    textContent: "Save new view",
-  });
-  toolbar.appendChild(toolbarSpan);
-
-  const toolbarIcon = buildIcon(icons.plus);
-  toolbarIcon.classList.add("saved-add", "spatial-tree-icon");
-  toolbar.appendChild(toolbarIcon);
-
-  // list
-  const list = contentEl.getElementsByClassName("saved-list")[0];
-  // add loaded views
-  for (let idx = 0; idx < savedViews.length; idx++) {
-    const savedView = savedViews[idx];
-    renderListItem(savedView);
-  }
-  // add new views created
-  document.addEventListener("newSavedView", (e) => {
-    const savedView = e.detail.savedView;
-    renderListItem(savedView);
-  });
-
-  function renderListItem(savedView) {
-    const savedViewEl = renderSavedView(savedView);
-    list.appendChild(savedViewEl);
-  }
-
-  // events
-  handleEvents();
-
-  return contentEl;
-
-  function handleEvents() {
-    toolbarIcon.addEventListener("click", (e) => {
-      e.stopPropagation();
-
-      openSavedViewForm();
-    });
-  }
-}
-
-function openSavedViewForm() {
-  const form = render$7();
-  form.classList.remove("hidden");
-  document.body.appendChild(form);
-}
-
 /**
  *
  * @param {NavbarItem} navItem
  * @returns
  */
-function build$2(navItem) {
+function build$3(navItem) {
   const element = renderSavedViews();
 
   loadCSS("./src/assets/css/savedViews.css");
@@ -98645,7 +98669,7 @@ function build$2(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function load$2(navItem) {
+function load$3(navItem) {
   userInteractions.savedViews = true;
   if(!userInteractions.clippingPlanes) {
     const clippingPlanesRef = navbarItems["clippingPlanes"];
@@ -98917,20 +98941,18 @@ function renderAnnotation(category, annotation, parent) {
   const options = {
     delete: {
       text: "Delete",
-      idx: undefined,
+      action: () => popupConfirmationDeleteAnnotation(),
     },
-    dummy: {
-      text: "Do things",
-      idx: undefined,
-    },
-    another: {
-      text: "Different thing being done",
-      idx: undefined,
+    view: {
+      text: "Go to view",
+      action: () => loadView(annotation.viewId),
     },
   };
   const menuExtras = createOptionsMenu(options);
   element.appendChild(menuExtras);
 
+  let isShowing = false;
+  const label2D = render2DText(annotation.position, category.color, annotation.content);
   handleEvents();
 
   return element;
@@ -98939,97 +98961,68 @@ function renderAnnotation(category, annotation, parent) {
   // Aux scoped functions
   //
   function handleEvents() {
-    // Delete annotation view
-
-    // deleteEl.addEventListener("click", (e) => {
-    //   e.stopPropagation();
-    //   removeAnnotation(annotation.id);
-    //   hide();
-    //   element.remove();
-    // });
-
-    menuExtras.addEventListener("optionSelected", (e) => {
-      const idx = e.detail.idx;
-      switch (idx) {
-        case options.delete.idx: {
-          popupConfirmationDeleteAnnotation();
-          break;
-        }
-
-        default:
-          console.error(`Event handler for index ${idx} is not defined!`);
-          break;
-      }
-    });
-
-    let isShowing = false;
     // Show annotation view
     element.addEventListener("click", (e) => {
       if (isShowing) hide(true);
       else show(true);
     });
 
-    const label2D = render2DText(
-      annotation.position,
-      category.color,
-      annotation.content
-    );
     // highlighting
     parent.addEventListener("selectAnnotations", show);
     parent.addEventListener("deselectAnnotations", hide);
     element.addEventListener("forceRenderAnnotation", (e) => {
       show(true);
     });
+  }
 
-    function show(isClick) {
-      if (!userInteractions.annotations) return;
-      isShowing = true;
-      add2DObjectToScene(label2D);
-      element.classList.add("anim-gradient");
-      if (isClick) emitEventOnElement(parent, "childEnabled");
-    }
+  function popupConfirmationDeleteAnnotation() {
+    const popupProps = {
+      title: "Confirmation",
+      subtitle: "",
+      message: `Are you sure you want to remove the annotation: "[${category.reference}] ${annotation.content}"?`,
+      affirmativeText: "Remove",
+      negativeText: "Cancel",
+    };
 
-    function hide(isClick) {
-      isShowing = false;
-      remove2DObjectFromScene(label2D);
-      element.classList.remove("anim-gradient");
-      if (isClick) emitEventOnElement(parent, "childHidden");
-    }
+    const popup = render$b(popupProps, true);
 
-    function popupConfirmationDeleteAnnotation() {
-      const popupProps = {
-        title: "Confirmation",
-        subtitle: "",
-        message: `Are you sure you want to remove the annotation: "[${category.reference}] ${annotation.content}"?`,
-        affirmativeText: "Remove",
-        negativeText: "Cancel",
-      };
+    document.body.appendChild(popup);
 
-      const popup = render$6(popupProps, true);
+    popup.addEventListener("confirmationResult", (e) => {
+      const result = e.detail.result;
+      if (result) deleteAnnotation();
+      popup.remove();
+    });
+  }
 
-      document.body.appendChild(popup);
+  function deleteAnnotation() {
+    removeAnnotation(annotation.id);
+    hide(true);
+    element.remove();
+  }
 
-      popup.addEventListener("confirmationResult", (e) => {
-        const result = e.detail.result;
-        if (result) deleteAnnotation();
-        popup.remove();
-      });
-    }
+  function show(isClick) {
+    if (!userInteractions.annotations) return;
+    isShowing = true;
+    add2DObjectToScene(label2D);
+    element.classList.add("anim-gradient");
+    if (isClick) emitEventOnElement(parent, "childEnabled");
+  }
 
-    function deleteAnnotation() {
-      removeAnnotation(annotation.id);
-      hide();
-      element.remove();
-    }
+  function hide(isClick) {
+    isShowing = false;
+    remove2DObjectFromScene(label2D);
+    element.classList.remove("anim-gradient");
+    if (isClick) emitEventOnElement(parent, "childHidden");
   }
 }
 
 function createOptionsMenu(options) {
-  const menuExtras = render$5();
+  const menuExtras = render$a();
 
   const eventsToPreventPropagation = ["click"];
   preventPropagation(menuExtras, eventsToPreventPropagation);
-  
+
   renderMultipleOptions(menuExtras, options);
 
   return menuExtras;
@@ -99458,7 +99451,7 @@ function renderAnnotations() {
  * @param {NavbarItem} navItem
  * @returns
  */
-function build$1(navItem) {
+function build$2(navItem) {
   const element = renderAnnotations();
 
   loadCSS("./src/assets/css/annotations.css");
@@ -99476,7 +99469,7 @@ function build$1(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function load$1(navItem) {
+function load$2(navItem) {
   userInteractions.annotations = true;
   emitGlobalEvent("enableAnnotations");
 }
@@ -99587,7 +99580,6 @@ async function getNodePropertyName(node) {
 
 async function processNodeEvents(titleEl, icons, node) {
   const objectsData = getAllObjectsDataByModel(node);
-  console.log("objectsData", objectsData);
   handleEvents(titleEl, icons, objectsData, node);
 }
 
@@ -99965,8 +99957,6 @@ async function render$4() {
         return acc;
       }, []);
 
-      console.log("tree", tree);
-
       await buildTree(element, tree);
 
       worker.terminate();
@@ -100018,8 +100008,6 @@ function render$3() {
       };
       worker.onmessage = async (e) => {
         const tree = e.data;
-
-        console.log("objectsByLevelByCategory", tree);
 
         emitGlobalEvent("loadingComplete");
 
@@ -100074,7 +100062,7 @@ const tabControls = [
   { title: "Discipline", ref: 3, status: false, content: undefined, buildFunction: render$1 },
 ];
 
-async function build(item) {
+async function build$1(item) {
   loadCSS("src/assets/css/spatialTree.css");
 
   const contentEl = createElement("div", {
@@ -100123,7 +100111,7 @@ async function build(item) {
 }
 
 let firstLoad = true;
-async function load(item) {
+async function load$1(item) {
   if (!firstLoad) return;
   firstLoad = false;
   const activeTab = tabControls.find((x) => x.status);
@@ -100139,6 +100127,138 @@ async function updateContent(item, tabData) {
   element.appendChild(tabData.content);
 }
 
+async function getPsets(modelIdx, expressId) {
+  const model = models[modelIdx];
+  const promises = [];
+  const _psets = await model.loader.ifcManager.getPropertySets(0, expressId);
+  for (let idx = 0; idx < _psets.length; idx++) {
+    const pset = _psets[idx];
+    if (!pset.HasProperties) continue;
+    pset.props = [];
+
+    // get pset props as a promise - performance increase
+    promises.push(getPropsFromPset(model, pset, idx));
+  }
+
+  // Ensure all promises are resolved, then add the recovered props to the corresponding pset
+  const _psetsData = await Promise.all(promises);
+  const psetsData = _psetsData.map(psetData => {
+    _psets[psetData.ref].props = psetData.props;
+    return _psets[psetData.ref];
+  });
+
+  return psetsData;
+}
+
+async function getPropsFromPset(model, pset, ref) {
+  const promises = [];
+  for (let idx = 0; idx < pset.HasProperties.length; idx++) {
+    const propRef = pset.HasProperties[idx];
+    if (!propRef.value) continue;
+    // push promise
+    promises.push(model.loader.ifcManager.getItemProperties(0, propRef.value));
+  }
+  // use promises.all instead of just awaiting for "getItemProperties" to improve performance
+  return Promise.all(promises).then((props) => {
+    return { ref, props };
+  });
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build(navItem) {
+  const element = initializeProperties();
+
+  loadCSS("./src/assets/css/properties.css");
+
+  document.addEventListener("openProperties", (e) => {
+    navItem.isActive = true;
+    featureRenderingHandler$1(navItem);
+  });
+
+  return element;
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load(navItem) {
+  const listEl = navItem.getContentElement().firstChild;
+  updateData(listEl);
+}
+
+function initializeProperties() {
+  const listEl = createElement("ul", {
+    classes: ["properties-list"],
+  });
+  document.addEventListener("selectedChanged", () => {
+    updateData(listEl);
+  });
+  return listEl;
+}
+
+function updateData(listEl) {
+  const selected = vars.selected;
+
+  if (!selected.isValid() || selected.isGroupSelection()) {
+    reset(listEl);
+    return;
+  }
+
+  emitGlobalEvent("loading");
+
+  const modelIdx = parseInt(Object.keys(selected.objects)[0]);
+  const expressID = selected.objects[modelIdx][0];
+
+  setTimeout(async () => {
+    const psets = await getPsets(modelIdx, expressID);
+
+    const objectToRender = {
+      modelIdx,
+      expressID,
+      props: selected.props,
+      psets: psets,
+    };
+
+    console.log("objectToRender", objectToRender);
+
+    listEl.innerHTML = renderProperties().outerHTML;
+
+    emitGlobalEvent("loadingComplete");
+  }, 1);
+}
+
+function renderProperties(listEl, objectToRender) {
+  // temporary debug
+  return createElement("li", {
+    textContent: "data",
+  });
+
+  // Render top priority properties
+
+  // Render other properties
+
+  // Render other psets
+
+  // let category = getCuratedCategoryNameById(objectToRender.props.type);
+}
+
+function reset(listEl) {
+  listEl.innerHTML = `${buildHeader("Select an object").outerHTML}`;
+}
+
+function buildHeader(title) {
+  return createElement("li", {
+    classes: ["properties-header"],
+    textContent: title,
+  });
+}
+
 async function startFeatures() {
   //// Temporary, for testing
   const buildTemp = (item) => createElement("span", { textContent: item.title });
@@ -100146,11 +100266,11 @@ async function startFeatures() {
   // Window (Selection tree, Properties)
   const window = new NavbarItem("Window", buildTemp);
   //// subitems
-  const selectionTree = new NavbarItem("Selection Tree", build, load);
+  const selectionTree = new NavbarItem("Selection Tree", build$1, load$1);
   selectionTree.sidebarPosition = "l1";
   selectionTree.hasTabs = true;
   selectionTree.loadAfterDOMRender = true;
-  const properties = new NavbarItem("Properties", buildTemp);
+  const properties = new NavbarItem("Properties", build, load);
   properties.sidebarPosition = "l2";
   // append subitems
   window.subitems.push(selectionTree, properties);
@@ -100159,16 +100279,16 @@ async function startFeatures() {
   // Visibility
   const visibility = new NavbarItem("Visibility", buildTemp);
   //// subitems
-  const views = new NavbarItem("Views", build$2, load$2, unload$1);
+  const views = new NavbarItem("Views", build$3, load$3, unload$1);
   views.sidebarPosition = "r1";
-  const annotations = new NavbarItem("Annotations", build$1, load$1, unload);
+  const annotations = new NavbarItem("Annotations", build$2, load$2, unload);
   annotations.sidebarPosition = "r2";
   // append subitems
   visibility.subitems.push(views, annotations);
   navbarItems["visibility"] = visibility;
 
   // Clipping planes
-  const clippingPlanes = new NavbarItem("Clipping planes", build$3, load$3, unload$2);
+  const clippingPlanes = new NavbarItem("Clipping planes", build$4, load$4, unload$2);
   navbarItems["clippingPlanes"] = clippingPlanes;
 
   // Measure

@@ -30,8 +30,6 @@ async function render() {
         return acc;
       }, []);
 
-      console.log("tree", tree);
-
       await buildTree(element, tree);
 
       worker.terminate();

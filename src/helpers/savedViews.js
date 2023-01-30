@@ -66,4 +66,4 @@ function openSavedViewForm() {
   document.body.appendChild(form);
 }
 
-export { renderSavedViews };
+export { renderSavedViews, openSavedViewForm };

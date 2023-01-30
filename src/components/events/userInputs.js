@@ -1,15 +1,7 @@
 import { emitGlobalEvent } from "../../helpers/emitEvent";
-import {
-  pickObject,
-  pickClippingPlane,
-  pickCrossPlane,
-} from "../../helpers/raytracing";
+import { pickObject, pickClippingPlane, pickCrossPlane } from "../../helpers/raytracing";
 import * as ClippingPlanesStore from "../../stores/clippingPlanes";
-import {
-  disableFeatureKeys,
-  isUserPressingSpecialKeys,
-  userInteractions,
-} from "../../stores/userInteractions";
+import { disableFeatureKeys, isUserPressingSpecialKeys, userInteractions } from "../../stores/userInteractions";
 import * as Materials from "../../configs/materials";
 import * as SceneStore from "../../stores/scene";
 import * as THREE from "three";
@@ -17,9 +9,10 @@ import { clippingConfigs } from "../../configs/clippingPlanes";
 import { renderContextMenu } from "../contextMenu/contextMenu";
 import { renderContextMenuItem } from "../contextMenu/contextMenuItem";
 import { renderAnnotationForm } from "../annotation/form";
-import { setCameraLookingPoint } from "../../helpers/camera";
+import { setCameraLookingPoint, setCameraLookingWorldCenter } from "../../helpers/camera";
 import * as RaycastStore from "../../stores/raycast";
 import * as SelectedStore from "../../stores/selection.js";
+import { openSavedViewForm } from "../../helpers/savedViews";
 
 let isMouseDragging = false;
 const canvas = document.getElementById("three-canvas");
@@ -46,13 +39,12 @@ export default function startUserInputs() {
       // When mouse is just hovering
       //// and C is active
       if (userInteractions.clippingPlanes && !userInteractions.keyXActive) {
-        console.log('catching planes')
         resetHighlighted(); // prevent visual artifacts
         const isPlaneFound = await pickClippingPlane(event);
         if (!isPlaneFound) resetVisualPlanesColoring();
         else highlightVisualPlane();
-        return
-      } 
+        return;
+      }
       //// and C is inactiveccc
       if (userInteractions.keyXActive) {
         resetVisualPlanesColoring(); // prevent visual artifacts
@@ -69,7 +61,7 @@ export default function startUserInputs() {
       if (
         !ClippingPlanesStore.foundPlane ||
         !userInteractions.clippingPlanes ||
-        userInteractions.keyCActive || 
+        userInteractions.keyCActive ||
         userInteractions.keyXActive
       )
         return;
@@ -113,12 +105,12 @@ export default function startUserInputs() {
           break;
         case "KeyC": {
           userInteractions.keyCActive = !userInteractions.keyCActive;
-          if(userInteractions.keyCActive) disableFeatureKeys();
+          if (userInteractions.keyCActive) disableFeatureKeys();
           resetVisuals();
           break;
         }
         case "KeyX": {
-          if(userInteractions.keyCActive) return;
+          if (userInteractions.keyCActive) return;
           userInteractions.keyXActive = !userInteractions.keyXActive;
           resetVisuals();
           break;
@@ -130,7 +122,7 @@ export default function startUserInputs() {
   });
 }
 
-function resetVisuals(){
+function resetVisuals() {
   resetVisualPlanesColoring();
   resetHighlighted();
 }
@@ -148,7 +140,7 @@ function resetVisualPlanesColoring() {
   _uuid = undefined;
 }
 
-function resetHighlighted(){
+function resetHighlighted() {
   RaycastStore.resetFound();
   SelectedStore.resetHighlightedProperties();
 }
@@ -175,8 +167,7 @@ async function moveClippingPlane(event) {
   // drag plane
   userInteractions.draggingPlane = true;
 
-  const vNormal =
-    ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
+  const vNormal = ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
   const key = vNormal.y !== 0 ? "y" : "x";
   const axleOfMovement = key == "y" ? key : vNormal.x !== 0 ? "x" : "z";
 
@@ -190,10 +181,7 @@ async function moveClippingPlane(event) {
     if (axle == axleOfMovement) continue;
 
     const normal = normals[axle];
-    const crossPlane = new THREE.Plane(
-      normal,
-      ClippingPlanesStore.center[axle]
-    );
+    const crossPlane = new THREE.Plane(normal, ClippingPlanesStore.center[axle]);
     ClippingPlanesStore.crossPlane.planes.push(crossPlane);
 
     // const helper = new THREE.PlaneHelper(crossPlane, 1000, 0x000000);
@@ -213,14 +201,11 @@ function stopMovingClippingPlane(event) {
 
 async function dragClippingPlane(event, isUserInteraction) {
   const visualPlane = ClippingPlanesStore.foundPlane.object;
-  const vNormal =
-    ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
+  const vNormal = ClippingPlanesStore.normals[ClippingPlanesStore.selectedPlaneIdx];
 
   const axleOfMovement = vNormal.y !== 0 ? "y" : vNormal.x !== 0 ? "x" : "z";
 
-  const multiplier = userInteractions.controlActive
-    ? clippingConfigs.multiplier.precision
-    : clippingConfigs.multiplier.normal;
+  const multiplier = userInteractions.controlActive ? clippingConfigs.multiplier.precision : clippingConfigs.multiplier.normal;
   const maximum = clippingConfigs.maxJump;
 
   const endPoint = await pickCrossPlane(event);
@@ -232,9 +217,7 @@ async function dragClippingPlane(event, isUserInteraction) {
   const initialPosition = ClippingPlanesStore.crossPlane.points.start;
   const finalPosition = ClippingPlanesStore.crossPlane.points.end;
 
-  let value =
-    (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) *
-    multiplier;
+  let value = (finalPosition[axleOfMovement] - initialPosition[axleOfMovement]) * multiplier;
   if (value > maximum) value = maximum;
   else if (value < maximum * -1) value = maximum * -1;
 
@@ -243,32 +226,22 @@ async function dragClippingPlane(event, isUserInteraction) {
     y: axleOfMovement == "y" ? value : 0,
     z: axleOfMovement == "z" ? value : 0,
   };
-  const moveVector = new THREE.Vector3(
-    vectorAxles.x,
-    vectorAxles.y,
-    vectorAxles.z
-  );
+  const moveVector = new THREE.Vector3(vectorAxles.x, vectorAxles.y, vectorAxles.z);
 
   visualPlane.position.add(moveVector);
 
   // Checks for plane positioning reaching the minimum or maximum
   const buffer = clippingConfigs.buffer;
-  const absoluteMinPosition =
-    ClippingPlanesStore.edgePositions.min[axleOfMovement];
-  const absoluteMaxPosition =
-    ClippingPlanesStore.edgePositions.max[axleOfMovement];
-  if (absoluteMinPosition > visualPlane.position[axleOfMovement])
-    visualPlane.position[axleOfMovement] = absoluteMinPosition;
+  const absoluteMinPosition = ClippingPlanesStore.edgePositions.min[axleOfMovement];
+  const absoluteMaxPosition = ClippingPlanesStore.edgePositions.max[axleOfMovement];
+  if (absoluteMinPosition > visualPlane.position[axleOfMovement]) visualPlane.position[axleOfMovement] = absoluteMinPosition;
   else if (absoluteMaxPosition < visualPlane.position[axleOfMovement])
     visualPlane.position[axleOfMovement] = absoluteMaxPosition;
 
-  const edgeVectorChanged =
-    vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
-  const edgeVectorOther =
-    edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
+  const edgeVectorChanged = vNormal[axleOfMovement] > 0 ? "currentMin" : "currentMax";
+  const edgeVectorOther = edgeVectorChanged == "currentMin" ? "currentMax" : "currentMin";
 
-  const relativeEdgePosition =
-    ClippingPlanesStore.edgePositions[edgeVectorOther][axleOfMovement];
+  const relativeEdgePosition = ClippingPlanesStore.edgePositions[edgeVectorOther][axleOfMovement];
 
   if (edgeVectorChanged == "currentMax") {
     if (relativeEdgePosition + buffer > visualPlane.position[axleOfMovement]) {
@@ -280,19 +253,14 @@ async function dragClippingPlane(event, isUserInteraction) {
     }
   }
 
-  ClippingPlanesStore.edgePositions[edgeVectorChanged][axleOfMovement] =
-    visualPlane.position[axleOfMovement];
+  ClippingPlanesStore.edgePositions[edgeVectorChanged][axleOfMovement] = visualPlane.position[axleOfMovement];
 
-  const cuttingPlane =
-    ClippingPlanesStore.clippingPlanes[ClippingPlanesStore.selectedPlaneIdx];
+  const cuttingPlane = ClippingPlanesStore.clippingPlanes[ClippingPlanesStore.selectedPlaneIdx];
 
-  const newConstant =
-    visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
+  const newConstant = visualPlane.position[axleOfMovement] * vNormal[axleOfMovement] * -1;
   cuttingPlane.constant = newConstant;
 
-  ClippingPlanesStore.crossPlane.points.start.copy(
-    ClippingPlanesStore.crossPlane.points.end
-  );
+  ClippingPlanesStore.crossPlane.points.start.copy(ClippingPlanesStore.crossPlane.points.end);
 }
 
 //
@@ -339,78 +307,87 @@ window.addEventListener("contextmenu", async (e) => {
   const menuList = document.getElementById("context-menu-list");
 
   // Menu content
-  if (object) {
-    objectContextMenu(object);
-    return;
-  } else freeContextMenu();
+  const config = {
+    options: object ? objectContextOptions() : freeContextOptions(),
+    object,
+  };
+  // Render menu
+  renderMenu(config);
 
   //
   // Aux functions in scope
   //
-  function objectContextMenu(object) {
-    // create annotation
-    const annotationEl = renderContextMenuItem("Create annotation");
-    menuList.appendChild(annotationEl);
-    annotationEl.addEventListener("mousedown", (e) => {
+  function objectContextOptions() {
+    return [
+      {
+        displayText: "Focus camera here",
+        hasSeperator: false,
+        action: (position) => setCameraLookingPoint(position),
+      },
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
+      },
+      {
+        displayText: "Save view",
+        hasSeperator: false,
+        action: (position) => openSavedViewForm(position),
+      },
+      {
+        displayText: "Create annotation",
+        hasSeperator: true,
+        action: (position) => {
+          const form = renderAnnotationForm(position);
+          document.body.appendChild(form);
+        },
+      },
+    ];
+  }
+
+  function freeContextOptions() {
+    return [
+      {
+        displayText: "Focus camera on model center",
+        hasSeperator: true,
+        action: (position) => setCameraLookingWorldCenter(),
+      },
+      {
+        displayText: "Save view",
+        hasSeperator: true,
+        action: (position) => openSavedViewForm(position),
+      },
+    ];
+  }
+
+  function renderMenu(config) {
+    config.options.forEach((option) => {
+      renderOption(menuList, option, config.object);
+    });
+  }
+
+  /**
+   *
+   * @param {HTMLElement} menuList Text to display in the UI
+   * @param {object} option {displayText: string, action: function, hasSeperator: boolean}
+   */
+  function renderOption(menuList, option, object) {
+    const optionEl = renderContextMenuItem(option.displayText, option.hasSeperator);
+    menuList.appendChild(optionEl);
+    optionEl.addEventListener("mousedown", (e) => {
       e.stopPropagation();
-      const position = object.object.point;
-      const form = renderAnnotationForm(position);
-      document.body.appendChild(form);
+
+      // get position and run custom action
+      const position = object ? object.object.point : undefined;
+      option.action(position);
 
       closeMenu();
     });
-    seperatorElement(menuList);
-
-    const cameraPointEl = renderContextMenuItem("Focus camera here");
-    menuList.appendChild(cameraPointEl);
-    cameraPointEl.addEventListener("mousedown", (e) => {
-      e.stopPropagation();
-      const position = object.object.point;
-      setCameraLookingPoint(position);
-
-      closeMenu();
-    });
-    seperatorElement(menuList);
-
-    // testing
-    testerElement(menuList);
-    seperatorElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    seperatorElement(menuList);
-    testerElement(menuList);
-    testerElement(menuList);
-    ////
-  }
-
-  function freeContextMenu() {
-    console.log("outside object");
-  }
-
-  function seperatorElement(menuList) {
-    const seperator = renderContextMenuItem("");
-    menuList.appendChild(seperator);
   }
 });
 
 function toggleCameraControls(isOn) {
   SceneStore.controls.enabled = isOn;
-}
-
-let idx = 0;
-function testerElement(menuList) {
-  const arr = [
-    "Tester",
-    "I'm real",
-    "Dummy",
-    "I'm stuck here!",
-    "Super important tester for sure",
-    "A wizard did this!",
-  ];
-  const element = renderContextMenuItem(arr[idx]);
-  idx = idx == 5 ? 0 : idx + 1;
-  menuList.appendChild(element);
 }
 
 // function renderText() {

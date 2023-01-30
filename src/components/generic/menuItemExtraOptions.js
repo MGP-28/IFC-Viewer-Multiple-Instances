@@ -25,27 +25,53 @@ function render() {
 
   handleEvents();
 
+  let status = false;
+
   function handleEvents() {
+    window.addEventListener("click", (e) => {
+      if (!status) return;
 
-    icon.addEventListener("click", (e) => {
-      list.classList.toggle("hidden");
-      list.style.left = "0px";
-      list.style.top = "0px";
-      const menuBoundingData = element.getBoundingClientRect();
-      const listBoundingData = list.getBoundingClientRect();
-      const newPosition = {
-        x: menuBoundingData.right - listBoundingData.left,
-        y: menuBoundingData.bottom - listBoundingData.top,
-      };
-      list.style.left = newPosition.x + "px";
-      list.style.top = newPosition.y + "px";
+      const elements = [icon, list];
+      if (elements.includes(e.target)) return;
 
-      element.classList.toggle("active");
-    });
-
-    list.addEventListener("click", () => {
       icon.click();
     });
+
+    icon.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      status = !status;
+      toggleStatus(status);
+
+      if (status) updatePosition();
+    });
+
+    list.addEventListener("click", (e) => {
+      e.stopPropagation();
+      icon.click();
+    });
+
+    function updatePosition() {
+      const id = setInterval(() => {
+        if (!status) clearInterval(id);
+
+        list.style.left = "0px";
+        list.style.top = "0px";
+        const menuBoundingData = element.getBoundingClientRect();
+        const listBoundingData = list.getBoundingClientRect();
+        const newPosition = {
+          x: menuBoundingData.right - listBoundingData.left - listBoundingData.width,
+          y: menuBoundingData.bottom - listBoundingData.top,
+        };
+        list.style.left = newPosition.x + "px";
+        list.style.top = newPosition.y + "px";
+      }, 20);
+    }
+  }
+
+  function toggleStatus(status) {
+    list.classList.toggle("hidden", !status);
+    element.classList.toggle("active", status);
   }
 
   return element;
@@ -60,7 +86,7 @@ function renderMultipleOptions(element, options) {
   for (const key in options) {
     if (Object.hasOwnProperty.call(options, key)) {
       const option = options[key];
-      option.idx = renderOption(element, option.text);
+      option.idx = renderOption(element, option);
     }
   }
 }
@@ -71,9 +97,9 @@ function renderMultipleOptions(element, options) {
  * @param {*} text String to show user
  * @returns List item index (idx)
  */
-function renderOption(element, text) {
+function renderOption(element, option) {
   // Capitalize first letter
-  const textContent = text.charAt(0).toUpperCase() + text.slice(1);
+  const textContent = option.text.charAt(0).toUpperCase() + option.text.slice(1);
   // Create list item
   const li = createElement("li", {
     textContent,
@@ -83,7 +109,7 @@ function renderOption(element, text) {
   // Handle events
   let idx = list.children.length;
   li.addEventListener("click", (e) => {
-    emitCustomEventOnElement(element, "optionSelected", { idx });
+    option.action();
   });
   // Reference for parent
   return idx;
