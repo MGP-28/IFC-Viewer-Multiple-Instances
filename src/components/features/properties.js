@@ -1,152 +1,190 @@
 import { icons } from "../../configs/icons";
 import getCuratedCategoryNameById from "../../helpers/categoryNames";
-import { emitEventOnElement } from "../../helpers/emitEvent";
+import { emitEventOnElement, emitGlobalEvent } from "../../helpers/emitEvent";
+import { loadCSS } from "../../helpers/generic/cssLoader";
 import { createElement } from "../../helpers/generic/domElements";
 import { capitalizeFirstLetter } from "../../helpers/generic/strings";
+import getNodePropertyName from "../../helpers/getNodePropertyName";
+import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
+import { getPsets } from "../../helpers/psets";
 import * as SelectionStore from "../../stores/selection";
-import { renderFeatureContainer } from "../feature-sidebar/containers";
+getNodePropertyName
 
 const mainProperties = [
-  "expressID",
-  "type",
-  "GlobalId",
-  "Name",
-  "ObjectType",
-  "Tag",
-  "PredefinedType",
+  {
+    label: "Name",
+    getter: (objectData) => getNodePropertyName(objectData),
+  },
+  {
+    label: "Express ID",
+    getter: (objectData) => objectData.expressID,
+  },
+  {
+    label: "Type",
+    getter: (objectData) => getCuratedCategoryNameById(objectData.props.type),
+  },
+  {
+    label: "Global ID",
+    getter: (objectData) => objectData.props.GlobalId,
+  },
+  {
+    label: "Object Type",
+    getter: (objectData) => objectData.props.ObjectType,
+  },
+  {
+    label: "Tag",
+    getter: (objectData) => objectData.props.Tag,
+  },
+  {
+    label: "Reference",
+    getter: (objectData) => objectData.props.PredefinedType,
+  },
 ];
 
-export default function startPropertiesFeature() {
-  // build wrapper and content
-  const wrapper = renderFeatureContainer(
-    icons.properties,
-    "Object properties",
-    "Select an object"
-  );
-  const contentEl = wrapper.getElementsByClassName(
-    "tools-side-feature-content"
-  )[0];
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build(navItem) {
+  const element = initializeProperties();
 
-  contentEl.innerHTML = `
-    <div class="tools-side-properties-tabs">
-        <div class="tools-side-properties-tab tab-active" id="properties-tab-props">
-            Properties
-        </div>
-        <div class="tools-side-properties-tab" id="properties-tab-material">
-            Material
-        </div>
-        <div class="tools-side-properties-tab" id="properties-tab-psets">
-            Property Sets
-        </div>
-    </div>
-    <div class="tools-side-properties-content-container">
-        <div class="tools-side-properties-header"></div>
-        <div class="tools-side-properties-table-wrapper">
-            <ul class="tools-side-properties-table">
-                <li>
-                    <span>Property</span>
-                    <span>Value</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-    `;
+  loadCSS("./src/assets/css/properties.css");
 
-  // build tabs and manage events
-  let activeTabIdx = 0;
-  const tabsWrapper = contentEl.getElementsByClassName(
-    "tools-side-properties-tabs"
-  )[0];
-
-  // when a tab is selected, changes each child to reflect changes
-  tabsWrapper.addEventListener("tabChanged", () => {
-    for (let idx = 0; idx < tabsWrapper.children.length; idx++) {
-      const element = tabsWrapper.children[idx];
-      if (idx === activeTabIdx) element.classList.add("tab-active");
-      else element.classList.remove("tab-active");
-    }
+  document.addEventListener("openProperties", (e) => {
+    navItem.isActive = true;
+    featureRenderingHandler(navItem);
   });
 
-  // event handlers on each tab
-  for (let idx = 0; idx < tabsWrapper.children.length; idx++) {
-    const element = tabsWrapper.children[idx];
-    element.addEventListener("click", () => {
-      activeTabIdx = idx;
-      emitEventOnElement(tabsWrapper, "tabChanged");
-    });
-  }
-
-  // main properties' tab
-  const tableEl = contentEl.getElementsByClassName(
-    "tools-side-properties-table"
-  )[0];
-  // add a line for each property defined as "main"
-  mainProperties.forEach((element) => {
-    const propertyText = capitalizeFirstLetter(element);
-    const propertyEl = buildLi(propertyText, "", element);
-    tableEl.appendChild(propertyEl);
-  });
-
-  //
-  //
-  //
-  const headerText = wrapper.getElementsByClassName(
-    "tools-side-feature-name"
-  )[0];
-  document.addEventListener("selectedChanged", () => {
-    const selected = SelectionStore.vars.selected;
-
-    if (selected.isValid() && !selected.isGroupSelection()) {
-      
-      let category = getCuratedCategoryNameById(selected.props.type);
-
-      mainProperties.forEach((propertyName) => {
-
-        const id = `property-${propertyName}`;
-        const domElement = document.getElementById(id);
-        const value = selected.props[propertyName];
-
-        let text = value;
-        if(!value) text = "-"
-        else if(typeof value === "object") text = value.value
-        else if(propertyName == "type") text = category
-
-        domElement.textContent = text;
-      });
-      // Changes feature header displayed name
-      const _headerText = `${category} - ${selected.props.expressID}`
-      headerText.textContent = _headerText;
-    } else {
-      resetFields();
-    }
-
-    function resetFields() {
-      mainProperties.forEach((propertyName) => {
-        const id = `property-${propertyName}`;
-        const domElement = document.getElementById(id);
-        domElement.textContent = "";
-      });
-    }
-  });
-  //
-  //
-  //
-  // await loader.ifcManager.getPropertySets(modelId, elementId);
-
-  // feature activating event handling
-  document.addEventListener("startFeatures", async (event) => {
-    emitEventOnElement(wrapper, "featureReady");
-  });
-
-  return wrapper;
+  return element;
 }
 
-function buildLi(property, value, ref) {
-  const li = createElement("li");
-  const id = `property-${ref}`;
-  const propertySpan = createElement("span", { textContent: property });
-  const valueSpan = createElement("span", { textContent: value, id: id });
-  li.appendChild(propertySpan);
-  li.appendChild(valueSpan);
-  return li;
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load(navItem) {
+  const listEl = navItem.getContentElement().firstChild;
+  updateData(listEl);
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function unload(navItem) {
+  //
+}
+
+export { build, load, unload };
+
+function initializeProperties() {
+  const listEl = createElement("ul", {
+    classes: ["properties-list"],
+  });
+  document.addEventListener("selectedChanged", () => {
+    updateData(listEl);
+  });
+  return listEl;
+}
+
+function updateData(listEl) {
+  const selected = SelectionStore.vars.selected;
+
+  if (!selected.isValid() || selected.isGroupSelection()) {
+    reset(listEl);
+    return;
+  }
+
+  emitGlobalEvent("loading");
+
+  const modelIdx = parseInt(Object.keys(selected.objects)[0]);
+  const expressID = selected.objects[modelIdx][0];
+
+  setTimeout(async () => {
+    const psets = await getPsets(modelIdx, expressID);
+
+    const objectData = {
+      modelIdx,
+      expressID,
+      props: selected.props,
+      psets: psets,
+    };
+
+    console.log("objectToRender", objectData);
+
+    listEl.innerHTML = renderProperties(listEl, objectData).outerHTML;
+
+    emitGlobalEvent("loadingComplete");
+  }, 1);
+}
+
+function renderProperties(listEl, objectToRender) {
+  // temporary debug
+  return createElement("li", {
+    textContent: "data",
+  });
+
+  // Render top priority properties
+
+  // Render other properties
+
+  // Render other psets
+
+  // let category = getCuratedCategoryNameById(objectToRender.props.type);
+}
+
+function reset(listEl) {
+  listEl.innerHTML = `${buildHeader("Select an object").outerHTML}`;
+}
+
+function buildHeader(title) {
+  return createElement("li", {
+    classes: ["properties-header"],
+    textContent: title,
+  });
+}
+
+function buildDataLine(label, value) {
+  const lineEl = createElement("li", {
+    classes: ["properties-line"],
+  });
+  const labelEl = createElement("span", {
+    classes: ["properties-line-label"],
+    textContent: label,
+  });
+  const valueEl = createElement("span", {
+    classes: ["properties-line-value"],
+    textContent: value,
+  });
+  lineEl.append(labelEl, valueEl);
+  return lineEl;
+}
+
+function buildPset(pset) {
+  //
+}
+
+function cleanPsetTitle(title) {
+  return title.replace("Pset_", "");
+}
+
+function getPsetPropData(prop) {
+  return {
+    label: prop.Name,
+    value: cleanPsetPropValue(prop.NominalValue.value),
+  };
+}
+
+function cleanPsetPropValue(value) {
+  switch (value) {
+    case "F":
+      return "False";
+    case "T":
+      return "True";
+    default:
+      return value;
+  }
 }

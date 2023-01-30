@@ -61,13 +61,19 @@ const setSelectedProperties = (props, objectsData, isFromViewer) => {
     vars.selected.addProps(props, expressIDs, modelIdx);
   }
   isSelectionFromViewer = isFromViewer;
-  emitGlobalEvent("selectedChanged");
+  emitGlobalEvent("selectedChangedPriority");
+  setTimeout(() => {
+    emitGlobalEvent("selectedChanged");
+  }, 1);
 };
 
 const resetSelectedProperties = () => {
   vars.selected.reset();
   isSelectionFromViewer = true;
-  emitGlobalEvent("selectedChanged");
+  emitGlobalEvent("selectedChangedPriority");
+  setTimeout(() => {
+    emitGlobalEvent("selectedChanged");
+  }, 1);
 };
 
 let isSelectionFromViewer = true;

@@ -94749,12 +94749,18 @@ const setSelectedProperties = (props, objectsData, isFromViewer) => {
     const expressIDs = objectsData[idx].expressIDs;
     vars.selected.addProps(props, expressIDs, modelIdx);
   }
-  emitGlobalEvent("selectedChanged");
+  emitGlobalEvent("selectedChangedPriority");
+  setTimeout(() => {
+    emitGlobalEvent("selectedChanged");
+  }, 1);
 };
 
 const resetSelectedProperties = () => {
   vars.selected.reset();
-  emitGlobalEvent("selectedChanged");
+  emitGlobalEvent("selectedChangedPriority");
+  setTimeout(() => {
+    emitGlobalEvent("selectedChanged");
+  }, 1);
 };
 
 // Currently highlighted object's properties
@@ -94942,7 +94948,7 @@ function setEdgePositions(vMin, vMax) {
   edgePositions.currentMax = new Vector3(vMax.x, vMax.y, vMax.z);
 }
 
-function reset() {
+function reset$1() {
   for (let idx = 0; idx < visualPlanes.length; idx++) {
     const vP = visualPlanes[idx];
     scene.add(vP);
@@ -96818,7 +96824,7 @@ function clipping(isEnabled) {
   }
 
   function resetPlanes() {
-    reset();
+    reset$1();
   }
 
   // #endregion Auxiliary functions in scope
@@ -97820,7 +97826,7 @@ function toggleCameraControls(isOn) {
 //
 
 function startRenderingEvents() {
-  document.addEventListener("selectedChanged", (event) => {
+  document.addEventListener("selectedChangedPriority", (event) => {
     processRenderization("selected");
   });
 
@@ -98076,10 +98082,10 @@ const navbarItems = {};
  *
  * @param {NavbarItem} item
  */
-function featureRenderingHandler$1(item) {
+async function featureRenderingHandler$1(item) {
   if (!item.isRendered) {
     item.isRendered = true;
-    item.build();
+    await item.build();
   }
 
   if (item.isActive) item.load();
@@ -98613,7 +98619,7 @@ async function initializeSidebar() {
  * @param {NavbarItem} navItem
  * @returns
  */
-function build$3(navItem) {
+function build$4(navItem) {
   document.addEventListener("openClippingPlanes", (e) => {
     navItem.isActive = true;
     navItem.load();
@@ -98625,7 +98631,7 @@ function build$3(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function load$3(navItem) {
+function load$4(navItem) {
   userInteractions.clippingPlanes = true;
   clipping(true);
 }
@@ -98645,7 +98651,7 @@ function unload$2(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function build$2(navItem) {
+function build$3(navItem) {
   const element = renderSavedViews();
 
   loadCSS("./src/assets/css/savedViews.css");
@@ -98663,7 +98669,7 @@ function build$2(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function load$2(navItem) {
+function load$3(navItem) {
   userInteractions.savedViews = true;
   if(!userInteractions.clippingPlanes) {
     const clippingPlanesRef = navbarItems["clippingPlanes"];
@@ -99445,7 +99451,7 @@ function renderAnnotations() {
  * @param {NavbarItem} navItem
  * @returns
  */
-function build$1(navItem) {
+function build$2(navItem) {
   const element = renderAnnotations();
 
   loadCSS("./src/assets/css/annotations.css");
@@ -99463,7 +99469,7 @@ function build$1(navItem) {
  * @param {NavbarItem} navItem
  * @returns
  */
-function load$1(navItem) {
+function load$2(navItem) {
   userInteractions.annotations = true;
   emitGlobalEvent("enableAnnotations");
 }
@@ -100056,7 +100062,7 @@ const tabControls = [
   { title: "Discipline", ref: 3, status: false, content: undefined, buildFunction: render$1 },
 ];
 
-async function build(item) {
+async function build$1(item) {
   loadCSS("src/assets/css/spatialTree.css");
 
   const contentEl = createElement("div", {
@@ -100105,7 +100111,7 @@ async function build(item) {
 }
 
 let firstLoad = true;
-async function load(item) {
+async function load$1(item) {
   if (!firstLoad) return;
   firstLoad = false;
   const activeTab = tabControls.find((x) => x.status);
@@ -100121,6 +100127,138 @@ async function updateContent(item, tabData) {
   element.appendChild(tabData.content);
 }
 
+async function getPsets(modelIdx, expressId) {
+  const model = models[modelIdx];
+  const promises = [];
+  const _psets = await model.loader.ifcManager.getPropertySets(0, expressId);
+  for (let idx = 0; idx < _psets.length; idx++) {
+    const pset = _psets[idx];
+    if (!pset.HasProperties) continue;
+    pset.props = [];
+
+    // get pset props as a promise - performance increase
+    promises.push(getPropsFromPset(model, pset, idx));
+  }
+
+  // Ensure all promises are resolved, then add the recovered props to the corresponding pset
+  const _psetsData = await Promise.all(promises);
+  const psetsData = _psetsData.map(psetData => {
+    _psets[psetData.ref].props = psetData.props;
+    return _psets[psetData.ref];
+  });
+
+  return psetsData;
+}
+
+async function getPropsFromPset(model, pset, ref) {
+  const promises = [];
+  for (let idx = 0; idx < pset.HasProperties.length; idx++) {
+    const propRef = pset.HasProperties[idx];
+    if (!propRef.value) continue;
+    // push promise
+    promises.push(model.loader.ifcManager.getItemProperties(0, propRef.value));
+  }
+  // use promises.all instead of just awaiting for "getItemProperties" to improve performance
+  return Promise.all(promises).then((props) => {
+    return { ref, props };
+  });
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function build(navItem) {
+  const element = initializeProperties();
+
+  loadCSS("./src/assets/css/properties.css");
+
+  document.addEventListener("openProperties", (e) => {
+    navItem.isActive = true;
+    featureRenderingHandler$1(navItem);
+  });
+
+  return element;
+}
+
+/**
+ *
+ * @param {NavbarItem} navItem
+ * @returns
+ */
+function load(navItem) {
+  const listEl = navItem.getContentElement().firstChild;
+  updateData(listEl);
+}
+
+function initializeProperties() {
+  const listEl = createElement("ul", {
+    classes: ["properties-list"],
+  });
+  document.addEventListener("selectedChanged", () => {
+    updateData(listEl);
+  });
+  return listEl;
+}
+
+function updateData(listEl) {
+  const selected = vars.selected;
+
+  if (!selected.isValid() || selected.isGroupSelection()) {
+    reset(listEl);
+    return;
+  }
+
+  emitGlobalEvent("loading");
+
+  const modelIdx = parseInt(Object.keys(selected.objects)[0]);
+  const expressID = selected.objects[modelIdx][0];
+
+  setTimeout(async () => {
+    const psets = await getPsets(modelIdx, expressID);
+
+    const objectToRender = {
+      modelIdx,
+      expressID,
+      props: selected.props,
+      psets: psets,
+    };
+
+    console.log("objectToRender", objectToRender);
+
+    listEl.innerHTML = renderProperties().outerHTML;
+
+    emitGlobalEvent("loadingComplete");
+  }, 1);
+}
+
+function renderProperties(listEl, objectToRender) {
+  // temporary debug
+  return createElement("li", {
+    textContent: "data",
+  });
+
+  // Render top priority properties
+
+  // Render other properties
+
+  // Render other psets
+
+  // let category = getCuratedCategoryNameById(objectToRender.props.type);
+}
+
+function reset(listEl) {
+  listEl.innerHTML = `${buildHeader("Select an object").outerHTML}`;
+}
+
+function buildHeader(title) {
+  return createElement("li", {
+    classes: ["properties-header"],
+    textContent: title,
+  });
+}
+
 async function startFeatures() {
   //// Temporary, for testing
   const buildTemp = (item) => createElement("span", { textContent: item.title });
@@ -100128,11 +100266,11 @@ async function startFeatures() {
   // Window (Selection tree, Properties)
   const window = new NavbarItem("Window", buildTemp);
   //// subitems
-  const selectionTree = new NavbarItem("Selection Tree", build, load);
+  const selectionTree = new NavbarItem("Selection Tree", build$1, load$1);
   selectionTree.sidebarPosition = "l1";
   selectionTree.hasTabs = true;
   selectionTree.loadAfterDOMRender = true;
-  const properties = new NavbarItem("Properties", buildTemp);
+  const properties = new NavbarItem("Properties", build, load);
   properties.sidebarPosition = "l2";
   // append subitems
   window.subitems.push(selectionTree, properties);
@@ -100141,16 +100279,16 @@ async function startFeatures() {
   // Visibility
   const visibility = new NavbarItem("Visibility", buildTemp);
   //// subitems
-  const views = new NavbarItem("Views", build$2, load$2, unload$1);
+  const views = new NavbarItem("Views", build$3, load$3, unload$1);
   views.sidebarPosition = "r1";
-  const annotations = new NavbarItem("Annotations", build$1, load$1, unload);
+  const annotations = new NavbarItem("Annotations", build$2, load$2, unload);
   annotations.sidebarPosition = "r2";
   // append subitems
   visibility.subitems.push(views, annotations);
   navbarItems["visibility"] = visibility;
 
   // Clipping planes
-  const clippingPlanes = new NavbarItem("Clipping planes", build$3, load$3, unload$2);
+  const clippingPlanes = new NavbarItem("Clipping planes", build$4, load$4, unload$2);
   navbarItems["clippingPlanes"] = clippingPlanes;
 
   // Measure
