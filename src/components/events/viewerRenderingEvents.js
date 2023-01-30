@@ -3,7 +3,7 @@ import * as Models from "../../stores/models.js";
 import * as SelectedStore from "../../stores/selection.js";
 
 export default function startRenderingEvents() {
-  document.addEventListener("selectedChanged", (event) => {
+  document.addEventListener("selectedChangedPriority", (event) => {
     processRenderization("selected");
   });
 
