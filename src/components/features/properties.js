@@ -1,40 +1,43 @@
 import { icons } from "../../configs/icons";
 import getCuratedCategoryNameById from "../../helpers/categoryNames";
-import { emitEventOnElement } from "../../helpers/emitEvent";
+import { emitEventOnElement, emitGlobalEvent } from "../../helpers/emitEvent";
 import { loadCSS } from "../../helpers/generic/cssLoader";
 import { createElement } from "../../helpers/generic/domElements";
 import { capitalizeFirstLetter } from "../../helpers/generic/strings";
+import getNodePropertyName from "../../helpers/getNodePropertyName";
 import featureRenderingHandler from "../../helpers/navbar/featureRenderingHandler";
+import { getPsets } from "../../helpers/psets";
 import * as SelectionStore from "../../stores/selection";
+getNodePropertyName
 
 const mainProperties = [
   {
-    label: "expressID",
-    getter: (props) => props.expressID,
-  },
-  {
-    label: "type",
-    getter: (props) => props.type,
-  },
-  {
-    label: "GlobalId",
-    getter: (props) => props.GlobalId,
-  },
-  {
     label: "Name",
-    getter: (props) => props.Name,
+    getter: (objectData) => getNodePropertyName(objectData),
   },
   {
-    label: "ObjectType",
-    getter: (props) => props.ObjectType,
+    label: "Express ID",
+    getter: (objectData) => objectData.expressID,
+  },
+  {
+    label: "Type",
+    getter: (objectData) => getCuratedCategoryNameById(objectData.props.type),
+  },
+  {
+    label: "Global ID",
+    getter: (objectData) => objectData.props.GlobalId,
+  },
+  {
+    label: "Object Type",
+    getter: (objectData) => objectData.props.ObjectType,
   },
   {
     label: "Tag",
-    getter: (props) => props.Tag,
+    getter: (objectData) => objectData.props.Tag,
   },
   {
-    label: "PredefinedType",
-    getter: (props) => props.PredefinedType,
+    label: "Reference",
+    getter: (objectData) => objectData.props.PredefinedType,
   },
 ];
 
@@ -95,20 +98,46 @@ function updateData(listEl) {
     return;
   }
 
-  let category = getCuratedCategoryNameById(selected.props.type);
+  emitGlobalEvent("loading");
+
+  const modelIdx = parseInt(Object.keys(selected.objects)[0]);
+  const expressID = selected.objects[modelIdx][0];
+
+  setTimeout(async () => {
+    const psets = await getPsets(modelIdx, expressID);
+
+    const objectData = {
+      modelIdx,
+      expressID,
+      props: selected.props,
+      psets: psets,
+    };
+
+    console.log("objectToRender", objectData);
+
+    listEl.innerHTML = renderProperties(listEl, objectData).outerHTML;
+
+    emitGlobalEvent("loadingComplete");
+  }, 1);
 }
 
-function renderProperties() {
-  //
+function renderProperties(listEl, objectToRender) {
+  // temporary debug
+  return createElement("li", {
+    textContent: "data",
+  });
+
+  // Render top priority properties
+
+  // Render other properties
+
+  // Render other psets
+
+  // let category = getCuratedCategoryNameById(objectToRender.props.type);
 }
 
 function reset(listEl) {
   listEl.innerHTML = `${buildHeader("Select an object").outerHTML}`;
-  listEl.innerHTML += `${buildDataLine("Label", "value").outerHTML}`;
-  listEl.innerHTML += `${buildDataLine("Label", "value").outerHTML}`;
-  listEl.innerHTML += `${buildDataLine("Label", "value").outerHTML}`;
-  listEl.innerHTML += `${buildHeader("Select an object").outerHTML}`;
-  listEl.innerHTML += `${buildDataLine("Label", "value").outerHTML}`;
 }
 
 function buildHeader(title) {
@@ -124,20 +153,38 @@ function buildDataLine(label, value) {
   });
   const labelEl = createElement("span", {
     classes: ["properties-line-label"],
-    textContent: label
+    textContent: label,
   });
   const valueEl = createElement("span", {
     classes: ["properties-line-value"],
-    textContent: value
+    textContent: value,
   });
   lineEl.append(labelEl, valueEl);
   return lineEl;
 }
 
-function buildData(label, value) {
+function buildPset(pset) {
   //
 }
 
-function buildPset(pset) {
-  //
+function cleanPsetTitle(title) {
+  return title.replace("Pset_", "");
+}
+
+function getPsetPropData(prop) {
+  return {
+    label: prop.Name,
+    value: cleanPsetPropValue(prop.NominalValue.value),
+  };
+}
+
+function cleanPsetPropValue(value) {
+  switch (value) {
+    case "F":
+      return "False";
+    case "T":
+      return "True";
+    default:
+      return value;
+  }
 }
